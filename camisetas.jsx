@@ -71,25 +71,15 @@ function main() {
             return;
         }
 
-        var baseGroup = findGroupByName(templateLayer, "FRENTE");
-        if (!baseGroup) {
+        var frenteGroup = findGroupByName(templateLayer, "FRENTE");
+        if (!frenteGroup) {
             logFile.writeln("Error: grupo FRENTE no encontrado");
             return;
         }
 
-        var base = findItemByName(baseGroup, "BASE");
-        if (!base) {
-            logFile.writeln("No se encontró BASE dentro del grupo FRENTE");
-            return;
-        }
-
-        // Encuentra grupo de escudos dentro del template
-        var escudosGroup = findGroupByName(baseGroup, "LOGOS_CENTRAL");
-
-        if (!escudosGroup) {
-            logFile.writeln("No se encontró el grupo LOGOS_CENTRAL");
-        }
-
+        var offsetX = 0;
+        var offsetY = 0;
+        var gap = 20; // separación en puntos
 
         // Recorrer jugadores
         for (var i = 0; i < jugadores.length; i++) {
@@ -104,7 +94,7 @@ function main() {
                 var dims = tallas[tallaNum];
 
                 // Duplicar BASE fuera del grupo
-                var copia = baseGroup.duplicate(app.activeDocument, ElementPlacement.PLACEATEND);
+                var copia = frenteGroup.duplicate(app.activeDocument, ElementPlacement.PLACEATEND);
                 copia.name = "FRENTE_" + j.nombre + "_" + j.numero + "_" + j.talla;
 
                 // Escalar proporcionalmente usando templateBase como referencia
@@ -114,7 +104,14 @@ function main() {
                     ", dimensiones objetivo (cm) - ancho: " + dims.ancho + ", alto: " + dims.alto
                 );
 
-                
+                copia.position = [offsetX, offsetY];
+                offsetX += copia.width + gap;
+
+                // Salto de fila si se sale del artboard
+                if (offsetX + copia.width > doc.width) {
+                    offsetX = 0;
+                    offsetY -= copia.height + gap;
+                }
                
             } catch(e) {
                 logFile.writeln("Error duplicando grupo para " + j.nombre + ": " + e.message);
