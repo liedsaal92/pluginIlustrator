@@ -5,25 +5,46 @@ function main() {
 
     // Datos de jugadores con tallas
     var jugadores = [
-        {nombre: "Juan", numero: 10, talla: "30H"}
+        {nombre: "Juan", numero: 10, talla: "30H"},
+        {nombre: "Thali", numero: 10, talla: "36M"},
+        {nombre: "Lincoln", numero: 10, talla: "40H"}
     ];
 
+    // BASE de referencia (hardcode)
+    var templateBase = {ancho: 42, alto: 59}; // en cm
+
     // Tabla de tallas en cm
-    var tallas = {
-        "24": {alto: 45, ancho: 32},
-        "26": {alto: 48, ancho: 34.5},
-        "28": {alto: 50.5, ancho: 36.5},
-        "30": {alto: 54, ancho: 38},
-        "32": {alto: 62, ancho: 41.5},
-        "34": {alto: 69, ancho: 43.5},
-        "35": {alto: 74, ancho: 46},
-        "36": {alto: 76, ancho: 51},
-        "38": {alto: 79, ancho: 52.5},
-        "40": {alto: 81, ancho: 55.5},
-        "42": {alto: 82.5, ancho: 58.3},
-        "44": {alto: 85.5, ancho: 61},
-        "46": {alto: 90.5, ancho: 63.2}
+   var tallas = {
+    // HOMBRES
+    "24H": {alto: 47.00, ancho: 34.50},
+    "26H": {alto: 50.82, ancho: 37.16},
+    "28H": {alto: 54.64, ancho: 39.82},
+    "30H": {alto: 58.46, ancho: 42.48},
+    "32H": {alto: 62.28, ancho: 45.14},
+    "34H": {alto: 66.10, ancho: 47.80},
+    "35H": {alto: 69.92, ancho: 50.46},
+    "36H": {alto: 73.74, ancho: 53.12},
+    "38H": {alto: 77.56, ancho: 55.78},
+    "40H": {alto: 81.38, ancho: 58.44},
+    "42H": {alto: 85.20, ancho: 61.10},
+    "44H": {alto: 89.00, ancho: 63.76},
+    
+    // MUJERES
+    "24M": {alto: 45.00, ancho: 34.50},
+    "26M": {alto: 48.20, ancho: 36.88},
+    "28M": {alto: 51.40, ancho: 39.26},
+    "30M": {alto: 54.60, ancho: 41.64},
+    "32M": {alto: 57.80, ancho: 44.02},
+    "34M": {alto: 61.00, ancho: 46.40},
+    "35M": {alto: 64.20, ancho: 48.78},
+    "36M": {alto: 67.40, ancho: 51.16},
+    "38M": {alto: 70.60, ancho: 53.54},
+    "40M": {alto: 73.80, ancho: 55.92},
+    "42M": {alto: 77.00, ancho: 58.30},
+    "44M": {alto: 80.00, ancho: 60.68}
     };
+
+
 
     var CM_TO_PT = 28.3464567;
 
@@ -40,67 +61,6 @@ function main() {
     logFile.writeln("=== Inicio del script ===");
     logFile.writeln("Documento: " + doc.name);
 
-    // Buscar grupo por nombre dentro de un layer
-    function findGroupByName(parent, name) {
-        for (var i = 0; i < parent.pageItems.length; i++) {
-            var item = parent.pageItems[i];
-            if (item.typename === "GroupItem" && item.name === name) {
-                return item;
-            }
-        }
-        return null;
-    }
-    
-function scaleGroupExact(group, targetWidthCm, targetHeightCm, logFile) {
-    var CM_TO_PT = 28.3464567;
-    var targetWidthPt  = targetWidthCm * CM_TO_PT;
-    var targetHeightPt = targetHeightCm * CM_TO_PT;
-
-    // Dimensiones reales del grupo en Illustrator
-    var currentWidth  = group.width;   // ancho en pts
-    var currentHeight = group.height;  // alto en pts
-
-    logFile.writeln("=== Escalado Detallado ===");
-    logFile.writeln("Grupo: " + group.name);
-
-    // Dimensiones actuales
-    logFile.writeln("Dimensiones actuales (pt) -> ancho: " + currentWidth.toFixed(2) + ", alto: " + currentHeight.toFixed(2));
-    logFile.writeln("Dimensiones actuales (cm) -> ancho: " + (currentWidth/CM_TO_PT).toFixed(4) + ", alto: " + (currentHeight/CM_TO_PT).toFixed(4));
-
-    // Dimensiones objetivo
-    logFile.writeln("Dimensiones objetivo (pt) -> ancho: " + targetWidthPt.toFixed(2) + ", alto: " + targetHeightPt.toFixed(2));
-    logFile.writeln("Dimensiones objetivo (cm) -> ancho: " + targetWidthCm.toFixed(4) + ", alto: " + targetHeightCm.toFixed(4));
-
-    // Factores de escala por eje
-    var scaleX = targetWidthPt / currentWidth;
-    var scaleY = targetHeightPt / currentHeight;
-
-    logFile.writeln("Factor de escala por ancho: " + scaleX.toFixed(4) + " (" + (scaleX*100).toFixed(2) + "%)");
-    logFile.writeln("Factor de escala por alto: " + scaleY.toFixed(4) + " (" + (scaleY*100).toFixed(2) + "%)");
-
-    // Escalado proporcional: usamos el menor factor para no deformar
-    var scaleFactor = Math.min(scaleX, scaleY);
-    logFile.writeln("Factor de escala final aplicado (proporcional): " + scaleFactor.toFixed(4) + " (" + (scaleFactor*100).toFixed(2) + "%)");
-
-    group.resize(scaleFactor*100, scaleFactor*100);
-
-    // Dimensiones finales
-    var newWidth  = group.width;
-    var newHeight = group.height;
-
-    logFile.writeln("Dimensiones finales (pt) -> ancho: " + newWidth.toFixed(2) + ", alto: " + newHeight.toFixed(2));
-    logFile.writeln("Dimensiones finales (cm) -> ancho: " + (newWidth/CM_TO_PT).toFixed(4) + ", alto: " + (newHeight/CM_TO_PT).toFixed(4));
-
-    logFile.writeln("=============================\n");
-}
-
-
-
-
-
-
-
-
     try {
         var templateLayer;
         try {
@@ -113,33 +73,49 @@ function scaleGroupExact(group, targetWidthCm, targetHeightCm, logFile) {
 
         var baseGroup = findGroupByName(templateLayer, "FRENTE");
         if (!baseGroup) {
-            logFile.writeln("Error: grupo FRENTE no encontrado dentro de TEMPLATE");
+            logFile.writeln("Error: grupo FRENTE no encontrado");
             return;
         }
-        logFile.writeln("Grupo FRENTE encontrado: " + baseGroup.name);
+
+        var base = findItemByName(baseGroup, "BASE");
+        if (!base) {
+            logFile.writeln("No se encontró BASE dentro del grupo FRENTE");
+            return;
+        }
+
+        // Encuentra grupo de escudos dentro del template
+        var escudosGroup = findGroupByName(baseGroup, "LOGOS_CENTRAL");
+
+        if (!escudosGroup) {
+            logFile.writeln("No se encontró el grupo LOGOS_CENTRAL");
+        }
+
 
         // Recorrer jugadores
         for (var i = 0; i < jugadores.length; i++) {
             var j = jugadores[i];
             try {
-                var tallaNum = j.talla.match(/\d+/)[0];
+                var tallaNum = j.talla; 
                 if (!tallas[tallaNum]) {
                     logFile.writeln("Error: talla " + j.talla + " no definida en la tabla de tallas");
                     continue;
                 }
 
                 var dims = tallas[tallaNum];
-                var copia = baseGroup.duplicate();
+
+                // Duplicar BASE fuera del grupo
+                var copia = baseGroup.duplicate(app.activeDocument, ElementPlacement.PLACEATEND);
                 copia.name = "FRENTE_" + j.nombre + "_" + j.numero + "_" + j.talla;
 
-                // Escalar proporcionalmente
-                scaleGroupExact(copia, dims.ancho, dims.alto, logFile);
-           
+                // Escalar proporcionalmente usando templateBase como referencia
+                scaleGroupExact(copia, dims.ancho, dims.alto, templateBase, logFile);
                 logFile.writeln(
                     "Grupo duplicado: " + copia.name +
-                    ", dimensiones aproximadas (cm) - ancho máximo: " + dims.ancho + ", alto máximo: " + dims.alto
+                    ", dimensiones objetivo (cm) - ancho: " + dims.ancho + ", alto: " + dims.alto
                 );
 
+                
+               
             } catch(e) {
                 logFile.writeln("Error duplicando grupo para " + j.nombre + ": " + e.message);
             }
@@ -154,6 +130,49 @@ function scaleGroupExact(group, targetWidthCm, targetHeightCm, logFile) {
     }
 
     alert("Se generaron las camisetas automáticamente. Log creado en el escritorio ✅");
+}
+
+// Conversión
+function pointsToCm(points) { return points / 28.3464567; }
+function cmToPoints(cm) { return cm * 28.3464567; }
+
+// Buscar grupo
+function findGroupByName(parent, name) {
+    for (var i = 0; i < parent.pageItems.length; i++) {
+        var item = parent.pageItems[i];
+        if (item.typename === "GroupItem" && item.name === name) return item;
+    }
+    return null;
+}
+
+// Buscar item dentro de grupo
+function findItemByName(parent, name) {
+    for (var i = 0; i < parent.pageItems.length; i++) {
+        var item = parent.pageItems[i];
+        if (item.name === name) return item;
+        if (item.typename === "GroupItem") {
+            var found = findItemByName(item, name);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+// Escalar grupo proporcionalmente según templateBase
+function scaleGroupExact(group, targetWidthCm, targetHeightCm, templateBase, logFile) {
+    var CM_TO_PT = 28.3464567;
+    // Añadir 1 cm al alto
+    
+    // Escala respecto a templateBase
+    var scaleX = (targetWidthCm + .5) / templateBase.ancho;
+    var scaleY = (targetHeightCm + .5) / templateBase.alto;
+    var scaleFactor = Math.min(scaleX, scaleY);
+
+    logFile.writeln("Escalando grupo " + group.name);
+    logFile.writeln("Dimensiones objetivo (cm) -> ancho: " + targetWidthCm + ", alto: " + targetHeightCm);
+    logFile.writeln("Factor de escala final: " + (scaleFactor*100).toFixed(2) + "%");
+
+    group.resize(scaleFactor*100, scaleFactor*100);
 }
 
 main();
