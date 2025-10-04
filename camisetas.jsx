@@ -5,10 +5,21 @@ function main() {
 
     // Datos de jugadores con tallas
     var jugadores = [
-        {nombre: "Juan", numero: 10, talla: "30H"},
-        {nombre: "Thali", numero: 10, talla: "36M"},
-        {nombre: "Lincoln", numero: 10, talla: "40H"}
-    ];
+    // Hombres
+    {nombre: "Juan", numero: 10, talla: "24H"},
+    {nombre: "Raúl", numero: 18, talla: "38H"},
+    {nombre: "Héctor", numero: 19, talla: "40H"},
+    {nombre: "Sergio", numero: 20, talla: "42H"},
+    {nombre: "Alberto", numero: 21, talla: "44H"},
+
+    // Mujeres
+    {nombre: "Ana", numero: 1, talla: "24M"},
+    {nombre: "María", numero: 2, talla: "26M"},
+    {nombre: "Gabriela", numero: 10, talla: "40M"},
+    {nombre: "Carolina", numero: 11, talla: "42M"},
+    {nombre: "Fernanda", numero: 12, talla: "44M"}
+];
+
 
     // BASE de referencia (hardcode)
     var templateBase = {ancho: 42, alto: 59}; // en cm
@@ -79,44 +90,46 @@ function main() {
 
         var offsetX = 0;
         var offsetY = 0;
-        var gap = 20; // separación en puntos
+        var gapX = 20; // separación horizontal
+        var gapY = 5;  // más ajustado verticalmente
+        var filaMaxHeight = 0;
 
-        // Recorrer jugadores
         for (var i = 0; i < jugadores.length; i++) {
             var j = jugadores[i];
-            try {
-                var tallaNum = j.talla; 
-                if (!tallas[tallaNum]) {
-                    logFile.writeln("Error: talla " + j.talla + " no definida en la tabla de tallas");
-                    continue;
-                }
+            var tallaNum = j.talla; 
+            if (!tallas[tallaNum]) continue;
+            var dims = tallas[tallaNum];
 
-                var dims = tallas[tallaNum];
+            var frenteCopia = frenteGroup.duplicate(app.activeDocument, ElementPlacement.PLACEATEND);
+            scaleGroupExact(frenteCopia, dims.ancho, dims.alto, templateBase, logFile);
 
-                // Duplicar BASE fuera del grupo
-                var copia = frenteGroup.duplicate(app.activeDocument, ElementPlacement.PLACEATEND);
-                copia.name = "FRENTE_" + j.nombre + "_" + j.numero + "_" + j.talla;
+            // Medimos la altura real de la camiseta
+            var frenteHeight = frenteCopia.height;
 
-                // Escalar proporcionalmente usando templateBase como referencia
-                scaleGroupExact(copia, dims.ancho, dims.alto, templateBase, logFile);
-                logFile.writeln(
-                    "Grupo duplicado: " + copia.name +
-                    ", dimensiones objetivo (cm) - ancho: " + dims.ancho + ", alto: " + dims.alto
-                );
+            // Agrupar
+            var grupoFinal = app.activeDocument.groupItems.add();
+            frenteCopia.moveToBeginning(grupoFinal);
+            grupoFinal.name = "FRENTE_" + j.nombre + "_" + j.numero + "_" + j.talla;
 
-                copia.position = [offsetX, offsetY];
-                offsetX += copia.width + gap;
+            // Posicionar
+            grupoFinal.position = [offsetX, offsetY];
 
-                // Salto de fila si se sale del artboard
-                if (offsetX + copia.width > doc.width) {
-                    offsetX = 0;
-                    offsetY -= copia.height + gap;
-                }
-               
-            } catch(e) {
-                logFile.writeln("Error duplicando grupo para " + j.nombre + ": " + e.message);
+            // Actualizamos el alto de fila usando la altura real de la camiseta
+            filaMaxHeight = Math.max(filaMaxHeight, frenteHeight);
+
+            // Avanzamos X
+            offsetX += grupoFinal.width + gapX;
+
+            // Salto de fila si se sale del artboard
+            if (offsetX + grupoFinal.width > doc.width) {
+                offsetX = 0;
+                offsetY -= filaMaxHeight + gapY;
+                filaMaxHeight = 0; // reset alto de fila
             }
         }
+
+
+
 
         logFile.writeln("=== Script finalizado correctamente ✅ ===");
 
