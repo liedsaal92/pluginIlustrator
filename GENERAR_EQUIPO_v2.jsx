@@ -16,10 +16,10 @@ var CONFIG = {
     // Dimensiones base de la plantilla .ai (en cm)
     // Si cambias el tamaño del template, actualiza estos valores
     templateBase: {
-        frente:   { ancho: 42, alto: 59 },
-        espalda:  { ancho: 42, alto: 59 },
-        manga_izq: { ancho: 46, alto: 28.5 }, // medido en plantilla .ai
-        manga_der: { ancho: 46, alto: 28.5 }  // simetrica a manga_izq
+        frente:    { ancho: 55,   alto: 79.5  }, // medido en plantilla .ai
+        espalda:   { ancho: 55,   alto: 79.5  }, // medido en plantilla .ai
+        manga_izq: { ancho: 46,   alto: 28.5  }, // medido en plantilla .ai
+        manga_der: { ancho: 46,   alto: 28.5  }  // simetrica a manga_izq
     },
 
     // Ancho máximo del plóter en cm
@@ -191,6 +191,7 @@ function main() {
         while (capaGenerado.pageItems.length > 0) {
             capaGenerado.pageItems[0].remove();
         }
+        capaGenerado.locked = false;
         Log._linea("-----", "Capa GENERADO existente limpiada");
     } catch(e) {
         capaGenerado = doc.layers.add();
@@ -201,9 +202,13 @@ function main() {
     // Mover GENERADO al frente (encima de TEMPLATE)
     capaGenerado.zOrder(ZOrderMethod.BRINGTOFRONT);
 
-    // 7. Ocultar capa TEMPLATE durante el proceso para no confundir visualmente
-    var templateLayer = validacion.templateLayer;
+    // 7. Desbloquear TEMPLATE y todos sus items recursivamente
+    //    y ocultarla durante el proceso para no confundir visualmente
+    var templateLayer   = validacion.templateLayer;
     var templateVisible = templateLayer.visible;
+    var templateLocked  = templateLayer.locked;
+    templateLayer.locked  = false;
+    desbloquearTodo(templateLayer);   // <-- desbloquea sublayers y grupos anidados
     templateLayer.visible = false;
 
     // 8. Procesar piezas
@@ -235,11 +240,8 @@ function main() {
                     continue;
                 }
 
-                // Duplicar dentro del mismo documento, en la capa GENERADO
-                var copia = grupoTemplate.duplicate(
-                    capaGenerado,
-                    ElementPlacement.PLACEATEND
-                );
+                // Duplicar a capa GENERADO
+                var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
 
                 // Escalar
                 var base = getBaseParaPieza(nombrePieza);
@@ -286,8 +288,9 @@ function main() {
         currentY -= filaMaxHeight + CONFIG.gapSeccion;
     }
 
-    // 9. Restaurar visibilidad de TEMPLATE
+    // 9. Restaurar estado original de TEMPLATE
     templateLayer.visible = templateVisible;
+    templateLayer.locked  = templateLocked;
 
     // 10. Log y resumen
     var logPath = Log.exportar(logFolder.fsName);
@@ -300,6 +303,21 @@ function main() {
         "Las piezas están en la capa GENERADO\n" +
         "Log: " + logPath
     );
+}
+
+// ─── Desbloquea recursivamente todos los items de un contenedor ──
+function desbloquearTodo(parent) {
+    try {
+        var items = parent.pageItems;
+        for (var i = 0; i < items.length; i++) {
+            try {
+                items[i].locked = false;
+                if (items[i].typename === "GroupItem") {
+                    desbloquearTodo(items[i]);
+                }
+            } catch(e) { /* ignorar items que no admiten unlock */ }
+        }
+    } catch(e) {}
 }
 
 
@@ -377,7 +395,6 @@ function leerXlsx(csvFile) {
 
             // Filtrar filas sin NOMBRE
             if (!obj.NOMBRE || trim(obj.NOMBRE) === "") continue;
-
 
             // Normalizar TIENE_NUMERO
             obj.TIENE_NUMERO = (trim(obj.TIENE_NUMERO + "").toUpperCase() === "SI")
@@ -493,7 +510,7 @@ function validarPlantilla(doc) {
         };
     }
 
-    // 3. Verificar duplicados dentro de cada pieza
+    // 4. Verificar duplicados dentro de cada pieza
     for (var nombre in grupos.grupos) {
         var grupo = grupos.grupos[nombre];
         var dupCheck = verificarDuplicados(grupo, nombre);
@@ -674,7 +691,7 @@ function llevaElemento(jugador, nombrePieza, elemento) {
         if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_E === "SI";
     }
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
-        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E === "SI"; // usa misma bandera espalda
+        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E === "SI";
         if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_M === "SI";
     }
     return false;
@@ -696,18 +713,16 @@ function inicialPieza(nombrePieza) {
 function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     var scaleX = targetAnchoCmd / base.ancho;
     var scaleY = targetAltoCmd  / base.alto;
-    var factor = Math.min(scaleX, scaleY);
+    // Math.max garantiza que ambas dimensiones queden >= al valor del CSV
+    // Una dimensión quedará exacta, la otra quedará levemente más grande
+    var factor = Math.max(scaleX, scaleY);
     var pct    = factor * 100;
 
-    // ── Estrategia segura para escalar dentro del artboard ──
-    // 1. Mover la esquina superior-izquierda exactamente al origen [0, 0]
-    //    usando left/top (más confiable que position[] para grupos)
+    // Mover al origen antes de escalar para evitar desplazamientos
     grupo.left = 0;
     grupo.top  = 0;
 
-    // 2. Escalar desde la esquina superior-izquierda del propio grupo
-    //    Transformation.TOP_LEFT escala hacia abajo y hacia la derecha,
-    //    garantizando que el objeto nunca salga del artboard por arriba/izquierda
+    // Escalar desde esquina superior-izquierda
     grupo.resize(
         pct, pct,
         true,  // changePositions
@@ -718,7 +733,7 @@ function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
         Transformation.TOPLEFT
     );
 
-    // 3. Volver a anclar en el origen por si resize movió algo
+    // Reanclaje final en el origen
     grupo.left = 0;
     grupo.top  = 0;
 }
@@ -826,7 +841,6 @@ function findAllGroupsByName(parent, nombre) {
         var item = items[i];
         if (item.typename === "GroupItem") {
             if (item.name === nombre) resultados.push(item);
-            // Solo busca en primer nivel para detección de duplicados
         }
     }
     return resultados;
