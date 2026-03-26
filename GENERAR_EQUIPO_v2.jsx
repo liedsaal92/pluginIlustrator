@@ -383,9 +383,10 @@ function leerXlsx(csvFile) {
                 var hdr = headers[c];
 
                 // Convertir campos numéricos
-                if (hdr === "NUMERO"     || hdr === "LOGO_ANCHO" ||
-                    hdr === "ALTO"       || hdr === "ANCHO"       ||
-                    hdr === "MANGA_ALTO" || hdr === "MANGA_ANCHO") {
+                if (hdr === "NUMERO"      || hdr === "LOGO_ANCHO"     ||
+                    hdr === "ALTO"        || hdr === "ANCHO"         ||
+                    hdr === "MANGA_ALTO"  || hdr === "MANGA_ANCHO"   ||
+                    hdr === "COSTILLA_ANCHO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -403,7 +404,8 @@ function leerXlsx(csvFile) {
             // Normalizar campos LLEVA_*
             var llevaFields = [
                 "LLEVA_NOMBRE_F", "LLEVA_NOMBRE_E",
-                "LLEVA_NUMERO_F", "LLEVA_NUMERO_E", "LLEVA_NUMERO_M"
+                "LLEVA_NUMERO_F", "LLEVA_NUMERO_E", "LLEVA_NUMERO_M",
+                "LLEVA_COSTILLA_F", "LLEVA_COSTILLA_E"
             ];
             for (var lf = 0; lf < llevaFields.length; lf++) {
                 var campo = llevaFields[lf];
@@ -622,6 +624,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza) {
             } else {
                 if (itemNombre.typename === "TextFrame") {
                     itemNombre.contents = textoCamiseta;
+                    centrarHorizontalmente(itemNombre, grupoCopia);
                 }
             }
         }
@@ -658,6 +661,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza) {
                 if (itemNumero.typename === "TextFrame") {
                     // Mostrar número sin decimales
                     itemNumero.contents = String(parseInt(jugador.NUMERO));
+                    centrarHorizontalmente(itemNumero, grupoCopia);
                 }
             }
         }
@@ -678,17 +682,42 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza) {
             );
         }
     }
+
+    // ── COSTILLAS ────────────────────────────────────────────
+    // Solo se procesan si el diseño las lleva Y el CSV tiene COSTILLA_ANCHO
+    // Si no existe el grupo o falta el valor en CSV → se omite sin error
+    if (llevaElemento(jugador, nombrePieza, "COSTILLA")) {
+        var costillaAncho = parseFloat(jugador.COSTILLA_ANCHO);
+        if (!isNaN(costillaAncho) && costillaAncho > 0) {
+            procesarCostilla(
+                findGroupByNameRecursivo(dinamico, "COSTILLA_IZQ"),
+                "IZQ", costillaAncho, grupoCopia, jugador.NOMBRE, nombrePieza
+            );
+            procesarCostilla(
+                findGroupByNameRecursivo(dinamico, "COSTILLA_DER"),
+                "DER", costillaAncho, grupoCopia, jugador.NOMBRE, nombrePieza
+            );
+        } else {
+            // LLEVA_COSTILLA=SI pero sin valor en CSV → omitir silenciosamente
+            Log.info(
+                nombrePieza + " | " + jugador.NOMBRE +
+                ": COSTILLA_ANCHO sin valor — costillas omitidas"
+            );
+        }
+    }
 }
 
 // ── Determina si una pieza lleva un elemento según el CSV ───
 function llevaElemento(jugador, nombrePieza, elemento) {
     if (nombrePieza === "FRENTE") {
-        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_F === "SI";
-        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_F === "SI";
+        if (elemento === "NOMBRE")    return jugador.LLEVA_NOMBRE_F    === "SI";
+        if (elemento === "NUMERO")    return jugador.LLEVA_NUMERO_F    === "SI";
+        if (elemento === "COSTILLA")  return jugador.LLEVA_COSTILLA_F  === "SI";
     }
     if (nombrePieza === "ESPALDA") {
-        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E === "SI";
-        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_E === "SI";
+        if (elemento === "NOMBRE")    return jugador.LLEVA_NOMBRE_E    === "SI";
+        if (elemento === "NUMERO")    return jugador.LLEVA_NUMERO_E    === "SI";
+        if (elemento === "COSTILLA")  return jugador.LLEVA_COSTILLA_E  === "SI";
     }
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
         if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E === "SI";
@@ -738,18 +767,17 @@ function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     grupo.top  = 0;
 }
 
-function escalarLogoDesdecentro(grupoLogo, targetAnchoCmd) {
-    var anchoActualCm = ptToCm(Math.abs(grupoLogo.width));
-    if (anchoActualCm <= 0) return;
+function escalarLogoDesdecentro(grupoLogo, targetAltoCmd) {
+    // Escala por ALTO — el ancho sigue proporcional
+    // LOGO_ANCHO en el CSV define el alto exacto final del logo
+    var bounds       = grupoLogo.geometricBounds;
+    var altoPt       = Math.abs(bounds[1] - bounds[3]);
+    if (altoPt <= 0) return;
 
-    var factor = (targetAnchoCmd / anchoActualCm) * 100;
+    var altoActualCm = ptToCm(altoPt);
+    var factor       = (targetAltoCmd / altoActualCm) * 100;
 
-    // Calcular centro del grupo
-    var bounds  = grupoLogo.geometricBounds;
-    var centroX = (bounds[0] + bounds[2]) / 2;
-    var centroY = (bounds[1] + bounds[3]) / 2;
-
-    // Escalar desde el centro
+    // Escalar desde el centro — la posición del logo se mantiene
     grupoLogo.resize(
         factor, factor,
         true,   // changePositions
@@ -929,6 +957,107 @@ function limpiarCarpeta(folder) {
         } else {
             files[i].remove();
         }
+    }
+}
+
+// ============================================================
+//  PROCESAMIENTO DE COSTILLAS
+// ============================================================
+
+// Procesa una costilla (IZQ o DER):
+//   1. Corrige SOLO el ancho al valor del CSV (el alto ya quedó bien del scaleGroupExact)
+//   2. La posiciona pegada al borde izquierdo o derecho de la pieza
+// Si el grupo no existe → omite silenciosamente (no todo diseño tiene costillas)
+function procesarCostilla(grupoCostilla, lado, targetAnchoCmd, grupoPieza, nombreJugador, nombrePieza) {
+    // Si no existe el grupo en el .ai → omitir sin error
+    if (!grupoCostilla) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": COSTILLA_" + lado + " no encontrada en DINAMICO — omitida");
+        return;
+    }
+
+    try {
+        // ── 1. Guardar posición ANTES del resize ─────────────
+        var boundsAntes  = grupoCostilla.geometricBounds;
+        var leftAntes    = boundsAntes[0];   // borde izquierdo
+        var rightAntes   = boundsAntes[2];   // borde derecho
+        var topAntes     = boundsAntes[1];   // posición vertical
+        var anchoActPt   = Math.abs(rightAntes - leftAntes);
+        if (anchoActPt <= 0) return;
+
+        var anchoActCm  = ptToCm(anchoActPt);
+        var factorAncho = (targetAnchoCmd / anchoActCm) * 100;
+
+        // ── 2. Resize SOLO en X desde TOPLEFT ────────────────
+        grupoCostilla.resize(
+            factorAncho, 100,
+            true, true, true, true, 100,
+            Transformation.TOPLEFT
+        );
+
+        // ── 3. Restaurar posición según lado ─────────────────
+        // TOPLEFT ancla el resize desde la esquina superior-izquierda,
+        // así que el left no cambia pero el right sí.
+        // Para DER necesitamos que el right quede donde estaba.
+        var boundsDespues = grupoCostilla.geometricBounds;
+        var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
+
+        if (lado === "IZQ") {
+            // Left fijo — la costilla crece hacia adentro (derecha)
+            grupoCostilla.left = leftAntes;
+        } else {
+            // Right fijo — la costilla crece hacia adentro (izquierda)
+            grupoCostilla.left = rightAntes - nuevoAncho;
+        }
+        grupoCostilla.top = topAntes;
+
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": COSTILLA_" + lado + " → " + targetAnchoCmd.toFixed(1) + "cm");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": COSTILLA_" + lado + " error (" + e.message + ") — omitida");
+    }
+}
+
+// ============================================================
+//  CENTRADO HORIZONTAL DE TEXTO
+// ============================================================
+
+// Centra un TextFrame horizontalmente respecto a su pieza contenedora.
+// Mantiene la posición vertical intacta.
+// Funciona con texto en punto (PointText) y texto en área (AreaText).
+function centrarHorizontalmente(textFrame, grupoPieza) {
+    try {
+        // Centro horizontal de la pieza completa
+        var piezaBounds  = grupoPieza.geometricBounds;
+        // geometricBounds = [left, top, right, bottom]
+        var piezaLeft    = piezaBounds[0];
+        var piezaRight   = piezaBounds[2];
+        var piezaCentroX = (piezaLeft + piezaRight) / 2;
+
+        // Forzar alineación centrada en el párrafo del TextFrame
+        // Esto es necesario para que el texto quede centrado dentro
+        // del Frame, especialmente en Area Text
+        try {
+            var parrafo = textFrame.textRange.paragraphAttributes;
+            parrafo.justification = Justification.CENTER;
+        } catch(e) { /* ignorar si no es accesible */ }
+
+        // Obtener ancho actual del TextFrame después de cambiar el contenido
+        // Usamos visibleBounds para incluir efectos visuales
+        var tfBounds = textFrame.visibleBounds;
+        var tfAncho  = Math.abs(tfBounds[2] - tfBounds[0]);
+
+        // Calcular nueva posición left para centrar
+        var nuevoLeft = piezaCentroX - (tfAncho / 2);
+
+        // Aplicar solo la posición horizontal, mantener vertical intacta
+        textFrame.left = nuevoLeft;
+
+    } catch(e) {
+        // Si falla el centrado, no interrumpir el proceso
+        // El texto queda en su posición original
     }
 }
 
