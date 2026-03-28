@@ -396,7 +396,8 @@ function leerXlsx(csvFile) {
                     hdr === "MANGA_ALTO"          || hdr === "MANGA_ANCHO"        ||
                     hdr === "COSTILLA_ANCHO"      ||
                     hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_DER_ANCHO" ||
-                    hdr === "MANGA_LINEA_INF_ALTO") {
+                    hdr === "MANGA_LINEA_INF_ALTO" ||
+                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -727,6 +728,26 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
     }
 
+    // ── ETIQUETA ─────────────────────────────────────────────
+    // Solo en FRENTE, solo si existen los valores en el CSV
+    // Si faltan valores o el grupo no existe → omite sin error
+    if (nombrePieza === "FRENTE") {
+        var etiquetaMarginInf = parseFloat(jugador.ETIQUETA_MARGIN_INF);
+        var etiquetaMarginLat = parseFloat(jugador.ETIQUETA_MARGIN_LAT);
+        var etiquetaLado      = trim((jugador.ETIQUETA_LADO || "DER") + "").toUpperCase();
+        var grupoEtiqueta     = findItemByNameRecursivo(dinamico, "ETIQUETA");
+
+        if (grupoEtiqueta &&
+            !isNaN(etiquetaMarginInf) && etiquetaMarginInf >= 0 &&
+            !isNaN(etiquetaMarginLat) && etiquetaMarginLat >= 0) {
+            posicionarEtiqueta(
+                grupoEtiqueta, grupoCopia,
+                etiquetaMarginInf, etiquetaMarginLat, etiquetaLado,
+                jugador.NOMBRE, nombrePieza
+            );
+        }
+    }
+
     // ── LÍNEAS DE MANGA ──────────────────────────────────────
     // Cada línea se procesa independientemente según su valor en CSV
     // Si el valor está vacío o el grupo no existe → se omite sin error
@@ -1008,6 +1029,100 @@ function limpiarCarpeta(folder) {
         } else {
             files[i].remove();
         }
+    }
+}
+
+// ============================================================
+//  POSICIONAMIENTO DE ETIQUETA
+// ============================================================
+
+// Posiciona la etiqueta en el FRENTE según márgenes del CSV.
+// La etiqueta NO escala — solo cambia su posición.
+//
+// ETIQUETA_MARGIN_INF → distancia desde el borde inferior de la pieza (cm)
+// ETIQUETA_MARGIN_LAT → distancia desde el borde lateral más cercano (cm)
+//
+// La etiqueta mantiene su tamaño original del template.
+// Si los valores faltan o el grupo no existe → se omite sin error.
+function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza) {
+    try {
+        // Usar ESTATICO como referencia de bordes reales de la camiseta
+        var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        var refBounds   = estatico ? estatico.geometricBounds
+                                   : grupoPieza.geometricBounds;
+        // geometricBounds = [left, top, right, bottom]
+        // En AI: top es el valor más GRANDE (menos negativo), bottom el más pequeño
+        var piezaLeft   = refBounds[0];
+        var piezaTop    = refBounds[1];  // valor mayor (menos negativo = arriba)
+        var piezaRight  = refBounds[2];
+        var piezaBottom = refBounds[3];  // valor menor (más negativo = abajo)
+
+        // Tamaño de la etiqueta — no escala
+        var etqBounds = etiqueta.geometricBounds;
+        var etqAncho  = Math.abs(etqBounds[2] - etqBounds[0]);
+        var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
+
+        // Convertir márgenes a puntos
+        var marginInfPt = cmToPt(marginInfCm);
+        var marginLatPt = cmToPt(marginLatCm);
+
+        // Usar las costillas ya posicionadas como referencia
+        // igual que procesarCostilla usa leftAntes/topAntes del template
+        // La costilla IZQ tiene:
+        //   left = borde izquierdo de la camiseta (referencia lateral IZQ)
+        //   top + alto = borde inferior de la camiseta (referencia inferior)
+        var dinamicoPieza = findGroupByNameRecursivo(grupoPieza, "DINAMICO");
+        var costillaIzq   = dinamicoPieza
+                            ? findGroupByNameRecursivo(dinamicoPieza, "COSTILLA_IZQ")
+                            : null;
+        var costillaDer   = dinamicoPieza
+                            ? findGroupByNameRecursivo(dinamicoPieza, "COSTILLA_DER")
+                            : null;
+
+        // Referencia lateral: borde EXTERNO de la costilla = borde del ESTATICO
+        var refLeft  = costillaIzq
+                       ? costillaIzq.geometricBounds[0]  // left de costilla IZQ
+                       : piezaLeft;
+        var refRight = costillaDer
+                       ? costillaDer.geometricBounds[2]  // right de costilla DER
+                       : piezaRight;
+
+        // Referencia inferior: bottom de la costilla
+        // costilla.top - costilla.alto = bottom real de la pieza
+        var refBottom = piezaBottom;
+        if (costillaIzq) {
+            var cIzqB = costillaIzq.geometricBounds;
+            // bottom = top - alto (en AI, top es menos negativo que bottom)
+            var cIzqBottom = cIzqB[1] - Math.abs(cIzqB[1] - cIzqB[3]);
+            refBottom = cIzqBottom;
+        } else if (costillaDer) {
+            var cDerB = costillaDer.geometricBounds;
+            var cDerBottom = cDerB[1] - Math.abs(cDerB[1] - cDerB[3]);
+            refBottom = cDerBottom;
+        }
+
+        // Posición vertical: top etiqueta = refBottom + marginInf + etqAlto
+        var nuevoTop = refBottom + marginInfPt + etqAlto;
+
+        // Posición horizontal según lado
+        var nuevoLeft;
+        if (lado === "IZQ") {
+            nuevoLeft = refLeft + marginLatPt;
+        } else {
+            nuevoLeft = refRight - marginLatPt - etqAncho;
+        }
+
+        etiqueta.left = nuevoLeft;
+        etiqueta.top  = nuevoTop;
+
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": ETIQUETA posicionada (inf:" +
+               marginInfCm.toFixed(1) + "cm, lat:" +
+               marginLatCm.toFixed(1) + "cm, lado:" + lado + ")");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": ETIQUETA error al posicionar (" + e.message + ") — omitida");
     }
 }
 
