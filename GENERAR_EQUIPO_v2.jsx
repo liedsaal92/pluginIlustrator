@@ -22,6 +22,14 @@ var CONFIG = {
         manga_der: { ancho: 46,   alto: 28.5  }  // simetrica a manga_izq
     },
 
+    // Dimensiones base de líneas de manga en el template .ai (en cm)
+    // Si cambias el tamaño de estos grupos en el .ai, actualiza estos valores
+    lineaMangaBase: {
+        izq_ancho: 3.0057, // ancho de MANGA_LINEA_IZQ en el template
+        der_ancho: 3.0057, // ancho de MANGA_LINEA_DER en el template
+        inf_alto:  6.0     // alto de MANGA_LINEA_INF en el template
+    },
+
     // Ancho máximo del plóter en cm
     ploterAncho: 130,
 
@@ -243,12 +251,12 @@ function main() {
                 // Duplicar a capa GENERADO
                 var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
 
-                // Escalar
-                var base = getBaseParaPieza(nombrePieza);
-                scaleGroupExact(copia, dims.ancho, dims.alto, base);
+                // Escalar — capturar el factor real aplicado
+                var base        = getBaseParaPieza(nombrePieza);
+                var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, base);
 
-                // Aplicar dinámicos
-                aplicarDinamicos(copia, j, nombrePieza);
+                // Aplicar dinámicos pasando el factor para compensar en líneas
+                aplicarDinamicos(copia, j, nombrePieza, factorPieza);
 
                 // Nombrar
                 var numStr = (j.TIENE_NUMERO === "SI" && j.NUMERO !== "") ? j.NUMERO : "SN";
@@ -383,10 +391,12 @@ function leerXlsx(csvFile) {
                 var hdr = headers[c];
 
                 // Convertir campos numéricos
-                if (hdr === "NUMERO"      || hdr === "LOGO_ANCHO"     ||
-                    hdr === "ALTO"        || hdr === "ANCHO"         ||
-                    hdr === "MANGA_ALTO"  || hdr === "MANGA_ANCHO"   ||
-                    hdr === "COSTILLA_ANCHO") {
+                if (hdr === "NUMERO"             || hdr === "LOGO_ANCHO"          ||
+                    hdr === "ALTO"               || hdr === "ANCHO"              ||
+                    hdr === "MANGA_ALTO"          || hdr === "MANGA_ANCHO"        ||
+                    hdr === "COSTILLA_ANCHO"      ||
+                    hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_DER_ANCHO" ||
+                    hdr === "MANGA_LINEA_INF_ALTO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -497,6 +507,18 @@ function validarPlantilla(doc) {
                             " '" + grupo.pageItems[ii].name + "'] ";
             }
             Log._linea("DIAG ", innerMsg);
+
+            // Diagnóstico adicional: mostrar contenido de DINAMICO si existe
+            var dinamicoDiag = findGroupByNameDirect(grupo, "DINAMICO");
+            if (dinamicoDiag) {
+                var dinMsg = "  Items en " + nombre + "/DINAMICO: ";
+                for (var dd = 0; dd < dinamicoDiag.pageItems.length; dd++) {
+                    dinMsg += "[" + dinamicoDiag.pageItems[dd].typename +
+                              " '" + dinamicoDiag.pageItems[dd].name + "'] ";
+                }
+                Log._linea("DIAG ", dinMsg);
+            }
+
             grupos.nombres.push(nombre);
             grupos.grupos[nombre] = grupo;
         } else {
@@ -587,7 +609,7 @@ function verificarDuplicados(grupoPieza, nombrePieza) {
 //  APLICAR ELEMENTOS DINÁMICOS
 // ============================================================
 
-function aplicarDinamicos(grupoCopia, jugador, nombrePieza) {
+function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     // Buscar DINAMICO dentro de la copia
     var dinamico = findGroupByNameRecursivo(grupoCopia, "DINAMICO");
@@ -698,10 +720,42 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza) {
                 "DER", costillaAncho, grupoCopia, jugador.NOMBRE, nombrePieza
             );
         } else {
-            // LLEVA_COSTILLA=SI pero sin valor en CSV → omitir silenciosamente
             Log.info(
                 nombrePieza + " | " + jugador.NOMBRE +
                 ": COSTILLA_ANCHO sin valor — costillas omitidas"
+            );
+        }
+    }
+
+    // ── LÍNEAS DE MANGA ──────────────────────────────────────
+    // Cada línea se procesa independientemente según su valor en CSV
+    // Si el valor está vacío o el grupo no existe → se omite sin error
+    if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+
+        // Línea izquierda — ancho fijo, alto escala con la manga
+        var lineaIzqAncho = parseFloat(jugador.MANGA_LINEA_IZQ_ANCHO);
+        if (!isNaN(lineaIzqAncho) && lineaIzqAncho > 0) {
+            procesarLineaManga(
+                findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ"),
+                "IZQ", lineaIzqAncho, jugador.NOMBRE, nombrePieza, factorPieza
+            );
+        }
+
+        // Línea derecha — ancho fijo, alto escala con la manga
+        var lineaDerAncho = parseFloat(jugador.MANGA_LINEA_DER_ANCHO);
+        if (!isNaN(lineaDerAncho) && lineaDerAncho > 0) {
+            procesarLineaManga(
+                findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER"),
+                "DER", lineaDerAncho, jugador.NOMBRE, nombrePieza, factorPieza
+            );
+        }
+
+        // Línea inferior — alto fijo, ancho escala con la manga
+        var lineaInfAlto = parseFloat(jugador.MANGA_LINEA_INF_ALTO);
+        if (!isNaN(lineaInfAlto) && lineaInfAlto > 0) {
+            procesarLineaMangaInf(
+                findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF"),
+                lineaInfAlto, jugador.NOMBRE, nombrePieza, factorPieza
             );
         }
     }
@@ -743,28 +797,25 @@ function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     var scaleX = targetAnchoCmd / base.ancho;
     var scaleY = targetAltoCmd  / base.alto;
     // Math.max garantiza que ambas dimensiones queden >= al valor del CSV
-    // Una dimensión quedará exacta, la otra quedará levemente más grande
     var factor = Math.max(scaleX, scaleY);
     var pct    = factor * 100;
 
-    // Mover al origen antes de escalar para evitar desplazamientos
     grupo.left = 0;
     grupo.top  = 0;
 
-    // Escalar desde esquina superior-izquierda
     grupo.resize(
         pct, pct,
-        true,  // changePositions
-        true,  // changeFillPatterns
-        true,  // changeFillGradients
-        true,  // changeStrokePattern
-        pct,   // changeLineWidths
+        true, true, true, true, pct,
         Transformation.TOPLEFT
     );
 
-    // Reanclaje final en el origen
     grupo.left = 0;
     grupo.top  = 0;
+
+    // Retorna los factores reales aplicados a cada dimensión
+    // Ambos son iguales (escala uniforme) pero los devolvemos separados
+    // para que las funciones de líneas puedan compensar correctamente
+    return { x: factor, y: factor };
 }
 
 function escalarLogoDesdecentro(grupoLogo, targetAltoCmd) {
@@ -957,6 +1008,99 @@ function limpiarCarpeta(folder) {
         } else {
             files[i].remove();
         }
+    }
+}
+
+// ============================================================
+//  PROCESAMIENTO DE LÍNEAS DE MANGA
+// ============================================================
+
+// Líneas laterales (IZQ y DER): ancho fijo del CSV, alto escala con la manga
+// Mismo comportamiento que las costillas del frente/espalda
+function procesarLineaManga(item, lado, targetAnchoCmd, nombreJugador, nombrePieza, factorPieza) {
+    if (!item) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": MANGA_LINEA_" + lado + " no encontrada — omitida");
+        return;
+    }
+
+    try {
+        var boundsAntes = item.geometricBounds;
+        var leftAntes   = boundsAntes[0];
+        var rightAntes  = boundsAntes[2];
+        var topAntes    = boundsAntes[1];
+
+        var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
+        if (anchoRealCm <= 0) return;
+        var factorAncho = (targetAnchoCmd / anchoRealCm) * 100;
+
+        // resize() funciona tanto para GroupItem como RasterItem
+        item.resize(
+            factorAncho, 100,
+            true, true, true, true, 100,
+            Transformation.TOPLEFT
+        );
+
+        // Restaurar posición según lado
+        var boundsDespues = item.geometricBounds;
+        var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
+
+        if (lado === "IZQ") {
+            item.left = leftAntes;
+        } else {
+            item.left = rightAntes - nuevoAncho;
+        }
+        item.top = topAntes;
+
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": MANGA_LINEA_" + lado + " → " + targetAnchoCmd.toFixed(1) + "cm");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": MANGA_LINEA_" + lado + " error (" + e.message + ") — omitida");
+    }
+}
+
+// Línea inferior: alto fijo del CSV, ancho escala con la manga
+function procesarLineaMangaInf(grupoLinea, targetAltoCmd, nombreJugador, nombrePieza, factorPieza) {
+    if (!grupoLinea) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": MANGA_LINEA_INF no encontrada — omitida");
+        return;
+    }
+
+    try {
+        var boundsAntes = grupoLinea.geometricBounds;
+        var leftAntes   = boundsAntes[0];
+        var bottomAntes = boundsAntes[3];  // borde inferior (valor negativo en AI)
+        var altoActPt   = Math.abs(boundsAntes[1] - boundsAntes[3]);
+        if (altoActPt <= 0) return;
+
+        // Usar factor Y (alto) — la línea inferior depende del alto de la manga
+        var altoActualReal = CONFIG.lineaMangaBase.inf_alto * factorPieza.y;
+        var factorAlto     = (targetAltoCmd / altoActualReal) * 100;
+
+        // Resize solo en Y — ancho no se toca
+        grupoLinea.resize(
+            100, factorAlto,
+            true, true, true, true, 100,
+            Transformation.BOTTOMLEFT  // anclar desde abajo para que suba hacia arriba
+        );
+
+        // Restaurar posición: left fijo, bottom fijo (pegada al borde inferior)
+        var boundsDespues = grupoLinea.geometricBounds;
+        var nuevoAlto     = Math.abs(boundsDespues[1] - boundsDespues[3]);
+
+        grupoLinea.left = leftAntes;
+        // Anclar borde inferior: top = bottomAntes + nuevoAlto
+        grupoLinea.top  = bottomAntes + nuevoAlto;
+
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": MANGA_LINEA_INF → " + targetAltoCmd.toFixed(1) + "cm");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": MANGA_LINEA_INF error (" + e.message + ") — omitida");
     }
 }
 
