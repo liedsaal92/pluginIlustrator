@@ -35,7 +35,7 @@ var CONFIG = {
     // Nombres de items dinámicos dentro de DINAMICO
     itemNombre: "NOMBRE",
     itemNumero: "NUMERO",
-    itemLogo:   "LOGO",
+    itemEscudo: "ESCUDO",
 
     // Hoja del xlsx que contiene los jugadores
     hojaCSV: "DATOS_CSV"

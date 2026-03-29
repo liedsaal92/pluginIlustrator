@@ -65,6 +65,21 @@ function findItemByNameRecursivo(parent, nombre) {
     return null;
 }
 
+// Busca el primer TextFrame dentro de un item (incluye envolventes y grupos)
+function findTextFrameRecursivo(item) {
+    if (!item) return null;
+    if (item.typename === "TextFrame") return item;
+    try {
+        if (item.pageItems && item.pageItems.length > 0) {
+            for (var i = 0; i < item.pageItems.length; i++) {
+                var found = findTextFrameRecursivo(item.pageItems[i]);
+                if (found) return found;
+            }
+        }
+    } catch(e) {}
+    return null;
+}
+
 // Devuelve TODOS los grupos con ese nombre (para detectar duplicados)
 function findAllGroupsByName(parent, nombre) {
     var resultados = [];

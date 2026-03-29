@@ -54,6 +54,26 @@ function escalarLogoDesdecentro(grupoLogo, targetAltoCmd) {
     );
 }
 
+// Escala cualquier item desde su centro usando ANCHO o ALTO como referencia.
+// ref = "ANCHO" → el ancho queda en targetCm, alto sigue proporcional
+// ref = "ALTO"  → el alto queda en targetCm, ancho sigue proporcional
+function escalarItemDesdecentro(item, targetCm, ref) {
+    var bounds   = item.geometricBounds;
+    var anchoPt  = Math.abs(bounds[2] - bounds[0]);
+    var altoPt   = Math.abs(bounds[1] - bounds[3]);
+
+    var actualCm = (ref === "ANCHO") ? ptToCm(anchoPt) : ptToCm(altoPt);
+    if (actualCm <= 0) return;
+
+    var factor = (targetCm / actualCm) * 100;
+
+    item.resize(
+        factor, factor,
+        true, true, true, true, factor,
+        Transformation.CENTER
+    );
+}
+
 // Devuelve { ancho, alto } en cm para la pieza y jugador dados, o null si faltan datos
 function getDimensiones(jugador, nombrePieza) {
     if (nombrePieza === "FRENTE" || nombrePieza === "ESPALDA") {

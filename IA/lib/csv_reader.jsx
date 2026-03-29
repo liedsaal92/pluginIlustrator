@@ -62,13 +62,17 @@ function leerXlsx(csvFile) {
                 var hdr = headers[c];
 
                 // Convertir campos numéricos
-                if (hdr === "NUMERO"             || hdr === "LOGO_ANCHO"          ||
+                if (hdr === "NUMERO"             || hdr === "ESCUDO_ALTO"         ||
+                    hdr === "ESCUDO_CENTRAL_ALTO" ||
                     hdr === "ALTO"               || hdr === "ANCHO"              ||
                     hdr === "MANGA_ALTO"          || hdr === "MANGA_ANCHO"        ||
                     hdr === "COSTILLA_ANCHO"      ||
                     hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_DER_ANCHO" ||
                     hdr === "MANGA_LINEA_INF_ALTO" ||
-                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT") {
+                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT" ||
+                    hdr === "LOGO_MARCA_ANCHO"   || hdr === "LOGO_MARCA_ALTO"  ||
+                    hdr === "NUMERO_FRENTE_ANCHO" || hdr === "NUMERO_FRENTE_ALTO" ||
+                    hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_DER_ANCHO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {

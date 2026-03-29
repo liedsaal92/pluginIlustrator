@@ -22,6 +22,9 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var itemNombre = findItemByNameRecursivo(dinamico, CONFIG.itemNombre);
 
     if (itemNombre) {
+        Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+            ": NOMBRE typename=" + itemNombre.typename +
+            " name=" + itemNombre.name);
         if (!llevaNobreEnEstaPieza) {
             itemNombre.hidden = true;
             Log.info(
@@ -39,8 +42,11 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     ": NOMBRE ocultado (NOMBRE_CAMISETA vacio en CSV)"
                 );
             } else {
-                if (itemNombre.typename === "TextFrame") {
-                    itemNombre.contents = textoCamiseta;
+                var tfNombre = (itemNombre.typename === "TextFrame")
+                               ? itemNombre
+                               : findTextFrameRecursivo(itemNombre);
+                if (tfNombre) {
+                    tfNombre.contents = textoCamiseta;
                     centrarHorizontalmente(itemNombre, grupoCopia);
                 }
             }
@@ -84,19 +90,117 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
     }
 
-    // ── LOGO ────────────────────────────────────────────────
-    var grupoLogo = findGroupByNameRecursivo(dinamico, CONFIG.itemLogo);
+    // ── ESCUDO ──────────────────────────────────────────────
+    var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
 
-    if (grupoLogo) {
-        var logoAncho = parseFloat(jugador.LOGO_ANCHO);
-        if (!isNaN(logoAncho) && logoAncho > 0) {
-            escalarLogoDesdecentro(grupoLogo, logoAncho);
+    if (grupoEscudo) {
+        var escudoAlto = parseFloat(jugador.ESCUDO_ALTO);
+        if (!isNaN(escudoAlto) && escudoAlto > 0) {
+            escalarItemDesdecentro(grupoEscudo, escudoAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": ESCUDO → alto " + escudoAlto.toFixed(1) + "cm");
         } else {
             Log.info(
                 nombrePieza + " | " + jugador.NOMBRE +
-                ": LOGO_ANCHO inválido (" + jugador.LOGO_ANCHO +
-                ") — logo no escalado"
+                ": ESCUDO_ALTO inválido (" + jugador.ESCUDO_ALTO +
+                ") — escudo no escalado"
             );
+        }
+    }
+
+    // ── ESCUDO_CENTRAL ──────────────────────────────────────
+    var grupoEscudoCentral = findGroupByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
+
+    if (grupoEscudoCentral) {
+        var escudoCentralAlto = parseFloat(jugador.ESCUDO_CENTRAL_ALTO);
+        if (!isNaN(escudoCentralAlto) && escudoCentralAlto > 0) {
+            escalarItemDesdecentro(grupoEscudoCentral, escudoCentralAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": ESCUDO_CENTRAL → alto " + escudoCentralAlto.toFixed(1) + "cm");
+        } else {
+            Log.info(
+                nombrePieza + " | " + jugador.NOMBRE +
+                ": ESCUDO_CENTRAL_ALTO inválido (" + jugador.ESCUDO_CENTRAL_ALTO +
+                ") — escudo central no escalado"
+            );
+        }
+    }
+
+    // ── NUMERO_FRENTE ────────────────────────────────────────
+    var itemNumeroFrente = findItemByNameRecursivo(dinamico, "NUMERO_FRENTE");
+
+    if (itemNumeroFrente) {
+        var numeroFrenteRef   = trim((jugador.NUMERO_FRENTE_REF || "") + "").toUpperCase();
+        var numeroFrenteAncho = parseFloat(jugador.NUMERO_FRENTE_ANCHO);
+        var numeroFrenteAlto  = parseFloat(jugador.NUMERO_FRENTE_ALTO);
+
+        if (numeroFrenteRef === "ANCHO" && !isNaN(numeroFrenteAncho) && numeroFrenteAncho > 0) {
+            escalarItemDesdecentro(itemNumeroFrente, numeroFrenteAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_FRENTE → ancho " + numeroFrenteAncho.toFixed(1) + "cm");
+        } else if (numeroFrenteRef === "ALTO" && !isNaN(numeroFrenteAlto) && numeroFrenteAlto > 0) {
+            escalarItemDesdecentro(itemNumeroFrente, numeroFrenteAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_FRENTE → alto " + numeroFrenteAlto.toFixed(1) + "cm");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": NUMERO_FRENTE sin valores válidos en CSV — no escalado");
+        }
+    }
+
+    // ── SPONSOR_TOP_IZQ ─────────────────────────────────────
+    var itemSponsorTopIzq = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_IZQ");
+
+    if (itemSponsorTopIzq) {
+        var sponsorTopIzqAncho = parseFloat(jugador.SPONSOR_TOP_IZQ_ANCHO);
+        if (!isNaN(sponsorTopIzqAncho) && sponsorTopIzqAncho > 0) {
+            escalarItemDesdecentro(itemSponsorTopIzq, sponsorTopIzqAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_TOP_IZQ → ancho " + sponsorTopIzqAncho.toFixed(1) + "cm");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": SPONSOR_TOP_IZQ_ANCHO inválido — no escalado");
+        }
+    }
+
+    // ── SPONSOR_TOP_DER ─────────────────────────────────────
+    var itemSponsorTopDer = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_DER");
+
+    if (itemSponsorTopDer) {
+        var sponsorTopDerAncho = parseFloat(jugador.SPONSOR_TOP_DER_ANCHO);
+        if (!isNaN(sponsorTopDerAncho) && sponsorTopDerAncho > 0) {
+            escalarItemDesdecentro(itemSponsorTopDer, sponsorTopDerAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_TOP_DER → ancho " + sponsorTopDerAncho.toFixed(1) + "cm");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": SPONSOR_TOP_DER_ANCHO inválido — no escalado");
+        }
+    }
+
+    // ── LOGO_MARCA ───────────────────────────────────────────
+    // Escala el logo del fabricante usando ANCHO o ALTO como referencia según CSV.
+    // LOGO_MARCA_REF = "ANCHO" → el ancho queda en LOGO_MARCA_ANCHO cm
+    // LOGO_MARCA_REF = "ALTO"  → el alto queda en LOGO_MARCA_ALTO cm
+    // Si el item no existe o faltan valores en CSV → se omite sin error
+    var itemLogoMarca = findItemByNameRecursivo(dinamico, "LOGO_MARCA");
+
+    if (itemLogoMarca) {
+        var logoMarcaRef   = trim((jugador.LOGO_MARCA_REF || "") + "").toUpperCase();
+        var logoMarcaAncho = parseFloat(jugador.LOGO_MARCA_ANCHO);
+        var logoMarcaAlto  = parseFloat(jugador.LOGO_MARCA_ALTO);
+
+        if (logoMarcaRef === "ANCHO" && !isNaN(logoMarcaAncho) && logoMarcaAncho > 0) {
+            escalarItemDesdecentro(itemLogoMarca, logoMarcaAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": LOGO_MARCA → ancho " + logoMarcaAncho.toFixed(1) + "cm");
+        } else if (logoMarcaRef === "ALTO" && !isNaN(logoMarcaAlto) && logoMarcaAlto > 0) {
+            escalarItemDesdecentro(itemLogoMarca, logoMarcaAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": LOGO_MARCA → alto " + logoMarcaAlto.toFixed(1) + "cm");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": LOGO_MARCA sin valores válidos en CSV — no escalado");
         }
     }
 
