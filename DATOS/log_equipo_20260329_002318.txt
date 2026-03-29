@@ -1,0 +1,125 @@
+================================================
+  GENERAR_EQUIPO.jsx v2.0 — Log de ejecución
+  Sun Mar 29 2026 00:23:18 GMT-0500
+================================================
+
+----- Documento : ECUADOR_TEMPLATE.ai
+----- CSV       : C:\Users\lieds\Documents\GitHub\pluginIlustrator\DATOS\DATOS.csv
+----- Columnas CSV: NOMBRE | NOMBRE_CAMISETA | NUMERO | TIENE_NUMERO | TALLA | ALTO | ANCHO | MANGA_ALTO | MANGA_ANCHO | ESCUDO_ALTO | EQUIPO | LLEVA_NOMBRE_F | LLEVA_NOMBRE_E | LLEVA_NUMERO_F | LLEVA_NUMERO_E | LLEVA_NUMERO_M | NOTAS | COSTILLA_ANCHO | LLEVA_COSTILLA_F | LLEVA_COSTILLA_E | MANGA_LINEA_IZQ_ANCHO | MANGA_LINEA_DER_ANCHO | MANGA_LINEA_INF_ALTO | ETIQUETA_MARGIN_INF | ETIQUETA_MARGIN_LAT | ETIQUETA_LADO | LOGO_MARCA_ANCHO | LOGO_MARCA_ALTO | LOGO_MARCA_REF | ESCUDO_CENTRAL_ALTO | NUMERO_FRENTE_ANCHO | NUMERO_FRENTE_ALTO | NUMERO_FRENTE_REF | SPONSOR_TOP_IZQ_ANCHO | SPONSOR_TOP_DER_ANCHO | ETIQUETA_TOP_ALTO
+----- CSV | Juan Perez | T:24H | Num:10 | Logo:undefinedcm
+----- CSV | Carlos Ruiz | T:28H | Num:7 | Logo:undefinedcm
+----- CSV | Luis Mendoza | T:32H | Num:15 | Logo:undefinedcm
+----- Jugadores validos: 3
+----- Jugadores : 3
+DIAG  Items en capa TEMPLATE: [GroupItem 'FRENTE'] [GroupItem 'ESPALDA'] [GroupItem 'MANGA_DER'] [GroupItem 'MANGA_IZQ'] [GroupItem 'MANGA_IZQ2'] [GroupItem ''] [GroupItem 'FRENTE_INIT'] 
+DIAG  Items en FRENTE: [GroupItem 'DINAMICO'] [GroupItem 'ESTATICO'] 
+DIAG    Items en FRENTE/DINAMICO: [GroupItem 'ETIQUETA'] [RasterItem 'COSTILLA_IZQ'] [RasterItem 'COSTILLA_DER'] [GroupItem 'ESCUDO'] [GroupItem 'ESCUDO_CENTRAL'] [TextFrame 'NUMERO_FRENTE'] [GroupItem 'LOGO_MARCA'] [GroupItem 'SPONSOR_TOP_IZQ'] [CompoundPathItem 'SPONSOR_TOP_DER'] 
+DIAG  Items en ESPALDA: [CompoundPathItem 'ETIQUETA'] [GroupItem 'DINAMICO'] [GroupItem 'ESTATICO'] 
+DIAG    Items en ESPALDA/DINAMICO: [GroupItem 'ETIQUETA_TOP'] [TextFrame 'NUMERO'] [TextFrame 'NOMBRE'] 
+DIAG  Items en MANGA_IZQ: [GroupItem 'DINAMICO'] [GroupItem 'ESTATICO'] 
+DIAG    Items en MANGA_IZQ/DINAMICO: [GroupItem 'MANGA_LINEA_INF'] [RasterItem 'MANGA_LINEA_IZQ'] [RasterItem 'MANGA_LINEA_DER'] 
+DIAG  Items en MANGA_DER: [GroupItem 'DINAMICO'] [GroupItem 'ESTATICO'] 
+DIAG    Items en MANGA_DER/DINAMICO: [GroupItem 'MANGA_LINEA_INF'] [RasterItem 'MANGA_LINEA_IZQ'] [RasterItem 'MANGA_LINEA_DER'] 
+----- Piezas    : FRENTE, ESPALDA, MANGA_IZQ, MANGA_DER
+----- Capa GENERADO creada
+----- 
+----- === FRENTE ===
+[OK]    FRENTE | Juan Perez: ESCUDO → alto 5.0cm
+[OK]    FRENTE | Juan Perez: ESCUDO_CENTRAL → alto 6.0cm
+[OK]    FRENTE | Juan Perez: NUMERO_FRENTE → alto 6.0cm
+[OK]    FRENTE | Juan Perez: SPONSOR_TOP_IZQ → ancho 5.0cm
+[OK]    FRENTE | Juan Perez: SPONSOR_TOP_DER → ancho 5.0cm
+[OK]    FRENTE | Juan Perez: LOGO_MARCA → ancho 8.0cm
+[OK]    FRENTE | Juan Perez: COSTILLA_IZQ → 7.0cm
+[OK]    FRENTE | Juan Perez: COSTILLA_DER → 7.0cm
+[OK]    FRENTE | Juan Perez: ETIQUETA posicionada (inf:8.0cm, lat:8.0cm, lado:IZQ)
+[OK]    FRENTE | Juan Perez | T:24H | 34.5x47.5cm
+[OK]    FRENTE | Carlos Ruiz: ESCUDO → alto 7.0cm
+[OK]    FRENTE | Carlos Ruiz: ESCUDO_CENTRAL → alto 6.0cm
+[OK]    FRENTE | Carlos Ruiz: NUMERO_FRENTE → alto 8.0cm
+[OK]    FRENTE | Carlos Ruiz: SPONSOR_TOP_IZQ → ancho 5.0cm
+[OK]    FRENTE | Carlos Ruiz: SPONSOR_TOP_DER → ancho 5.0cm
+[OK]    FRENTE | Carlos Ruiz: LOGO_MARCA → ancho 8.0cm
+[OK]    FRENTE | Carlos Ruiz: COSTILLA_IZQ → 7.0cm
+[OK]    FRENTE | Carlos Ruiz: COSTILLA_DER → 7.0cm
+[OK]    FRENTE | Carlos Ruiz: ETIQUETA posicionada (inf:8.0cm, lat:8.0cm, lado:IZQ)
+[OK]    FRENTE | Carlos Ruiz | T:28H | 38.5x54.5cm
+[OK]    FRENTE | Luis Mendoza: ESCUDO → alto 7.0cm
+[OK]    FRENTE | Luis Mendoza: ESCUDO_CENTRAL → alto 6.0cm
+[OK]    FRENTE | Luis Mendoza: NUMERO_FRENTE → alto 8.0cm
+[OK]    FRENTE | Luis Mendoza: SPONSOR_TOP_IZQ → ancho 7.0cm
+[OK]    FRENTE | Luis Mendoza: SPONSOR_TOP_DER → ancho 7.0cm
+[OK]    FRENTE | Luis Mendoza: LOGO_MARCA → ancho 8.0cm
+[OK]    FRENTE | Luis Mendoza: COSTILLA_IZQ → 7.0cm
+[OK]    FRENTE | Luis Mendoza: COSTILLA_DER → 7.0cm
+[OK]    FRENTE | Luis Mendoza: ETIQUETA posicionada (inf:8.0cm, lat:8.0cm, lado:IZQ)
+[OK]    FRENTE | Luis Mendoza | T:32H | 44.5x64.5cm
+----- 
+----- === ESPALDA ===
+----- ESPALDA | Juan Perez: NOMBRE typename=TextFrame name=NOMBRE
+[OK]    ESPALDA | Juan Perez: ETIQUETA_TOP → alto 3.0cm
+[INFO]  ESPALDA | Juan Perez: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+[INFO]  ESPALDA | Juan Perez: COSTILLA_DER no encontrada en DINAMICO — omitida
+[OK]    ESPALDA | Juan Perez | T:24H | 34.5x47.5cm
+----- ESPALDA | Carlos Ruiz: NOMBRE typename=TextFrame name=NOMBRE
+[OK]    ESPALDA | Carlos Ruiz: ETIQUETA_TOP → alto 3.0cm
+[INFO]  ESPALDA | Carlos Ruiz: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+[INFO]  ESPALDA | Carlos Ruiz: COSTILLA_DER no encontrada en DINAMICO — omitida
+[OK]    ESPALDA | Carlos Ruiz | T:28H | 38.5x54.5cm
+----- ESPALDA | Luis Mendoza: NOMBRE typename=TextFrame name=NOMBRE
+[INFO]  ESPALDA | Luis Mendoza: NOMBRE ocultado (NOMBRE_CAMISETA vacio en CSV)
+[OK]    ESPALDA | Luis Mendoza: ETIQUETA_TOP → alto 3.0cm
+[INFO]  ESPALDA | Luis Mendoza: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+[INFO]  ESPALDA | Luis Mendoza: COSTILLA_DER no encontrada en DINAMICO — omitida
+[OK]    ESPALDA | Luis Mendoza | T:32H | 44.5x64.5cm
+----- 
+----- === MANGA_IZQ ===
+[OK]    MANGA_IZQ | Juan Perez: MANGA_LINEA_IZQ → 2.0cm
+[OK]    MANGA_IZQ | Juan Perez: MANGA_LINEA_DER → 2.0cm
+[OK]    MANGA_IZQ | Juan Perez: MANGA_LINEA_INF → 6.0cm
+[OK]    MANGA_IZQ | Juan Perez | T:24H | 28.5x16.5cm
+[OK]    MANGA_IZQ | Carlos Ruiz: MANGA_LINEA_IZQ → 3.0cm
+[OK]    MANGA_IZQ | Carlos Ruiz: MANGA_LINEA_DER → 3.0cm
+[OK]    MANGA_IZQ | Carlos Ruiz: MANGA_LINEA_INF → 7.0cm
+[OK]    MANGA_IZQ | Carlos Ruiz | T:28H | 32.5x18.0cm
+[OK]    MANGA_IZQ | Luis Mendoza: MANGA_LINEA_IZQ → 4.0cm
+[OK]    MANGA_IZQ | Luis Mendoza: MANGA_LINEA_DER → 4.0cm
+[OK]    MANGA_IZQ | Luis Mendoza: MANGA_LINEA_INF → 7.0cm
+[INFO]  MANGA_IZQ | Luis Mendoza: pieza (141.9cm) supera ancho del plóter
+[OK]    MANGA_IZQ | Luis Mendoza | T:32H | 37.0x22.0cm
+----- 
+----- === MANGA_DER ===
+[OK]    MANGA_DER | Juan Perez: MANGA_LINEA_IZQ → 2.0cm
+[OK]    MANGA_DER | Juan Perez: MANGA_LINEA_DER → 2.0cm
+[OK]    MANGA_DER | Juan Perez: MANGA_LINEA_INF → 6.0cm
+[OK]    MANGA_DER | Juan Perez | T:24H | 28.5x16.5cm
+[OK]    MANGA_DER | Carlos Ruiz: MANGA_LINEA_IZQ → 3.0cm
+[OK]    MANGA_DER | Carlos Ruiz: MANGA_LINEA_DER → 3.0cm
+[OK]    MANGA_DER | Carlos Ruiz: MANGA_LINEA_INF → 7.0cm
+[OK]    MANGA_DER | Carlos Ruiz | T:28H | 32.5x18.0cm
+[OK]    MANGA_DER | Luis Mendoza: MANGA_LINEA_IZQ → 4.0cm
+[OK]    MANGA_DER | Luis Mendoza: MANGA_LINEA_DER → 4.0cm
+[OK]    MANGA_DER | Luis Mendoza: MANGA_LINEA_INF → 7.0cm
+[INFO]  MANGA_DER | Luis Mendoza: pieza (141.9cm) supera ancho del plóter
+[OK]    MANGA_DER | Luis Mendoza | T:32H | 37.0x22.0cm
+
+================================================
+  RESUMEN FINAL
+================================================
+OK     : 60
+INFO   : 9
+ERROR  : 0
+FATAL  : 0
+
+OMISIONES (9):
+  - ESPALDA | Juan Perez: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+  - ESPALDA | Juan Perez: COSTILLA_DER no encontrada en DINAMICO — omitida
+  - ESPALDA | Carlos Ruiz: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+  - ESPALDA | Carlos Ruiz: COSTILLA_DER no encontrada en DINAMICO — omitida
+  - ESPALDA | Luis Mendoza: NOMBRE ocultado (NOMBRE_CAMISETA vacio en CSV)
+  - ESPALDA | Luis Mendoza: COSTILLA_IZQ no encontrada en DINAMICO — omitida
+  - ESPALDA | Luis Mendoza: COSTILLA_DER no encontrada en DINAMICO — omitida
+  - MANGA_IZQ | Luis Mendoza: pieza (141.9cm) supera ancho del plóter
+  - MANGA_DER | Luis Mendoza: pieza (141.9cm) supera ancho del plóter
+
+Log guardado en: C:\Users\lieds\Documents\GitHub\pluginIlustrator\DATOS\log_equipo_20260329_002318.txt

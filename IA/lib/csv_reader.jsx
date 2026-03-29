@@ -72,7 +72,8 @@ function leerXlsx(csvFile) {
                     hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT" ||
                     hdr === "LOGO_MARCA_ANCHO"   || hdr === "LOGO_MARCA_ALTO"  ||
                     hdr === "NUMERO_FRENTE_ANCHO" || hdr === "NUMERO_FRENTE_ALTO" ||
-                    hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_DER_ANCHO") {
+                    hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_DER_ANCHO" ||
+                    hdr === "ETIQUETA_TOP_ALTO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {

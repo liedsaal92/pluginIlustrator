@@ -178,6 +178,21 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
     }
 
+    // ── ETIQUETA_TOP ─────────────────────────────────────────
+    var itemEtiquetaTop = findItemByNameRecursivo(dinamico, "ETIQUETA_TOP");
+
+    if (itemEtiquetaTop) {
+        var etiquetaTopAlto = parseFloat(jugador.ETIQUETA_TOP_ALTO);
+        if (!isNaN(etiquetaTopAlto) && etiquetaTopAlto > 0) {
+            escalarItemDesdecentro(itemEtiquetaTop, etiquetaTopAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": ETIQUETA_TOP → alto " + etiquetaTopAlto.toFixed(1) + "cm");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": ETIQUETA_TOP_ALTO inválido — no escalado");
+        }
+    }
+
     // ── LOGO_MARCA ───────────────────────────────────────────
     // Escala el logo del fabricante usando ANCHO o ALTO como referencia según CSV.
     // LOGO_MARCA_REF = "ANCHO" → el ancho queda en LOGO_MARCA_ANCHO cm
@@ -227,9 +242,9 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     }
 
     // ── ETIQUETA ─────────────────────────────────────────────
-    // Solo en FRENTE, solo si existen los valores en el CSV
+    // En FRENTE y ESPALDA, usando los mismos márgenes del CSV
     // Si faltan valores o el grupo no existe → omite sin error
-    if (nombrePieza === "FRENTE") {
+    if (nombrePieza === "FRENTE" || nombrePieza === "ESPALDA") {
         var etiquetaMarginInf = parseFloat(jugador.ETIQUETA_MARGIN_INF);
         var etiquetaMarginLat = parseFloat(jugador.ETIQUETA_MARGIN_LAT);
         var etiquetaLado      = trim((jugador.ETIQUETA_LADO || "DER") + "").toUpperCase();
