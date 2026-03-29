@@ -1,0 +1,199 @@
+// ============================================================
+//  GENERAR_EQUIPO.jsx  —  v2.0
+//  Sublimania — Generador automático de equipos deportivos
+//
+//  Requiere:
+//    - Adobe Illustrator CS6 o superior
+//    - Plantilla .ai con capa TEMPLATE estructurada
+//    - Archivo EQUIPO.xlsx con hoja DATOS_CSV
+//
+//  Requerimientos: REQUERIMIENTOS_GENERAR_EQUIPO_v1.2.md
+// ============================================================
+
+#include "lib/config.jsx";
+#include "lib/log.jsx";
+#include "lib/utils.jsx";
+#include "lib/ai_utils.jsx";
+#include "lib/csv_reader.jsx";
+#include "lib/template_validator.jsx";
+#include "lib/escala.jsx";
+#include "lib/dinamicos.jsx";
+
+// ─── ENTRADA PRINCIPAL ──────────────────────────────────────
+
+function main() {
+
+    // 1. Verificar que hay un documento abierto (la plantilla)
+    if (app.documents.length === 0) {
+        alert("No hay ningún documento abierto.\nAbre la plantilla .ai y vuelve a ejecutar el script.");
+        return;
+    }
+
+    var doc = app.activeDocument;
+
+    // 2. Seleccionar CSV
+    var csvFile = File.openDialog(
+        "Selecciona el archivo CSV (exportado de hoja DATOS_CSV)",
+        "*.csv"
+    );
+    if (!csvFile) {
+        alert("No se seleccionó ningún archivo CSV. Script cancelado.");
+        return;
+    }
+
+    // 3. Seleccionar carpeta de log
+    var logFolder = Folder.selectDialog(
+        "Selecciona la carpeta donde guardar el log"
+    );
+    if (!logFolder) logFolder = csvFile.parent;
+
+    Log._linea("-----", "Documento : " + doc.name);
+    Log._linea("-----", "CSV       : " + csvFile.fsName);
+
+    // 4. Leer CSV
+    var jugadores = leerXlsx(csvFile);
+    if (jugadores === null || jugadores.length === 0) {
+        Log.fatal("No se encontraron jugadores válidos en el CSV");
+        var lp = Log.exportar(logFolder.fsName);
+        alert("ERROR FATAL: No hay jugadores válidos.\nRevisa el log: " + lp);
+        return;
+    }
+    Log._linea("-----", "Jugadores : " + jugadores.length);
+
+    // 5. Validar plantilla ANTES de modificar nada
+    var validacion = validarPlantilla(doc);
+    if (!validacion.ok) {
+        Log.fatal(validacion.mensaje);
+        var lp = Log.exportar(logFolder.fsName);
+        alert("ERROR FATAL: " + validacion.mensaje + "\n\nRevisa el log: " + lp);
+        return;
+    }
+
+    var gruposDisponibles = validacion.grupos;
+    Log._linea("-----", "Piezas    : " + gruposDisponibles.nombres.join(", "));
+
+    // 6. Crear capa GENERADO dentro del mismo documento
+    //    Si ya existe de una ejecución anterior, la eliminamos y recreamos
+    var capaGenerado;
+    try {
+        capaGenerado = doc.layers.getByName("GENERADO");
+        // Eliminar todos los items de la capa anterior
+        while (capaGenerado.pageItems.length > 0) {
+            capaGenerado.pageItems[0].remove();
+        }
+        capaGenerado.locked = false;
+        Log._linea("-----", "Capa GENERADO existente limpiada");
+    } catch(e) {
+        capaGenerado = doc.layers.add();
+        capaGenerado.name = "GENERADO";
+        Log._linea("-----", "Capa GENERADO creada");
+    }
+
+    // Mover GENERADO al frente (encima de TEMPLATE)
+    capaGenerado.zOrder(ZOrderMethod.BRINGTOFRONT);
+
+    // 7. Desbloquear TEMPLATE y todos sus items recursivamente
+    //    y ocultarla durante el proceso para no confundir visualmente
+    var templateLayer   = validacion.templateLayer;
+    var templateVisible = templateLayer.visible;
+    var templateLocked  = templateLayer.locked;
+    templateLayer.locked  = false;
+    desbloquearTodo(templateLayer);   // desbloquea sublayers y grupos anidados
+    templateLayer.visible = false;
+
+    // 8. Procesar piezas
+    var docAncho  = doc.width;
+    var currentY  = 0;
+
+    for (var p = 0; p < CONFIG.piezas.length; p++) {
+        var nombrePieza   = CONFIG.piezas[p];
+        var grupoTemplate = gruposDisponibles.grupos[nombrePieza];
+
+        if (!grupoTemplate) {
+            Log.info("Pieza '" + nombrePieza + "' no encontrada en plantilla — omitida");
+            continue;
+        }
+
+        Log._linea("-----", "");
+        Log._linea("-----", "=== " + nombrePieza + " ===");
+
+        var offsetX       = 0;
+        var filaMaxHeight = 0;
+
+        for (var i = 0; i < jugadores.length; i++) {
+            var j = jugadores[i];
+
+            try {
+                var dims = getDimensiones(j, nombrePieza);
+                if (!dims) {
+                    Log.error(nombrePieza + " | " + j.NOMBRE + ": dimensiones inválidas — omitido");
+                    continue;
+                }
+
+                // Duplicar a capa GENERADO
+                var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
+
+                // Escalar — capturar el factor real aplicado
+                var base        = getBaseParaPieza(nombrePieza);
+                var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, base);
+
+                // Aplicar dinámicos pasando el factor para compensar en líneas
+                aplicarDinamicos(copia, j, nombrePieza, factorPieza);
+
+                // Nombrar
+                var numStr = (j.TIENE_NUMERO === "SI" && j.NUMERO !== "") ? j.NUMERO : "SN";
+                copia.name = nombrePieza + "_" + sanitizar(j.NOMBRE) + "_" + numStr + "_" + j.TALLA;
+
+                // Layout
+                var gW = Math.abs(copia.width);
+                var gH = Math.abs(copia.height);
+
+                // Salto de fila
+                if (offsetX + gW > docAncho && offsetX > 0) {
+                    currentY     -= filaMaxHeight + CONFIG.gapY;
+                    offsetX       = 0;
+                    filaMaxHeight = 0;
+                }
+
+                if (gW > docAncho) {
+                    Log.info(nombrePieza + " | " + j.NOMBRE +
+                             ": pieza (" + ptToCm(gW).toFixed(1) + "cm) supera ancho del plóter");
+                }
+
+                copia.left = offsetX;
+                copia.top  = currentY;
+
+                filaMaxHeight = Math.max(filaMaxHeight, gH);
+                offsetX      += gW + CONFIG.gapX;
+
+                Log.ok(nombrePieza + " | " + j.NOMBRE +
+                       " | T:" + j.TALLA +
+                       " | " + dims.ancho.toFixed(1) + "x" + dims.alto.toFixed(1) + "cm");
+
+            } catch (e) {
+                Log.error(nombrePieza + " | " + j.NOMBRE + ": " + e.message);
+            }
+        }
+
+        currentY -= filaMaxHeight + CONFIG.gapSeccion;
+    }
+
+    // 9. Restaurar estado original de TEMPLATE
+    templateLayer.visible = templateVisible;
+    templateLayer.locked  = templateLocked;
+
+    // 10. Log y resumen
+    var logPath = Log.exportar(logFolder.fsName);
+
+    alert(
+        "Proceso completado\n\n" +
+        "OK     : " + Log.resumen.ok     + " piezas\n" +
+        "INFO   : " + Log.resumen.info   + " omisiones\n" +
+        "ERROR  : " + Log.resumen.error  + " errores\n\n" +
+        "Las piezas están en la capa GENERADO\n" +
+        "Log: " + logPath
+    );
+}
+
+// ─── PUNTO DE ENTRADA ────────────────────────────────────────
+main();
