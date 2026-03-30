@@ -130,6 +130,19 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var itemNumeroFrente = findItemByNameRecursivo(dinamico, "NUMERO_FRENTE");
 
     if (itemNumeroFrente) {
+        // Escribir el número en el TextFrame si existe
+        if (jugador.TIENE_NUMERO === "NO" || !llevaNumeroEnEstaPieza) {
+            itemNumeroFrente.hidden = true;
+        } else if (jugador.NUMERO !== "" && !isNaN(parseFloat(jugador.NUMERO))) {
+            var tfNumeroFrente = (itemNumeroFrente.typename === "TextFrame")
+                                 ? itemNumeroFrente
+                                 : findTextFrameRecursivo(itemNumeroFrente);
+            if (tfNumeroFrente) {
+                tfNumeroFrente.contents = String(parseInt(jugador.NUMERO));
+                centrarHorizontalmente(itemNumeroFrente, grupoCopia);
+            }
+        }
+
         var numeroFrenteRef   = trim((jugador.NUMERO_FRENTE_REF || "") + "").toUpperCase();
         var numeroFrenteAncho = parseFloat(jugador.NUMERO_FRENTE_ANCHO);
         var numeroFrenteAlto  = parseFloat(jugador.NUMERO_FRENTE_ALTO);
@@ -142,9 +155,52 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             escalarItemDesdecentro(itemNumeroFrente, numeroFrenteAlto, "ALTO");
             Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                    ": NUMERO_FRENTE → alto " + numeroFrenteAlto.toFixed(1) + "cm");
+        } else if (numeroFrenteRef === "PROPORCIONAL") {
+            // scaleGroupExact ya escaló el item con la pieza — no se aplica nada adicional
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_FRENTE → proporcional (escala con pieza)");
         } else {
             Log.info(nombrePieza + " | " + jugador.NOMBRE +
                      ": NUMERO_FRENTE sin valores válidos en CSV — no escalado");
+        }
+    }
+
+    // ── NUMERO_ESPALDA ───────────────────────────────────────
+    var itemNumeroEspalda = findItemByNameRecursivo(dinamico, "NUMERO_ESPALDA");
+
+    if (itemNumeroEspalda) {
+        // Escribir el número en el TextFrame si existe
+        if (jugador.TIENE_NUMERO === "NO" || !llevaNumeroEnEstaPieza) {
+            itemNumeroEspalda.hidden = true;
+        } else if (jugador.NUMERO !== "" && !isNaN(parseFloat(jugador.NUMERO))) {
+            var tfNumeroEspalda = (itemNumeroEspalda.typename === "TextFrame")
+                                  ? itemNumeroEspalda
+                                  : findTextFrameRecursivo(itemNumeroEspalda);
+            if (tfNumeroEspalda) {
+                tfNumeroEspalda.contents = String(parseInt(jugador.NUMERO));
+                centrarHorizontalmente(itemNumeroEspalda, grupoCopia);
+            }
+        }
+
+        var numeroEspaldaRef   = trim((jugador.NUMERO_ESPALDA_REF || "") + "").toUpperCase();
+        var numeroEspaldaAncho = parseFloat(jugador.NUMERO_ESPALDA_ANCHO);
+        var numeroEspaldaAlto  = parseFloat(jugador.NUMERO_ESPALDA_ALTO);
+
+        if (numeroEspaldaRef === "ANCHO" && !isNaN(numeroEspaldaAncho) && numeroEspaldaAncho > 0) {
+            escalarItemDesdecentro(itemNumeroEspalda, numeroEspaldaAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_ESPALDA → ancho " + numeroEspaldaAncho.toFixed(1) + "cm");
+        } else if (numeroEspaldaRef === "ALTO" && !isNaN(numeroEspaldaAlto) && numeroEspaldaAlto > 0) {
+            escalarItemDesdecentro(itemNumeroEspalda, numeroEspaldaAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_ESPALDA → alto " + numeroEspaldaAlto.toFixed(1) + "cm");
+        } else if (numeroEspaldaRef === "PROPORCIONAL") {
+            // scaleGroupExact ya escaló el item con la pieza — no se aplica nada adicional
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": NUMERO_ESPALDA → proporcional (escala con pieza)");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": NUMERO_ESPALDA sin valores válidos en CSV — no escalado");
         }
     }
 
@@ -175,6 +231,164 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         } else {
             Log.info(nombrePieza + " | " + jugador.NOMBRE +
                      ": SPONSOR_TOP_DER_ANCHO inválido — no escalado");
+        }
+    }
+
+    // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
+    if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+        var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+        var itemSponsorSecundarioManga = findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO");
+
+        // 1. Escalar SPONSOR_SECUNDARIO
+        if (itemSponsorSecundarioManga) {
+            var ssmRef   = trim((jugador.SPONSOR_SECUNDARIO_M_REF || "") + "").toUpperCase();
+            var ssmAncho = parseFloat(jugador.SPONSOR_SECUNDARIO_M_ANCHO);
+            var ssmAlto  = parseFloat(jugador.SPONSOR_SECUNDARIO_M_ALTO);
+
+            if (ssmRef === "ANCHO" && !isNaN(ssmAncho) && ssmAncho > 0) {
+                escalarItemDesdecentro(itemSponsorSecundarioManga, ssmAncho, "ANCHO");
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": SPONSOR_SECUNDARIO (manga) → ancho " + ssmAncho.toFixed(1) + "cm");
+            } else if (ssmRef === "ALTO" && !isNaN(ssmAlto) && ssmAlto > 0) {
+                escalarItemDesdecentro(itemSponsorSecundarioManga, ssmAlto, "ALTO");
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": SPONSOR_SECUNDARIO (manga) → alto " + ssmAlto.toFixed(1) + "cm");
+            } else if (ssmRef === "PROPORCIONAL") {
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": SPONSOR_SECUNDARIO (manga) → proporcional (escala con pieza)");
+            } else {
+                Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                         ": SPONSOR_SECUNDARIO_M sin valores válidos en CSV — no escalado");
+            }
+        }
+
+        // 2. Escalar ESCUDO
+        if (grupoEscudoManga) {
+            var escudoMRef   = trim((jugador.ESCUDO_M_REF || "") + "").toUpperCase();
+            var escudoMAncho = parseFloat(jugador.ESCUDO_M_ANCHO);
+            var escudoMAlto  = parseFloat(jugador.ESCUDO_M_ALTO);
+
+            if (escudoMRef === "ANCHO" && !isNaN(escudoMAncho) && escudoMAncho > 0) {
+                escalarItemDesdecentro(grupoEscudoManga, escudoMAncho, "ANCHO");
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": ESCUDO (manga) → ancho " + escudoMAncho.toFixed(1) + "cm");
+            } else if (escudoMRef === "ALTO" && !isNaN(escudoMAlto) && escudoMAlto > 0) {
+                escalarItemDesdecentro(grupoEscudoManga, escudoMAlto, "ALTO");
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": ESCUDO (manga) → alto " + escudoMAlto.toFixed(1) + "cm");
+            } else if (escudoMRef === "PROPORCIONAL") {
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": ESCUDO (manga) → proporcional (escala con pieza)");
+            } else {
+                Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                         ": ESCUDO_M sin valores válidos en CSV — no escalado");
+            }
+        }
+
+        // 3. Posicionar verticalmente y centrar horizontalmente
+        var mangaMarginInf    = parseFloat(jugador.MANGA_MARGIN_INF);
+        var mangaMarginEscudo = parseFloat(jugador.MANGA_MARGIN_ESCUDO);
+        var estaticManga      = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
+        var mangaBounds       = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
+        var mangaBottom       = mangaBounds[3];  // borde inferior
+        var mangaLeft         = mangaBounds[0];
+        var mangaRight        = mangaBounds[2];
+        var mangaCentroX      = (mangaLeft + mangaRight) / 2;
+
+        if (!isNaN(mangaMarginInf) && mangaMarginInf >= 0) {
+
+            // Posicionar SPONSOR_SECUNDARIO desde borde inferior (si existe)
+            if (itemSponsorSecundarioManga) {
+                var ssmBounds = itemSponsorSecundarioManga.geometricBounds;
+                var ssmAltura = Math.abs(ssmBounds[1] - ssmBounds[3]);
+                var ssmAncho2 = Math.abs(ssmBounds[2] - ssmBounds[0]);
+
+                var ssmNuevoTop  = mangaBottom + cmToPt(mangaMarginInf) + ssmAltura;
+                var ssmNuevoLeft = mangaCentroX - (ssmAncho2 / 2);
+
+                itemSponsorSecundarioManga.top  = ssmNuevoTop;
+                itemSponsorSecundarioManga.left = ssmNuevoLeft;
+
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": SPONSOR_SECUNDARIO (manga) posicionado (inf:" + mangaMarginInf.toFixed(1) + "cm)");
+            }
+
+            // Posicionar ESCUDO
+            if (grupoEscudoManga) {
+                var escBounds  = grupoEscudoManga.geometricBounds;
+                var escAltura  = Math.abs(escBounds[1] - escBounds[3]);
+                var escAncho2  = Math.abs(escBounds[2] - escBounds[0]);
+                var escNuevoLeft = mangaCentroX - (escAncho2 / 2);
+
+                if (itemSponsorSecundarioManga && !isNaN(mangaMarginEscudo) && mangaMarginEscudo >= 0) {
+                    // Encima del sponsor con margen
+                    var ssmTopActual = itemSponsorSecundarioManga.geometricBounds[1];
+                    grupoEscudoManga.top  = ssmTopActual + escAltura + cmToPt(mangaMarginEscudo);
+                    Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                           ": ESCUDO (manga) posicionado sobre sponsor (sep:" + mangaMarginEscudo.toFixed(1) + "cm)");
+                } else {
+                    // Sin sponsor — posicionar desde borde inferior igual que el sponsor
+                    grupoEscudoManga.top  = mangaBottom + cmToPt(mangaMarginInf) + escAltura;
+                    Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                           ": ESCUDO (manga) posicionado desde borde (sin sponsor)");
+                }
+                grupoEscudoManga.left = escNuevoLeft;
+            }
+        }
+    }
+
+    // ── SPONSOR_PRINCIPAL ────────────────────────────────────
+    // Columnas CSV con sufijo _F (frente), _E (espalda)
+    var itemSponsorPrincipal = findItemByNameRecursivo(dinamico, "SPONSOR_PRINCIPAL");
+
+    if (itemSponsorPrincipal) {
+        var spSufijo  = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+        var spRef     = trim((jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"] || "") + "").toUpperCase();
+        var spAncho   = parseFloat(jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ANCHO"]);
+        var spAlto    = parseFloat(jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ALTO"]);
+
+        if (spRef === "ANCHO" && !isNaN(spAncho) && spAncho > 0) {
+            escalarItemDesdecentro(itemSponsorPrincipal, spAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_PRINCIPAL → ancho " + spAncho.toFixed(1) + "cm");
+        } else if (spRef === "ALTO" && !isNaN(spAlto) && spAlto > 0) {
+            escalarItemDesdecentro(itemSponsorPrincipal, spAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_PRINCIPAL → alto " + spAlto.toFixed(1) + "cm");
+        } else if (spRef === "PROPORCIONAL") {
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_PRINCIPAL → proporcional (escala con pieza)");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": SPONSOR_PRINCIPAL sin valores válidos en CSV — no escalado");
+        }
+    }
+
+    // ── SPONSOR_SECUNDARIO (frente / espalda) ────────────────
+    var itemSponsorSecundario = (nombrePieza !== "MANGA_IZQ" && nombrePieza !== "MANGA_DER")
+                                ? findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO")
+                                : null;
+
+    if (itemSponsorSecundario) {
+        var ssSufijo  = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+        var ssRef     = trim((jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_REF"] || "") + "").toUpperCase();
+        var ssAncho   = parseFloat(jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ANCHO"]);
+        var ssAlto    = parseFloat(jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ALTO"]);
+
+        if (ssRef === "ANCHO" && !isNaN(ssAncho) && ssAncho > 0) {
+            escalarItemDesdecentro(itemSponsorSecundario, ssAncho, "ANCHO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_SECUNDARIO → ancho " + ssAncho.toFixed(1) + "cm");
+        } else if (ssRef === "ALTO" && !isNaN(ssAlto) && ssAlto > 0) {
+            escalarItemDesdecentro(itemSponsorSecundario, ssAlto, "ALTO");
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_SECUNDARIO → alto " + ssAlto.toFixed(1) + "cm");
+        } else if (ssRef === "PROPORCIONAL") {
+            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                   ": SPONSOR_SECUNDARIO → proporcional (escala con pieza)");
+        } else {
+            Log.info(nombrePieza + " | " + jugador.NOMBRE +
+                     ": SPONSOR_SECUNDARIO sin valores válidos en CSV — no escalado");
         }
     }
 

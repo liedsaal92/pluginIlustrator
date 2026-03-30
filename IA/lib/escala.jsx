@@ -74,6 +74,17 @@ function escalarItemDesdecentro(item, targetCm, ref) {
     );
 }
 
+// Escala un item desde su centro en proporción al factor de la pieza (escala proporcional).
+// El item crece/decrece igual que la pieza completa.
+function escalarItemProporcional(item, factorPieza) {
+    var pct = factorPieza * 100;
+    item.resize(
+        pct, pct,
+        true, true, true, true, pct,
+        Transformation.CENTER
+    );
+}
+
 // Devuelve { ancho, alto } en cm para la pieza y jugador dados, o null si faltan datos
 function getDimensiones(jugador, nombrePieza) {
     if (nombrePieza === "FRENTE" || nombrePieza === "ESPALDA") {
