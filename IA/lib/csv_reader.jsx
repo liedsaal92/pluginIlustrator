@@ -91,9 +91,15 @@ function leerXlsx(csvFile) {
                     // COSTILLA
                     hdr === "COSTILLA_F_ANCHO"    || hdr === "COSTILLA_F_ALTO"    ||
                     hdr === "COSTILLA_E_ANCHO"    || hdr === "COSTILLA_E_ALTO"    ||
-                    // ETIQUETA
-                    hdr === "ETIQUETA_ANCHO"      || hdr === "ETIQUETA_ALTO"      ||
-                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT"||
+                    // ETIQUETA PRINCIPAL / SECUNDARIA
+                    hdr === "ETIQUETA_PRINCIPAL_F_ANCHO"      || hdr === "ETIQUETA_PRINCIPAL_F_ALTO"      ||
+                    hdr === "ETIQUETA_PRINCIPAL_F_MARGIN_INF" || hdr === "ETIQUETA_PRINCIPAL_F_MARGIN_LAT"||
+                    hdr === "ETIQUETA_SECUNDARIA_F_ANCHO"     || hdr === "ETIQUETA_SECUNDARIA_F_ALTO"     ||
+                    hdr === "ETIQUETA_SECUNDARIA_F_MARGIN_INF"|| hdr === "ETIQUETA_SECUNDARIA_F_MARGIN_LAT"||
+                    hdr === "ETIQUETA_PRINCIPAL_E_ANCHO"      || hdr === "ETIQUETA_PRINCIPAL_E_ALTO"      ||
+                    hdr === "ETIQUETA_PRINCIPAL_E_MARGIN_INF" || hdr === "ETIQUETA_PRINCIPAL_E_MARGIN_LAT"||
+                    hdr === "ETIQUETA_SECUNDARIA_E_ANCHO"     || hdr === "ETIQUETA_SECUNDARIA_E_ALTO"     ||
+                    hdr === "ETIQUETA_SECUNDARIA_E_MARGIN_INF"|| hdr === "ETIQUETA_SECUNDARIA_E_MARGIN_LAT"||
                     hdr === "ETIQUETA_TOP_ANCHO"  || hdr === "ETIQUETA_TOP_ALTO"  ||
                     // LÍNEAS DE MANGA
                     hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_IZQ_ALTO" ||
@@ -121,10 +127,12 @@ function leerXlsx(csvFile) {
                 "LLEVA_ESCUDO_CENTRAL", "LLEVA_LOGO_MARCA",
                 "LLEVA_SPONSOR_TOP_IZQ", "LLEVA_SPONSOR_TOP_DER",
                 "LLEVA_SPONSOR_PRINCIPAL_F", "LLEVA_SPONSOR_SECUNDARIO_F",
-                "LLEVA_COSTILLA_F", "LLEVA_ETIQUETA",
+                "LLEVA_COSTILLA_F",
+                "LLEVA_ETIQUETA_PRINCIPAL_F", "LLEVA_ETIQUETA_SECUNDARIA_F",
                 // ESPALDA
                 "LLEVA_NOMBRE_E", "LLEVA_NUMERO_E",
                 "LLEVA_ESCUDO_E", "LLEVA_ETIQUETA_TOP",
+                "LLEVA_ETIQUETA_PRINCIPAL_E", "LLEVA_ETIQUETA_SECUNDARIA_E",
                 "LLEVA_SPONSOR_PRINCIPAL_E", "LLEVA_SPONSOR_SECUNDARIO_E",
                 "LLEVA_COSTILLA_E",
                 // MANGA

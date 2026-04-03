@@ -34,15 +34,24 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_SPONSOR_SECUNDARIO_F', 'SPONSOR_SECUNDARIO_F_ANCHO', 'SPONSOR_SECUNDARIO_F_ALTO', 'SPONSOR_SECUNDARIO_F_REF',
   // FRENTE — COSTILLA
   'LLEVA_COSTILLA_F', 'COSTILLA_F_ANCHO', 'COSTILLA_F_ALTO', 'COSTILLA_F_REF',
-  // FRENTE — ETIQUETA
-  'LLEVA_ETIQUETA', 'ETIQUETA_ANCHO', 'ETIQUETA_ALTO', 'ETIQUETA_REF',
-  'ETIQUETA_MARGIN_INF', 'ETIQUETA_MARGIN_LAT', 'ETIQUETA_LADO',
+  // FRENTE — ETIQUETA PRINCIPAL
+  'LLEVA_ETIQUETA_PRINCIPAL_F', 'ETIQUETA_PRINCIPAL_F_ANCHO', 'ETIQUETA_PRINCIPAL_F_ALTO', 'ETIQUETA_PRINCIPAL_F_REF',
+  'ETIQUETA_PRINCIPAL_F_MARGIN_INF', 'ETIQUETA_PRINCIPAL_F_MARGIN_LAT', 'ETIQUETA_PRINCIPAL_F_LADO',
+  // FRENTE — ETIQUETA SECUNDARIA
+  'LLEVA_ETIQUETA_SECUNDARIA_F', 'ETIQUETA_SECUNDARIA_F_ANCHO', 'ETIQUETA_SECUNDARIA_F_ALTO', 'ETIQUETA_SECUNDARIA_F_REF',
+  'ETIQUETA_SECUNDARIA_F_MARGIN_INF', 'ETIQUETA_SECUNDARIA_F_MARGIN_LAT', 'ETIQUETA_SECUNDARIA_F_LADO',
   // ESPALDA — NOMBRE
   'LLEVA_NOMBRE_E', 'NOMBRE_E_ANCHO', 'NOMBRE_E_ALTO', 'NOMBRE_E_REF',
   // ESPALDA — NÚMERO
   'LLEVA_NUMERO_E', 'NUMERO_ESPALDA_ANCHO', 'NUMERO_ESPALDA_ALTO', 'NUMERO_ESPALDA_REF',
   // ESPALDA — ETIQUETA TOP
   'LLEVA_ETIQUETA_TOP', 'ETIQUETA_TOP_ANCHO', 'ETIQUETA_TOP_ALTO', 'ETIQUETA_TOP_REF',
+  // ESPALDA — ETIQUETA PRINCIPAL
+  'LLEVA_ETIQUETA_PRINCIPAL_E', 'ETIQUETA_PRINCIPAL_E_ANCHO', 'ETIQUETA_PRINCIPAL_E_ALTO', 'ETIQUETA_PRINCIPAL_E_REF',
+  'ETIQUETA_PRINCIPAL_E_MARGIN_INF', 'ETIQUETA_PRINCIPAL_E_MARGIN_LAT', 'ETIQUETA_PRINCIPAL_E_LADO',
+  // ESPALDA — ETIQUETA SECUNDARIA
+  'LLEVA_ETIQUETA_SECUNDARIA_E', 'ETIQUETA_SECUNDARIA_E_ANCHO', 'ETIQUETA_SECUNDARIA_E_ALTO', 'ETIQUETA_SECUNDARIA_E_REF',
+  'ETIQUETA_SECUNDARIA_E_MARGIN_INF', 'ETIQUETA_SECUNDARIA_E_MARGIN_LAT', 'ETIQUETA_SECUNDARIA_E_LADO',
   // ESPALDA — SPONSOR PRINCIPAL / SECUNDARIO
   'LLEVA_SPONSOR_PRINCIPAL_E', 'SPONSOR_PRINCIPAL_E_ANCHO', 'SPONSOR_PRINCIPAL_E_ALTO', 'SPONSOR_PRINCIPAL_E_REF',
   'LLEVA_SPONSOR_SECUNDARIO_E', 'SPONSOR_SECUNDARIO_E_ANCHO', 'SPONSOR_SECUNDARIO_E_ALTO', 'SPONSOR_SECUNDARIO_E_REF',
@@ -93,11 +102,17 @@ export const SCHEMA: Schema = {
         fields: [numField('SPONSOR_SECUNDARIO_F_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_F_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_F_REF')] },
       { id: 'costilla_f', label: 'COSTILLA', icon: '|||', toggleKey: 'LLEVA_COSTILLA_F',
         fields: [numField('COSTILLA_F_ANCHO', 'Ancho'), numField('COSTILLA_F_ALTO', 'Alto'), refField('COSTILLA_F_REF')] },
-      { id: 'etiqueta_f', label: 'ETIQUETA', icon: '⬚', toggleKey: 'LLEVA_ETIQUETA',
+      { id: 'etiqueta_principal_f', label: 'ETIQUETA PRINCIPAL', icon: '⬚', toggleKey: 'LLEVA_ETIQUETA_PRINCIPAL_F',
         fields: [
-          numField('ETIQUETA_ANCHO', 'Ancho'), numField('ETIQUETA_ALTO', 'Alto'), refField('ETIQUETA_REF'),
-          numField('ETIQUETA_MARGIN_INF', 'Margen inf'), numField('ETIQUETA_MARGIN_LAT', 'Margen lat'),
-          { key: 'ETIQUETA_LADO', label: 'Lado', type: 'select', options: LADO_OPTIONS },
+          numField('ETIQUETA_PRINCIPAL_F_ANCHO', 'Ancho'), numField('ETIQUETA_PRINCIPAL_F_ALTO', 'Alto'), refField('ETIQUETA_PRINCIPAL_F_REF'),
+          numField('ETIQUETA_PRINCIPAL_F_MARGIN_INF', 'Margen inf'), numField('ETIQUETA_PRINCIPAL_F_MARGIN_LAT', 'Margen lat'),
+          { key: 'ETIQUETA_PRINCIPAL_F_LADO', label: 'Lado', type: 'select', options: LADO_OPTIONS },
+        ] },
+      { id: 'etiqueta_secundaria_f', label: 'ETIQUETA SECUNDARIA', icon: '⬙', toggleKey: 'LLEVA_ETIQUETA_SECUNDARIA_F',
+        fields: [
+          numField('ETIQUETA_SECUNDARIA_F_ANCHO', 'Ancho'), numField('ETIQUETA_SECUNDARIA_F_ALTO', 'Alto'), refField('ETIQUETA_SECUNDARIA_F_REF'),
+          numField('ETIQUETA_SECUNDARIA_F_MARGIN_INF', 'Margen inf'), numField('ETIQUETA_SECUNDARIA_F_MARGIN_LAT', 'Margen lat'),
+          { key: 'ETIQUETA_SECUNDARIA_F_LADO', label: 'Lado', type: 'select', options: LADO_OPTIONS },
         ] },
     ],
   },
@@ -112,6 +127,18 @@ export const SCHEMA: Schema = {
         fields: [numField('NUMERO_ESPALDA_ANCHO', 'Ancho'), numField('NUMERO_ESPALDA_ALTO', 'Alto'), refField('NUMERO_ESPALDA_REF')] },
       { id: 'etiqueta_top', label: 'ETIQUETA TOP', icon: '⬒', toggleKey: 'LLEVA_ETIQUETA_TOP',
         fields: [numField('ETIQUETA_TOP_ANCHO', 'Ancho'), numField('ETIQUETA_TOP_ALTO', 'Alto'), refField('ETIQUETA_TOP_REF')] },
+      { id: 'etiqueta_principal_e', label: 'ETIQUETA PRINCIPAL', icon: '⬚', toggleKey: 'LLEVA_ETIQUETA_PRINCIPAL_E',
+        fields: [
+          numField('ETIQUETA_PRINCIPAL_E_ANCHO', 'Ancho'), numField('ETIQUETA_PRINCIPAL_E_ALTO', 'Alto'), refField('ETIQUETA_PRINCIPAL_E_REF'),
+          numField('ETIQUETA_PRINCIPAL_E_MARGIN_INF', 'Margen inf'), numField('ETIQUETA_PRINCIPAL_E_MARGIN_LAT', 'Margen lat'),
+          { key: 'ETIQUETA_PRINCIPAL_E_LADO', label: 'Lado', type: 'select', options: LADO_OPTIONS },
+        ] },
+      { id: 'etiqueta_secundaria_e', label: 'ETIQUETA SECUNDARIA', icon: '⬙', toggleKey: 'LLEVA_ETIQUETA_SECUNDARIA_E',
+        fields: [
+          numField('ETIQUETA_SECUNDARIA_E_ANCHO', 'Ancho'), numField('ETIQUETA_SECUNDARIA_E_ALTO', 'Alto'), refField('ETIQUETA_SECUNDARIA_E_REF'),
+          numField('ETIQUETA_SECUNDARIA_E_MARGIN_INF', 'Margen inf'), numField('ETIQUETA_SECUNDARIA_E_MARGIN_LAT', 'Margen lat'),
+          { key: 'ETIQUETA_SECUNDARIA_E_LADO', label: 'Lado', type: 'select', options: LADO_OPTIONS },
+        ] },
       { id: 'sponsor_principal_e', label: 'SPONSOR PRINCIPAL', icon: '★', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_E',
         fields: [numField('SPONSOR_PRINCIPAL_E_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_E_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_E_REF')] },
       { id: 'sponsor_secundario_e', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_E',

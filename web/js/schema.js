@@ -29,9 +29,12 @@ const CSV_COLUMN_ORDER = [
   'LLEVA_SPONSOR_SECUNDARIO_F','SPONSOR_SECUNDARIO_F_ANCHO','SPONSOR_SECUNDARIO_F_ALTO','SPONSOR_SECUNDARIO_F_REF',
   // FRENTE — COSTILLA
   'LLEVA_COSTILLA_F','COSTILLA_F_ANCHO','COSTILLA_F_ALTO','COSTILLA_F_REF',
-  // FRENTE — ETIQUETA
-  'LLEVA_ETIQUETA','ETIQUETA_ANCHO','ETIQUETA_ALTO','ETIQUETA_REF',
-  'ETIQUETA_MARGIN_INF','ETIQUETA_MARGIN_LAT','ETIQUETA_LADO',
+  // FRENTE — ETIQUETA PRINCIPAL
+  'LLEVA_ETIQUETA_PRINCIPAL_F','ETIQUETA_PRINCIPAL_F_ANCHO','ETIQUETA_PRINCIPAL_F_ALTO','ETIQUETA_PRINCIPAL_F_REF',
+  'ETIQUETA_PRINCIPAL_F_MARGIN_INF','ETIQUETA_PRINCIPAL_F_MARGIN_LAT','ETIQUETA_PRINCIPAL_F_LADO',
+  // FRENTE — ETIQUETA SECUNDARIA
+  'LLEVA_ETIQUETA_SECUNDARIA_F','ETIQUETA_SECUNDARIA_F_ANCHO','ETIQUETA_SECUNDARIA_F_ALTO','ETIQUETA_SECUNDARIA_F_REF',
+  'ETIQUETA_SECUNDARIA_F_MARGIN_INF','ETIQUETA_SECUNDARIA_F_MARGIN_LAT','ETIQUETA_SECUNDARIA_F_LADO',
   // ESPALDA — NOMBRE
   'LLEVA_NOMBRE_E','NOMBRE_E_ANCHO','NOMBRE_E_ALTO','NOMBRE_E_REF',
   // ESPALDA — NÚMERO
@@ -40,6 +43,12 @@ const CSV_COLUMN_ORDER = [
   'LLEVA_ESCUDO_E','ESCUDO_E_ANCHO','ESCUDO_E_ALTO','ESCUDO_E_REF',
   // ESPALDA — ETIQUETA TOP
   'LLEVA_ETIQUETA_TOP','ETIQUETA_TOP_ANCHO','ETIQUETA_TOP_ALTO','ETIQUETA_TOP_REF',
+  // ESPALDA — ETIQUETA PRINCIPAL
+  'LLEVA_ETIQUETA_PRINCIPAL_E','ETIQUETA_PRINCIPAL_E_ANCHO','ETIQUETA_PRINCIPAL_E_ALTO','ETIQUETA_PRINCIPAL_E_REF',
+  'ETIQUETA_PRINCIPAL_E_MARGIN_INF','ETIQUETA_PRINCIPAL_E_MARGIN_LAT','ETIQUETA_PRINCIPAL_E_LADO',
+  // ESPALDA — ETIQUETA SECUNDARIA
+  'LLEVA_ETIQUETA_SECUNDARIA_E','ETIQUETA_SECUNDARIA_E_ANCHO','ETIQUETA_SECUNDARIA_E_ALTO','ETIQUETA_SECUNDARIA_E_REF',
+  'ETIQUETA_SECUNDARIA_E_MARGIN_INF','ETIQUETA_SECUNDARIA_E_MARGIN_LAT','ETIQUETA_SECUNDARIA_E_LADO',
   // ESPALDA — SPONSOR PRINCIPAL / SECUNDARIO
   'LLEVA_SPONSOR_PRINCIPAL_E','SPONSOR_PRINCIPAL_E_ANCHO','SPONSOR_PRINCIPAL_E_ALTO','SPONSOR_PRINCIPAL_E_REF',
   'LLEVA_SPONSOR_SECUNDARIO_E','SPONSOR_SECUNDARIO_E_ANCHO','SPONSOR_SECUNDARIO_E_ALTO','SPONSOR_SECUNDARIO_E_REF',
@@ -152,15 +161,27 @@ const SCHEMA = {
         ]
       },
       {
-        id: 'etiqueta_f', label: 'ETIQUETA', icon: '⬚',
-        toggleKey: 'LLEVA_ETIQUETA',
+        id: 'etiqueta_principal_f', label: 'ETIQUETA PRINCIPAL', icon: '⬚',
+        toggleKey: 'LLEVA_ETIQUETA_PRINCIPAL_F',
         fields: [
-          { key: 'ETIQUETA_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
-          { key: 'ETIQUETA_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
+          { key: 'ETIQUETA_PRINCIPAL_F_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_F_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_F_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_PRINCIPAL_F_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_F_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_F_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
+        ]
+      },
+      {
+        id: 'etiqueta_secundaria_f', label: 'ETIQUETA SECUNDARIA', icon: '⬙',
+        toggleKey: 'LLEVA_ETIQUETA_SECUNDARIA_F',
+        fields: [
+          { key: 'ETIQUETA_SECUNDARIA_F_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_F_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_F_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_SECUNDARIA_F_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_F_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_F_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
         ]
       },
     ]
@@ -204,6 +225,30 @@ const SCHEMA = {
           { key: 'ETIQUETA_TOP_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'ETIQUETA_TOP_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
           { key: 'ETIQUETA_TOP_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+        ]
+      },
+      {
+        id: 'etiqueta_principal_e', label: 'ETIQUETA PRINCIPAL', icon: '⬚',
+        toggleKey: 'LLEVA_ETIQUETA_PRINCIPAL_E',
+        fields: [
+          { key: 'ETIQUETA_PRINCIPAL_E_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_E_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_E_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_PRINCIPAL_E_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_E_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_PRINCIPAL_E_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
+        ]
+      },
+      {
+        id: 'etiqueta_secundaria_e', label: 'ETIQUETA SECUNDARIA', icon: '⬙',
+        toggleKey: 'LLEVA_ETIQUETA_SECUNDARIA_E',
+        fields: [
+          { key: 'ETIQUETA_SECUNDARIA_E_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_E_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_E_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_SECUNDARIA_E_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_E_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_SECUNDARIA_E_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
         ]
       },
       {

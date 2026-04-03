@@ -409,33 +409,63 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         );
     }
 
-    // ── ETIQUETA ─────────────────────────────────────────────
+    // ── ETIQUETA_PRINCIPAL / ETIQUETA_SECUNDARIA ─────────────
     if (nombrePieza === "FRENTE" || nombrePieza === "ESPALDA") {
-        var etiquetaMarginInf = parseFloat(jugador.ETIQUETA_MARGIN_INF);
-        var etiquetaMarginLat = parseFloat(jugador.ETIQUETA_MARGIN_LAT);
-        var etiquetaLado      = trim((jugador.ETIQUETA_LADO || "DER") + "").toUpperCase();
-        var grupoEtiqueta     = findItemByNameRecursivo(dinamico, "ETIQUETA");
+        var sufEtq = (nombrePieza === "ESPALDA") ? "_E" : "_F";
 
-        if (grupoEtiqueta) {
-            if (jugador.LLEVA_ETIQUETA !== "SI") {
-                grupoEtiqueta.hidden = true;
-                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA ocultada (LLEVA=NO)");
+        // — ETIQUETA_PRINCIPAL —
+        var epMarginInf = parseFloat(jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_MARGIN_INF"]);
+        var epMarginLat = parseFloat(jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_MARGIN_LAT"]);
+        var epLado      = trim((jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_LADO"] || "DER") + "").toUpperCase();
+        var grupoEtqPrincipal = findItemByNameRecursivo(dinamico, "ETIQUETA_PRINCIPAL");
+
+        if (grupoEtqPrincipal) {
+            if (jugador["LLEVA_ETIQUETA_PRINCIPAL" + sufEtq] !== "SI") {
+                grupoEtqPrincipal.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_PRINCIPAL ocultada (LLEVA=NO)");
             } else {
-                // Escalar antes de posicionar
                 escalarConRef(
-                    grupoEtiqueta,
-                    jugador.ETIQUETA_ANCHO,
-                    jugador.ETIQUETA_ALTO,
-                    jugador.ETIQUETA_REF,
-                    nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA"
+                    grupoEtqPrincipal,
+                    jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_ANCHO"],
+                    jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_ALTO"],
+                    jugador["ETIQUETA_PRINCIPAL" + sufEtq + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_PRINCIPAL"
                 );
-
-                if (!isNaN(etiquetaMarginInf) && etiquetaMarginInf >= 0 &&
-                    !isNaN(etiquetaMarginLat) && etiquetaMarginLat >= 0) {
+                if (!isNaN(epMarginInf) && epMarginInf >= 0 &&
+                    !isNaN(epMarginLat) && epMarginLat >= 0) {
                     posicionarEtiqueta(
-                        grupoEtiqueta, grupoCopia,
-                        etiquetaMarginInf, etiquetaMarginLat, etiquetaLado,
-                        jugador.NOMBRE, nombrePieza
+                        grupoEtqPrincipal, grupoCopia,
+                        epMarginInf, epMarginLat, epLado,
+                        jugador.NOMBRE, nombrePieza, "ETIQUETA_PRINCIPAL"
+                    );
+                }
+            }
+        }
+
+        // — ETIQUETA_SECUNDARIA —
+        var esMarginInf = parseFloat(jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_MARGIN_INF"]);
+        var esMarginLat = parseFloat(jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_MARGIN_LAT"]);
+        var esLado      = trim((jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_LADO"] || "DER") + "").toUpperCase();
+        var grupoEtqSecundaria = findItemByNameRecursivo(dinamico, "ETIQUETA_SECUNDARIA");
+
+        if (grupoEtqSecundaria) {
+            if (jugador["LLEVA_ETIQUETA_SECUNDARIA" + sufEtq] !== "SI") {
+                grupoEtqSecundaria.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_SECUNDARIA ocultada (LLEVA=NO)");
+            } else {
+                escalarConRef(
+                    grupoEtqSecundaria,
+                    jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_ANCHO"],
+                    jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_ALTO"],
+                    jugador["ETIQUETA_SECUNDARIA" + sufEtq + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_SECUNDARIA"
+                );
+                if (!isNaN(esMarginInf) && esMarginInf >= 0 &&
+                    !isNaN(esMarginLat) && esMarginLat >= 0) {
+                    posicionarEtiqueta(
+                        grupoEtqSecundaria, grupoCopia,
+                        esMarginInf, esMarginLat, esLado,
+                        jugador.NOMBRE, nombrePieza, "ETIQUETA_SECUNDARIA"
                     );
                 }
             }
@@ -535,7 +565,7 @@ function inicialPieza(nombrePieza) {
 //  POSICIONAMIENTO DE ETIQUETA
 // ============================================================
 
-function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza) {
+function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza, labelEtiqueta) {
     try {
         var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds   = estatico ? estatico.geometricBounds
@@ -580,13 +610,13 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
         etiqueta.top  = nuevoTop;
 
         Log.ok(nombrePieza + " | " + nombreJugador +
-               ": ETIQUETA posicionada (inf:" +
+               ": " + labelEtiqueta + " posicionada (inf:" +
                marginInfCm.toFixed(1) + "cm, lat:" +
                marginLatCm.toFixed(1) + "cm, lado:" + lado + ")");
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
-                 ": ETIQUETA error al posicionar (" + e.message + ") — omitida");
+                 ": " + labelEtiqueta + " error al posicionar (" + e.message + ") — omitida");
     }
 }
 
