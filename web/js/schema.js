@@ -12,20 +12,49 @@ const PLAYER_KEYS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA', 'ALTO', 'AN
 // Orden exacto de columnas del CSV final de salida
 const CSV_COLUMN_ORDER = [
   'NOMBRE','NOMBRE_CAMISETA','NUMERO','TIENE_NUMERO','TALLA','ALTO','ANCHO',
-  'MANGA_ALTO','MANGA_ANCHO','ESCUDO_ALTO','EQUIPO','LLEVA_NOMBRE_F','LLEVA_NOMBRE_E',
-  'LLEVA_NUMERO_F','LLEVA_NUMERO_E','LLEVA_NUMERO_M','NOTAS','COSTILLA_ANCHO',
-  'LLEVA_COSTILLA_F','LLEVA_COSTILLA_E','MANGA_LINEA_IZQ_ANCHO','MANGA_LINEA_DER_ANCHO',
-  'MANGA_LINEA_INF_ALTO','ETIQUETA_MARGIN_INF','ETIQUETA_MARGIN_LAT','ETIQUETA_LADO',
-  'LOGO_MARCA_ANCHO','LOGO_MARCA_ALTO','LOGO_MARCA_REF','ESCUDO_CENTRAL_ALTO',
-  'NUMERO_FRENTE_ANCHO','NUMERO_FRENTE_ALTO','NUMERO_FRENTE_REF',
-  'SPONSOR_TOP_IZQ_ANCHO','SPONSOR_TOP_DER_ANCHO','ETIQUETA_TOP_ALTO',
-  'NUMERO_ESPALDA_ANCHO','NUMERO_ESPALDA_ALTO','NUMERO_ESPALDA_REF',
-  'SPONSOR_PRINCIPAL_F_ANCHO','SPONSOR_PRINCIPAL_F_ALTO','SPONSOR_PRINCIPAL_F_REF',
-  'SPONSOR_PRINCIPAL_E_ANCHO','SPONSOR_PRINCIPAL_E_ALTO','SPONSOR_PRINCIPAL_E_REF',
-  'SPONSOR_SECUNDARIO_F_ANCHO','SPONSOR_SECUNDARIO_F_ALTO','SPONSOR_SECUNDARIO_F_REF',
-  'SPONSOR_SECUNDARIO_E_ANCHO','SPONSOR_SECUNDARIO_E_ALTO','SPONSOR_SECUNDARIO_E_REF',
-  'ESCUDO_M_ANCHO','ESCUDO_M_ALTO','ESCUDO_M_REF',
-  'SPONSOR_SECUNDARIO_M_ANCHO','SPONSOR_SECUNDARIO_M_ALTO','SPONSOR_SECUNDARIO_M_REF',
+  'MANGA_ALTO','MANGA_ANCHO','EQUIPO','NOTAS',
+  // FRENTE — NOMBRE
+  'LLEVA_NOMBRE_F','NOMBRE_F_ANCHO','NOMBRE_F_ALTO','NOMBRE_F_REF',
+  // FRENTE — NÚMERO
+  'LLEVA_NUMERO_F','NUMERO_FRENTE_ANCHO','NUMERO_FRENTE_ALTO','NUMERO_FRENTE_REF',
+  // FRENTE — ESCUDO CENTRAL
+  'LLEVA_ESCUDO_CENTRAL','ESCUDO_CENTRAL_ANCHO','ESCUDO_CENTRAL_ALTO','ESCUDO_CENTRAL_REF',
+  // FRENTE — LOGO MARCA
+  'LLEVA_LOGO_MARCA','LOGO_MARCA_ANCHO','LOGO_MARCA_ALTO','LOGO_MARCA_REF',
+  // FRENTE — SPONSORS TOP
+  'LLEVA_SPONSOR_TOP_IZQ','SPONSOR_TOP_IZQ_ANCHO','SPONSOR_TOP_IZQ_ALTO','SPONSOR_TOP_IZQ_REF',
+  'LLEVA_SPONSOR_TOP_DER','SPONSOR_TOP_DER_ANCHO','SPONSOR_TOP_DER_ALTO','SPONSOR_TOP_DER_REF',
+  // FRENTE — SPONSOR PRINCIPAL / SECUNDARIO
+  'LLEVA_SPONSOR_PRINCIPAL_F','SPONSOR_PRINCIPAL_F_ANCHO','SPONSOR_PRINCIPAL_F_ALTO','SPONSOR_PRINCIPAL_F_REF',
+  'LLEVA_SPONSOR_SECUNDARIO_F','SPONSOR_SECUNDARIO_F_ANCHO','SPONSOR_SECUNDARIO_F_ALTO','SPONSOR_SECUNDARIO_F_REF',
+  // FRENTE — COSTILLA
+  'LLEVA_COSTILLA_F','COSTILLA_F_ANCHO','COSTILLA_F_ALTO','COSTILLA_F_REF',
+  // FRENTE — ETIQUETA
+  'LLEVA_ETIQUETA','ETIQUETA_ANCHO','ETIQUETA_ALTO','ETIQUETA_REF',
+  'ETIQUETA_MARGIN_INF','ETIQUETA_MARGIN_LAT','ETIQUETA_LADO',
+  // ESPALDA — NOMBRE
+  'LLEVA_NOMBRE_E','NOMBRE_E_ANCHO','NOMBRE_E_ALTO','NOMBRE_E_REF',
+  // ESPALDA — NÚMERO
+  'LLEVA_NUMERO_E','NUMERO_ESPALDA_ANCHO','NUMERO_ESPALDA_ALTO','NUMERO_ESPALDA_REF',
+  // ESPALDA — ESCUDO
+  'LLEVA_ESCUDO_E','ESCUDO_E_ANCHO','ESCUDO_E_ALTO','ESCUDO_E_REF',
+  // ESPALDA — ETIQUETA TOP
+  'LLEVA_ETIQUETA_TOP','ETIQUETA_TOP_ANCHO','ETIQUETA_TOP_ALTO','ETIQUETA_TOP_REF',
+  // ESPALDA — SPONSOR PRINCIPAL / SECUNDARIO
+  'LLEVA_SPONSOR_PRINCIPAL_E','SPONSOR_PRINCIPAL_E_ANCHO','SPONSOR_PRINCIPAL_E_ALTO','SPONSOR_PRINCIPAL_E_REF',
+  'LLEVA_SPONSOR_SECUNDARIO_E','SPONSOR_SECUNDARIO_E_ANCHO','SPONSOR_SECUNDARIO_E_ALTO','SPONSOR_SECUNDARIO_E_REF',
+  // ESPALDA — COSTILLA
+  'LLEVA_COSTILLA_E','COSTILLA_E_ANCHO','COSTILLA_E_ALTO','COSTILLA_E_REF',
+  // MANGA — NÚMERO
+  'LLEVA_NUMERO_M','NUMERO_M_ANCHO','NUMERO_M_ALTO','NUMERO_M_REF',
+  // MANGA — ESCUDO / SPONSOR
+  'LLEVA_ESCUDO_M','ESCUDO_M_ANCHO','ESCUDO_M_ALTO','ESCUDO_M_REF',
+  'LLEVA_SPONSOR_SECUNDARIO_M','SPONSOR_SECUNDARIO_M_ANCHO','SPONSOR_SECUNDARIO_M_ALTO','SPONSOR_SECUNDARIO_M_REF',
+  // MANGA — LÍNEAS
+  'LLEVA_MANGA_LINEA_IZQ','MANGA_LINEA_IZQ_ANCHO','MANGA_LINEA_IZQ_ALTO','MANGA_LINEA_IZQ_REF',
+  'LLEVA_MANGA_LINEA_DER','MANGA_LINEA_DER_ANCHO','MANGA_LINEA_DER_ALTO','MANGA_LINEA_DER_REF',
+  'LLEVA_MANGA_LINEA_INF','MANGA_LINEA_INF_ANCHO','MANGA_LINEA_INF_ALTO','MANGA_LINEA_INF_REF',
+  // MANGA — POSICIONAMIENTO
   'MANGA_MARGIN_INF','MANGA_MARGIN_ESCUDO'
 ];
 
@@ -44,7 +73,11 @@ const SCHEMA = {
       {
         id: 'nombre_f', label: 'NOMBRE', icon: '✦',
         toggleKey: 'LLEVA_NOMBRE_F',
-        fields: []
+        fields: [
+          { key: 'NOMBRE_F_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'NOMBRE_F_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'NOMBRE_F_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+        ]
       },
       {
         id: 'numero_f', label: 'NÚMERO', icon: '#',
@@ -57,14 +90,16 @@ const SCHEMA = {
       },
       {
         id: 'escudo_central', label: 'ESCUDO CENTRAL', icon: '⬡',
-        toggleKey: null,
+        toggleKey: 'LLEVA_ESCUDO_CENTRAL',
         fields: [
-          { key: 'ESCUDO_CENTRAL_ALTO', label: 'Alto', type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_CENTRAL_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_CENTRAL_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_CENTRAL_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'logo_marca', label: 'LOGO MARCA', icon: '◈',
-        toggleKey: null,
+        toggleKey: 'LLEVA_LOGO_MARCA',
         fields: [
           { key: 'LOGO_MARCA_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'LOGO_MARCA_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -73,21 +108,25 @@ const SCHEMA = {
       },
       {
         id: 'sponsor_top_izq', label: 'SPONSOR TOP IZQ', icon: '◧',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_TOP_IZQ',
         fields: [
           { key: 'SPONSOR_TOP_IZQ_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_TOP_IZQ_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_TOP_IZQ_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'sponsor_top_der', label: 'SPONSOR TOP DER', icon: '◨',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_TOP_DER',
         fields: [
           { key: 'SPONSOR_TOP_DER_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_TOP_DER_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_TOP_DER_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'sponsor_principal_f', label: 'SPONSOR PRINCIPAL', icon: '★',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_F',
         fields: [
           { key: 'SPONSOR_PRINCIPAL_F_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'SPONSOR_PRINCIPAL_F_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -96,7 +135,7 @@ const SCHEMA = {
       },
       {
         id: 'sponsor_secundario_f', label: 'SPONSOR SECUNDARIO', icon: '☆',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_F',
         fields: [
           { key: 'SPONSOR_SECUNDARIO_F_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'SPONSOR_SECUNDARIO_F_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -107,13 +146,18 @@ const SCHEMA = {
         id: 'costilla_f', label: 'COSTILLA', icon: '|||',
         toggleKey: 'LLEVA_COSTILLA_F',
         fields: [
-          { key: 'COSTILLA_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_F_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_F_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_F_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'etiqueta_f', label: 'ETIQUETA', icon: '⬚',
-        toggleKey: null,
+        toggleKey: 'LLEVA_ETIQUETA',
         fields: [
+          { key: 'ETIQUETA_ANCHO',      label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_ALTO',       label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_REF',        label: 'Ref',        type: 'select', options: REF_OPTIONS },
           { key: 'ETIQUETA_MARGIN_INF', label: 'Margen inf', type: 'number', unit: 'cm' },
           { key: 'ETIQUETA_MARGIN_LAT', label: 'Margen lat', type: 'number', unit: 'cm' },
           { key: 'ETIQUETA_LADO',       label: 'Lado',       type: 'select', options: LADO_OPTIONS },
@@ -129,7 +173,11 @@ const SCHEMA = {
       {
         id: 'nombre_e', label: 'NOMBRE', icon: '✦',
         toggleKey: 'LLEVA_NOMBRE_E',
-        fields: []
+        fields: [
+          { key: 'NOMBRE_E_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'NOMBRE_E_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'NOMBRE_E_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+        ]
       },
       {
         id: 'numero_e', label: 'NÚMERO', icon: '#',
@@ -142,21 +190,25 @@ const SCHEMA = {
       },
       {
         id: 'escudo_e', label: 'ESCUDO', icon: '⬡',
-        toggleKey: null,
+        toggleKey: 'LLEVA_ESCUDO_E',
         fields: [
-          { key: 'ESCUDO_ALTO', label: 'Alto', type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_E_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_E_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_E_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'etiqueta_top', label: 'ETIQUETA TOP', icon: '⬒',
-        toggleKey: null,
+        toggleKey: 'LLEVA_ETIQUETA_TOP',
         fields: [
-          { key: 'ETIQUETA_TOP_ALTO', label: 'Alto', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_TOP_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_TOP_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_TOP_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'sponsor_principal_e', label: 'SPONSOR PRINCIPAL', icon: '★',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_E',
         fields: [
           { key: 'SPONSOR_PRINCIPAL_E_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'SPONSOR_PRINCIPAL_E_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -165,7 +217,7 @@ const SCHEMA = {
       },
       {
         id: 'sponsor_secundario_e', label: 'SPONSOR SECUNDARIO', icon: '☆',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_E',
         fields: [
           { key: 'SPONSOR_SECUNDARIO_E_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'SPONSOR_SECUNDARIO_E_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -176,7 +228,9 @@ const SCHEMA = {
         id: 'costilla_e', label: 'COSTILLA', icon: '|||',
         toggleKey: 'LLEVA_COSTILLA_E',
         fields: [
-          { key: 'COSTILLA_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_E_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_E_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'COSTILLA_E_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
     ]
@@ -189,11 +243,15 @@ const SCHEMA = {
       {
         id: 'numero_m', label: 'NÚMERO', icon: '#',
         toggleKey: 'LLEVA_NUMERO_M',
-        fields: []
+        fields: [
+          { key: 'NUMERO_M_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'NUMERO_M_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'NUMERO_M_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+        ]
       },
       {
         id: 'escudo_m', label: 'ESCUDO', icon: '⬡',
-        toggleKey: null,
+        toggleKey: 'LLEVA_ESCUDO_M',
         fields: [
           { key: 'ESCUDO_M_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'ESCUDO_M_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -202,7 +260,7 @@ const SCHEMA = {
       },
       {
         id: 'sponsor_secundario_m', label: 'SPONSOR SECUNDARIO', icon: '☆',
-        toggleKey: null,
+        toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M',
         fields: [
           { key: 'SPONSOR_SECUNDARIO_M_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
           { key: 'SPONSOR_SECUNDARIO_M_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
@@ -211,23 +269,29 @@ const SCHEMA = {
       },
       {
         id: 'linea_izq', label: 'LÍNEA LATERAL IZQ', icon: '|',
-        toggleKey: null,
+        toggleKey: 'LLEVA_MANGA_LINEA_IZQ',
         fields: [
           { key: 'MANGA_LINEA_IZQ_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_IZQ_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_IZQ_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'linea_der', label: 'LÍNEA LATERAL DER', icon: '|',
-        toggleKey: null,
+        toggleKey: 'LLEVA_MANGA_LINEA_DER',
         fields: [
           { key: 'MANGA_LINEA_DER_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_DER_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_DER_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {
         id: 'linea_inf', label: 'LÍNEA INFERIOR', icon: '—',
-        toggleKey: null,
+        toggleKey: 'LLEVA_MANGA_LINEA_INF',
         fields: [
-          { key: 'MANGA_LINEA_INF_ALTO', label: 'Alto', type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_INF_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_INF_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
+          { key: 'MANGA_LINEA_INF_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
         ]
       },
       {

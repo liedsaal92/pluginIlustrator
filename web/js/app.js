@@ -163,7 +163,6 @@ async function loadConfigFromFile() {
     const config = JSON.parse(text);
     applyConfigSnapshot(config);
     render();
-    if (APP.screen === 'configure') attachConfigListeners();
     showToast('Config cargada desde ' + handle.name, 'ok');
   } catch(e) {
     if (e.name !== 'AbortError') showToast('Error al cargar: ' + e.message, 'error');
@@ -194,7 +193,6 @@ async function tryReconnectFile() {
       if (fileDate > localDate) {
         applyConfigSnapshot(config);
         render();
-        if (APP.screen === 'configure') attachConfigListeners();
         showToast('Config cargada desde archivo → ' + handle.name, 'ok');
       }
       updateSaveStatus();
@@ -229,7 +227,6 @@ function showReconnectBanner(fileName) {
         const config = JSON.parse(text);
         applyConfigSnapshot(config);
         render();
-        if (APP.screen === 'configure') attachConfigListeners();
         updateSaveStatus();
         showToast('Config cargada desde ' + APP.fileHandle.name, 'ok');
       }
@@ -746,7 +743,6 @@ function attachConfigListeners() {
     btn.addEventListener('click', () => {
       APP.configTab = btn.dataset.tab;
       render();
-      attachConfigListeners();
     });
   });
 
@@ -767,7 +763,7 @@ function attachRulesListeners() {
   document.querySelectorAll('.talla-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       APP.activeTalla = btn.dataset.talla;
-      render(); attachConfigListeners();
+      render();
     });
   });
 
@@ -789,7 +785,7 @@ function attachRulesListeners() {
   const btnApply = document.getElementById('btnApplyAll');
   if (btnApply) btnApply.addEventListener('click', () => {
     applyTallaToAll(APP.activeTalla);
-    render(); attachConfigListeners();
+    render();
   });
 
   const btnCopy = document.getElementById('btnCopyRules');
@@ -811,7 +807,7 @@ function attachPlayersListeners() {
     hdr.addEventListener('click', () => {
       const idx = parseInt(hdr.dataset.player);
       APP.expandedPlayer = APP.expandedPlayer === idx ? null : idx;
-      render(); attachConfigListeners();
+      render();
     });
   });
 
@@ -835,7 +831,7 @@ function attachPlayersListeners() {
       e.stopPropagation();
       const idx = parseInt(btn.dataset.player);
       clearOverride(idx);
-      render(); attachConfigListeners();
+      render();
     });
   });
 
@@ -899,7 +895,7 @@ function attachFieldListeners(container) {
 
 function attachExportListeners() {
   const btnBack = document.getElementById('btnBackExport');
-  if (btnBack) btnBack.addEventListener('click', () => { APP.screen = 'configure'; render(); attachConfigListeners(); });
+  if (btnBack) btnBack.addEventListener('click', () => { APP.screen = 'configure'; render(); });
 
   const btnDl = document.getElementById('btnDownload');
   if (btnDl) btnDl.addEventListener('click', () => {
@@ -972,8 +968,7 @@ function svgPlotter() {
 document.addEventListener('DOMContentLoaded', async () => {
   loadState(); // 1. localStorage → inmediato, sin permiso
   render();
-  if (APP.screen === 'upload')     attachUploadListeners();
-  if (APP.screen === 'configure')  attachConfigListeners();
+  if (APP.screen === 'upload') attachUploadListeners();
 
   // 2. Intentar reconectar con el archivo guardado (async, no bloquea el render)
   await tryReconnectFile();

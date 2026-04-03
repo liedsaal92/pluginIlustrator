@@ -62,26 +62,44 @@ function leerXlsx(csvFile) {
                 var hdr = headers[c];
 
                 // Convertir campos numéricos
-                if (hdr === "NUMERO"             || hdr === "ESCUDO_ALTO"         ||
-                    hdr === "ESCUDO_CENTRAL_ALTO" ||
-                    hdr === "ALTO"               || hdr === "ANCHO"              ||
+                if (hdr === "NUMERO"             || hdr === "ALTO"               || hdr === "ANCHO"              ||
                     hdr === "MANGA_ALTO"          || hdr === "MANGA_ANCHO"        ||
-                    hdr === "COSTILLA_ANCHO"      ||
-                    hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_DER_ANCHO" ||
-                    hdr === "MANGA_LINEA_INF_ALTO" ||
-                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT" ||
-                    hdr === "LOGO_MARCA_ANCHO"   || hdr === "LOGO_MARCA_ALTO"  ||
+                    // NOMBRE
+                    hdr === "NOMBRE_F_ANCHO"      || hdr === "NOMBRE_F_ALTO"      ||
+                    hdr === "NOMBRE_E_ANCHO"      || hdr === "NOMBRE_E_ALTO"      ||
+                    // NUMERO por pieza
                     hdr === "NUMERO_FRENTE_ANCHO" || hdr === "NUMERO_FRENTE_ALTO" ||
-                    hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_DER_ANCHO" ||
-                    hdr === "ETIQUETA_TOP_ALTO"          ||
-                    hdr === "NUMERO_ESPALDA_ANCHO"       || hdr === "NUMERO_ESPALDA_ALTO"       ||
+                    hdr === "NUMERO_ESPALDA_ANCHO"|| hdr === "NUMERO_ESPALDA_ALTO"||
+                    hdr === "NUMERO_M_ANCHO"      || hdr === "NUMERO_M_ALTO"      ||
+                    // ESCUDO
+                    hdr === "ESCUDO_F_ANCHO"      || hdr === "ESCUDO_F_ALTO"      ||
+                    hdr === "ESCUDO_E_ANCHO"      || hdr === "ESCUDO_E_ALTO"      ||
+                    hdr === "ESCUDO_CENTRAL_ANCHO"|| hdr === "ESCUDO_CENTRAL_ALTO"||
+                    hdr === "ESCUDO_M_ANCHO"      || hdr === "ESCUDO_M_ALTO"      ||
+                    // LOGO MARCA
+                    hdr === "LOGO_MARCA_ANCHO"    || hdr === "LOGO_MARCA_ALTO"    ||
+                    // SPONSORS TOP
+                    hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_IZQ_ALTO" ||
+                    hdr === "SPONSOR_TOP_DER_ANCHO" || hdr === "SPONSOR_TOP_DER_ALTO" ||
+                    // SPONSORS PRINCIPAL
                     hdr === "SPONSOR_PRINCIPAL_F_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_F_ALTO"  ||
                     hdr === "SPONSOR_PRINCIPAL_E_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_E_ALTO"  ||
+                    // SPONSORS SECUNDARIO
                     hdr === "SPONSOR_SECUNDARIO_F_ANCHO" || hdr === "SPONSOR_SECUNDARIO_F_ALTO" ||
                     hdr === "SPONSOR_SECUNDARIO_E_ANCHO" || hdr === "SPONSOR_SECUNDARIO_E_ALTO" ||
-                    hdr === "ESCUDO_M_ANCHO"             || hdr === "ESCUDO_M_ALTO"             ||
                     hdr === "SPONSOR_SECUNDARIO_M_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_ALTO" ||
-                    hdr === "MANGA_MARGIN_INF"           || hdr === "MANGA_MARGIN_ESCUDO") {
+                    // COSTILLA
+                    hdr === "COSTILLA_F_ANCHO"    || hdr === "COSTILLA_F_ALTO"    ||
+                    hdr === "COSTILLA_E_ANCHO"    || hdr === "COSTILLA_E_ALTO"    ||
+                    // ETIQUETA
+                    hdr === "ETIQUETA_ANCHO"      || hdr === "ETIQUETA_ALTO"      ||
+                    hdr === "ETIQUETA_MARGIN_INF" || hdr === "ETIQUETA_MARGIN_LAT"||
+                    hdr === "ETIQUETA_TOP_ANCHO"  || hdr === "ETIQUETA_TOP_ALTO"  ||
+                    // LÍNEAS DE MANGA
+                    hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_IZQ_ALTO" ||
+                    hdr === "MANGA_LINEA_DER_ANCHO" || hdr === "MANGA_LINEA_DER_ALTO" ||
+                    hdr === "MANGA_LINEA_INF_ANCHO" || hdr === "MANGA_LINEA_INF_ALTO" ||
+                    hdr === "MANGA_MARGIN_INF"    || hdr === "MANGA_MARGIN_ESCUDO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -98,9 +116,21 @@ function leerXlsx(csvFile) {
 
             // Normalizar campos LLEVA_*
             var llevaFields = [
-                "LLEVA_NOMBRE_F", "LLEVA_NOMBRE_E",
-                "LLEVA_NUMERO_F", "LLEVA_NUMERO_E", "LLEVA_NUMERO_M",
-                "LLEVA_COSTILLA_F", "LLEVA_COSTILLA_E"
+                // FRENTE
+                "LLEVA_NOMBRE_F", "LLEVA_NUMERO_F",
+                "LLEVA_ESCUDO_CENTRAL", "LLEVA_LOGO_MARCA",
+                "LLEVA_SPONSOR_TOP_IZQ", "LLEVA_SPONSOR_TOP_DER",
+                "LLEVA_SPONSOR_PRINCIPAL_F", "LLEVA_SPONSOR_SECUNDARIO_F",
+                "LLEVA_COSTILLA_F", "LLEVA_ETIQUETA",
+                // ESPALDA
+                "LLEVA_NOMBRE_E", "LLEVA_NUMERO_E",
+                "LLEVA_ESCUDO_E", "LLEVA_ETIQUETA_TOP",
+                "LLEVA_SPONSOR_PRINCIPAL_E", "LLEVA_SPONSOR_SECUNDARIO_E",
+                "LLEVA_COSTILLA_E",
+                // MANGA
+                "LLEVA_NUMERO_M",
+                "LLEVA_ESCUDO_M", "LLEVA_SPONSOR_SECUNDARIO_M",
+                "LLEVA_MANGA_LINEA_IZQ", "LLEVA_MANGA_LINEA_DER", "LLEVA_MANGA_LINEA_INF"
             ];
             for (var lf = 0; lf < llevaFields.length; lf++) {
                 var campo = llevaFields[lf];

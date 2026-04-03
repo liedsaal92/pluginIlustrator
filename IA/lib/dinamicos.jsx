@@ -33,7 +33,6 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 inicialPieza(nombrePieza) + "=NO)"
             );
         } else {
-            // Si NOMBRE_CAMISETA está vacío en el CSV → ocultar el item
             var textoCamiseta = trim(jugador.NOMBRE_CAMISETA + "");
             if (textoCamiseta === "") {
                 itemNombre.hidden = true;
@@ -47,13 +46,23 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                                : findTextFrameRecursivo(itemNombre);
                 if (tfNombre) {
                     tfNombre.contents = textoCamiseta;
-                    centrarHorizontalmente(itemNombre, grupoCopia);
                 }
+                // Escalar según REF del CSV
+                var sufNombre = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+                escalarConRef(
+                    itemNombre,
+                    jugador["NOMBRE" + sufNombre + "_ANCHO"],
+                    jugador["NOMBRE" + sufNombre + "_ALTO"],
+                    jugador["NOMBRE" + sufNombre + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": NOMBRE"
+                );
+                centrarHorizontalmente(itemNombre, grupoCopia);
             }
         }
     }
 
     // ── NUMERO ──────────────────────────────────────────────
+    // Item genérico llamado "NUMERO" — usado principalmente en MANGA
     var llevaNumeroEnEstaPieza = llevaElemento(jugador, nombrePieza, "NUMERO");
     var itemNumero = findItemByNameRecursivo(dinamico, CONFIG.itemNumero);
 
@@ -73,7 +82,6 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 );
             }
         } else {
-            // Validar que el número exista
             if (jugador.NUMERO === "" || isNaN(parseFloat(jugador.NUMERO))) {
                 Log.error(
                     nombrePieza + " | " + jugador.NOMBRE +
@@ -82,28 +90,40 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 itemNumero.hidden = true;
             } else {
                 if (itemNumero.typename === "TextFrame") {
-                    // Mostrar número sin decimales
                     itemNumero.contents = String(parseInt(jugador.NUMERO));
                     centrarHorizontalmente(itemNumero, grupoCopia);
+                }
+                // Escalar — para MANGA usa NUMERO_M_*, para otras piezas sin item dedicado
+                if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+                    escalarConRef(
+                        itemNumero,
+                        jugador.NUMERO_M_ANCHO,
+                        jugador.NUMERO_M_ALTO,
+                        jugador.NUMERO_M_REF,
+                        nombrePieza + " | " + jugador.NOMBRE + ": NUMERO"
+                    );
                 }
             }
         }
     }
 
     // ── ESCUDO ──────────────────────────────────────────────
+    // Item genérico ESCUDO en piezas FRENTE o ESPALDA
     var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
 
     if (grupoEscudo) {
-        var escudoAlto = parseFloat(jugador.ESCUDO_ALTO);
-        if (!isNaN(escudoAlto) && escudoAlto > 0) {
-            escalarItemDesdecentro(grupoEscudo, escudoAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": ESCUDO → alto " + escudoAlto.toFixed(1) + "cm");
+        var sufEscudo    = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+        var llevaEscudo  = (nombrePieza === "ESPALDA") ? jugador.LLEVA_ESCUDO_E : jugador.LLEVA_ESCUDO_F;
+        if (llevaEscudo !== "SI") {
+            grupoEscudo.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO ocultado (LLEVA=NO)");
         } else {
-            Log.info(
-                nombrePieza + " | " + jugador.NOMBRE +
-                ": ESCUDO_ALTO inválido (" + jugador.ESCUDO_ALTO +
-                ") — escudo no escalado"
+            escalarConRef(
+                grupoEscudo,
+                jugador["ESCUDO" + sufEscudo + "_ANCHO"],
+                jugador["ESCUDO" + sufEscudo + "_ALTO"],
+                jugador["ESCUDO" + sufEscudo + "_REF"],
+                nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO"
             );
         }
     }
@@ -112,16 +132,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var grupoEscudoCentral = findGroupByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
 
     if (grupoEscudoCentral) {
-        var escudoCentralAlto = parseFloat(jugador.ESCUDO_CENTRAL_ALTO);
-        if (!isNaN(escudoCentralAlto) && escudoCentralAlto > 0) {
-            escalarItemDesdecentro(grupoEscudoCentral, escudoCentralAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": ESCUDO_CENTRAL → alto " + escudoCentralAlto.toFixed(1) + "cm");
+        if (jugador.LLEVA_ESCUDO_CENTRAL !== "SI") {
+            grupoEscudoCentral.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO_CENTRAL ocultado (LLEVA=NO)");
         } else {
-            Log.info(
-                nombrePieza + " | " + jugador.NOMBRE +
-                ": ESCUDO_CENTRAL_ALTO inválido (" + jugador.ESCUDO_CENTRAL_ALTO +
-                ") — escudo central no escalado"
+            escalarConRef(
+                grupoEscudoCentral,
+                jugador.ESCUDO_CENTRAL_ANCHO,
+                jugador.ESCUDO_CENTRAL_ALTO,
+                jugador.ESCUDO_CENTRAL_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO_CENTRAL"
             );
         }
     }
@@ -130,7 +150,6 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var itemNumeroFrente = findItemByNameRecursivo(dinamico, "NUMERO_FRENTE");
 
     if (itemNumeroFrente) {
-        // Escribir el número en el TextFrame si existe
         if (jugador.TIENE_NUMERO === "NO" || !llevaNumeroEnEstaPieza) {
             itemNumeroFrente.hidden = true;
         } else if (jugador.NUMERO !== "" && !isNaN(parseFloat(jugador.NUMERO))) {
@@ -142,34 +161,19 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 centrarHorizontalmente(itemNumeroFrente, grupoCopia);
             }
         }
-
-        var numeroFrenteRef   = trim((jugador.NUMERO_FRENTE_REF || "") + "").toUpperCase();
-        var numeroFrenteAncho = parseFloat(jugador.NUMERO_FRENTE_ANCHO);
-        var numeroFrenteAlto  = parseFloat(jugador.NUMERO_FRENTE_ALTO);
-
-        if (numeroFrenteRef === "ANCHO" && !isNaN(numeroFrenteAncho) && numeroFrenteAncho > 0) {
-            escalarItemDesdecentro(itemNumeroFrente, numeroFrenteAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_FRENTE → ancho " + numeroFrenteAncho.toFixed(1) + "cm");
-        } else if (numeroFrenteRef === "ALTO" && !isNaN(numeroFrenteAlto) && numeroFrenteAlto > 0) {
-            escalarItemDesdecentro(itemNumeroFrente, numeroFrenteAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_FRENTE → alto " + numeroFrenteAlto.toFixed(1) + "cm");
-        } else if (numeroFrenteRef === "PROPORCIONAL") {
-            // scaleGroupExact ya escaló el item con la pieza — no se aplica nada adicional
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_FRENTE → proporcional (escala con pieza)");
-        } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": NUMERO_FRENTE sin valores válidos en CSV — no escalado");
-        }
+        escalarConRef(
+            itemNumeroFrente,
+            jugador.NUMERO_FRENTE_ANCHO,
+            jugador.NUMERO_FRENTE_ALTO,
+            jugador.NUMERO_FRENTE_REF,
+            nombrePieza + " | " + jugador.NOMBRE + ": NUMERO_FRENTE"
+        );
     }
 
     // ── NUMERO_ESPALDA ───────────────────────────────────────
     var itemNumeroEspalda = findItemByNameRecursivo(dinamico, "NUMERO_ESPALDA");
 
     if (itemNumeroEspalda) {
-        // Escribir el número en el TextFrame si existe
         if (jugador.TIENE_NUMERO === "NO" || !llevaNumeroEnEstaPieza) {
             itemNumeroEspalda.hidden = true;
         } else if (jugador.NUMERO !== "" && !isNaN(parseFloat(jugador.NUMERO))) {
@@ -181,41 +185,30 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 centrarHorizontalmente(itemNumeroEspalda, grupoCopia);
             }
         }
-
-        var numeroEspaldaRef   = trim((jugador.NUMERO_ESPALDA_REF || "") + "").toUpperCase();
-        var numeroEspaldaAncho = parseFloat(jugador.NUMERO_ESPALDA_ANCHO);
-        var numeroEspaldaAlto  = parseFloat(jugador.NUMERO_ESPALDA_ALTO);
-
-        if (numeroEspaldaRef === "ANCHO" && !isNaN(numeroEspaldaAncho) && numeroEspaldaAncho > 0) {
-            escalarItemDesdecentro(itemNumeroEspalda, numeroEspaldaAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_ESPALDA → ancho " + numeroEspaldaAncho.toFixed(1) + "cm");
-        } else if (numeroEspaldaRef === "ALTO" && !isNaN(numeroEspaldaAlto) && numeroEspaldaAlto > 0) {
-            escalarItemDesdecentro(itemNumeroEspalda, numeroEspaldaAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_ESPALDA → alto " + numeroEspaldaAlto.toFixed(1) + "cm");
-        } else if (numeroEspaldaRef === "PROPORCIONAL") {
-            // scaleGroupExact ya escaló el item con la pieza — no se aplica nada adicional
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": NUMERO_ESPALDA → proporcional (escala con pieza)");
-        } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": NUMERO_ESPALDA sin valores válidos en CSV — no escalado");
-        }
+        escalarConRef(
+            itemNumeroEspalda,
+            jugador.NUMERO_ESPALDA_ANCHO,
+            jugador.NUMERO_ESPALDA_ALTO,
+            jugador.NUMERO_ESPALDA_REF,
+            nombrePieza + " | " + jugador.NOMBRE + ": NUMERO_ESPALDA"
+        );
     }
 
     // ── SPONSOR_TOP_IZQ ─────────────────────────────────────
     var itemSponsorTopIzq = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_IZQ");
 
     if (itemSponsorTopIzq) {
-        var sponsorTopIzqAncho = parseFloat(jugador.SPONSOR_TOP_IZQ_ANCHO);
-        if (!isNaN(sponsorTopIzqAncho) && sponsorTopIzqAncho > 0) {
-            escalarItemDesdecentro(itemSponsorTopIzq, sponsorTopIzqAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_TOP_IZQ → ancho " + sponsorTopIzqAncho.toFixed(1) + "cm");
+        if (jugador.LLEVA_SPONSOR_TOP_IZQ !== "SI") {
+            itemSponsorTopIzq.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ ocultado (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": SPONSOR_TOP_IZQ_ANCHO inválido — no escalado");
+            escalarConRef(
+                itemSponsorTopIzq,
+                jugador.SPONSOR_TOP_IZQ_ANCHO,
+                jugador.SPONSOR_TOP_IZQ_ALTO,
+                jugador.SPONSOR_TOP_IZQ_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ"
+            );
         }
     }
 
@@ -223,14 +216,17 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var itemSponsorTopDer = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_DER");
 
     if (itemSponsorTopDer) {
-        var sponsorTopDerAncho = parseFloat(jugador.SPONSOR_TOP_DER_ANCHO);
-        if (!isNaN(sponsorTopDerAncho) && sponsorTopDerAncho > 0) {
-            escalarItemDesdecentro(itemSponsorTopDer, sponsorTopDerAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_TOP_DER → ancho " + sponsorTopDerAncho.toFixed(1) + "cm");
+        if (jugador.LLEVA_SPONSOR_TOP_DER !== "SI") {
+            itemSponsorTopDer.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER ocultado (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": SPONSOR_TOP_DER_ANCHO inválido — no escalado");
+            escalarConRef(
+                itemSponsorTopDer,
+                jugador.SPONSOR_TOP_DER_ANCHO,
+                jugador.SPONSOR_TOP_DER_ALTO,
+                jugador.SPONSOR_TOP_DER_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER"
+            );
         }
     }
 
@@ -241,47 +237,35 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
         // 1. Escalar SPONSOR_SECUNDARIO
         if (itemSponsorSecundarioManga) {
-            var ssmRef   = trim((jugador.SPONSOR_SECUNDARIO_M_REF || "") + "").toUpperCase();
-            var ssmAncho = parseFloat(jugador.SPONSOR_SECUNDARIO_M_ANCHO);
-            var ssmAlto  = parseFloat(jugador.SPONSOR_SECUNDARIO_M_ALTO);
-
-            if (ssmRef === "ANCHO" && !isNaN(ssmAncho) && ssmAncho > 0) {
-                escalarItemDesdecentro(itemSponsorSecundarioManga, ssmAncho, "ANCHO");
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": SPONSOR_SECUNDARIO (manga) → ancho " + ssmAncho.toFixed(1) + "cm");
-            } else if (ssmRef === "ALTO" && !isNaN(ssmAlto) && ssmAlto > 0) {
-                escalarItemDesdecentro(itemSponsorSecundarioManga, ssmAlto, "ALTO");
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": SPONSOR_SECUNDARIO (manga) → alto " + ssmAlto.toFixed(1) + "cm");
-            } else if (ssmRef === "PROPORCIONAL") {
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": SPONSOR_SECUNDARIO (manga) → proporcional (escala con pieza)");
+            if (jugador.LLEVA_SPONSOR_SECUNDARIO_M !== "SI") {
+                itemSponsorSecundarioManga.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (manga) ocultado (LLEVA=NO)");
+                itemSponsorSecundarioManga = null; // evitar que el posicionado lo use
             } else {
-                Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                         ": SPONSOR_SECUNDARIO_M sin valores válidos en CSV — no escalado");
+                escalarConRef(
+                    itemSponsorSecundarioManga,
+                    jugador.SPONSOR_SECUNDARIO_M_ANCHO,
+                    jugador.SPONSOR_SECUNDARIO_M_ALTO,
+                    jugador.SPONSOR_SECUNDARIO_M_REF,
+                    nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (manga)"
+                );
             }
         }
 
         // 2. Escalar ESCUDO
         if (grupoEscudoManga) {
-            var escudoMRef   = trim((jugador.ESCUDO_M_REF || "") + "").toUpperCase();
-            var escudoMAncho = parseFloat(jugador.ESCUDO_M_ANCHO);
-            var escudoMAlto  = parseFloat(jugador.ESCUDO_M_ALTO);
-
-            if (escudoMRef === "ANCHO" && !isNaN(escudoMAncho) && escudoMAncho > 0) {
-                escalarItemDesdecentro(grupoEscudoManga, escudoMAncho, "ANCHO");
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": ESCUDO (manga) → ancho " + escudoMAncho.toFixed(1) + "cm");
-            } else if (escudoMRef === "ALTO" && !isNaN(escudoMAlto) && escudoMAlto > 0) {
-                escalarItemDesdecentro(grupoEscudoManga, escudoMAlto, "ALTO");
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": ESCUDO (manga) → alto " + escudoMAlto.toFixed(1) + "cm");
-            } else if (escudoMRef === "PROPORCIONAL") {
-                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": ESCUDO (manga) → proporcional (escala con pieza)");
+            if (jugador.LLEVA_ESCUDO_M !== "SI") {
+                grupoEscudoManga.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (manga) ocultado (LLEVA=NO)");
+                grupoEscudoManga = null; // evitar que el posicionado lo use
             } else {
-                Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                         ": ESCUDO_M sin valores válidos en CSV — no escalado");
+                escalarConRef(
+                    grupoEscudoManga,
+                    jugador.ESCUDO_M_ANCHO,
+                    jugador.ESCUDO_M_ALTO,
+                    jugador.ESCUDO_M_REF,
+                    nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (manga)"
+                );
             }
         }
 
@@ -290,30 +274,25 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         var mangaMarginEscudo = parseFloat(jugador.MANGA_MARGIN_ESCUDO);
         var estaticManga      = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
         var mangaBounds       = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
-        var mangaBottom       = mangaBounds[3];  // borde inferior
+        var mangaBottom       = mangaBounds[3];
         var mangaLeft         = mangaBounds[0];
         var mangaRight        = mangaBounds[2];
         var mangaCentroX      = (mangaLeft + mangaRight) / 2;
 
         if (!isNaN(mangaMarginInf) && mangaMarginInf >= 0) {
 
-            // Posicionar SPONSOR_SECUNDARIO desde borde inferior (si existe)
             if (itemSponsorSecundarioManga) {
                 var ssmBounds = itemSponsorSecundarioManga.geometricBounds;
                 var ssmAltura = Math.abs(ssmBounds[1] - ssmBounds[3]);
                 var ssmAncho2 = Math.abs(ssmBounds[2] - ssmBounds[0]);
 
-                var ssmNuevoTop  = mangaBottom + cmToPt(mangaMarginInf) + ssmAltura;
-                var ssmNuevoLeft = mangaCentroX - (ssmAncho2 / 2);
-
-                itemSponsorSecundarioManga.top  = ssmNuevoTop;
-                itemSponsorSecundarioManga.left = ssmNuevoLeft;
+                itemSponsorSecundarioManga.top  = mangaBottom + cmToPt(mangaMarginInf) + ssmAltura;
+                itemSponsorSecundarioManga.left = mangaCentroX - (ssmAncho2 / 2);
 
                 Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                        ": SPONSOR_SECUNDARIO (manga) posicionado (inf:" + mangaMarginInf.toFixed(1) + "cm)");
             }
 
-            // Posicionar ESCUDO
             if (grupoEscudoManga) {
                 var escBounds  = grupoEscudoManga.geometricBounds;
                 var escAltura  = Math.abs(escBounds[1] - escBounds[3]);
@@ -321,13 +300,11 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 var escNuevoLeft = mangaCentroX - (escAncho2 / 2);
 
                 if (itemSponsorSecundarioManga && !isNaN(mangaMarginEscudo) && mangaMarginEscudo >= 0) {
-                    // Encima del sponsor con margen
                     var ssmTopActual = itemSponsorSecundarioManga.geometricBounds[1];
                     grupoEscudoManga.top  = ssmTopActual + escAltura + cmToPt(mangaMarginEscudo);
                     Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                            ": ESCUDO (manga) posicionado sobre sponsor (sep:" + mangaMarginEscudo.toFixed(1) + "cm)");
                 } else {
-                    // Sin sponsor — posicionar desde borde inferior igual que el sponsor
                     grupoEscudoManga.top  = mangaBottom + cmToPt(mangaMarginInf) + escAltura;
                     Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                            ": ESCUDO (manga) posicionado desde borde (sin sponsor)");
@@ -338,29 +315,22 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     }
 
     // ── SPONSOR_PRINCIPAL ────────────────────────────────────
-    // Columnas CSV con sufijo _F (frente), _E (espalda)
     var itemSponsorPrincipal = findItemByNameRecursivo(dinamico, "SPONSOR_PRINCIPAL");
 
     if (itemSponsorPrincipal) {
-        var spSufijo  = (nombrePieza === "ESPALDA") ? "_E" : "_F";
-        var spRef     = trim((jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"] || "") + "").toUpperCase();
-        var spAncho   = parseFloat(jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ANCHO"]);
-        var spAlto    = parseFloat(jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ALTO"]);
-
-        if (spRef === "ANCHO" && !isNaN(spAncho) && spAncho > 0) {
-            escalarItemDesdecentro(itemSponsorPrincipal, spAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_PRINCIPAL → ancho " + spAncho.toFixed(1) + "cm");
-        } else if (spRef === "ALTO" && !isNaN(spAlto) && spAlto > 0) {
-            escalarItemDesdecentro(itemSponsorPrincipal, spAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_PRINCIPAL → alto " + spAlto.toFixed(1) + "cm");
-        } else if (spRef === "PROPORCIONAL") {
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_PRINCIPAL → proporcional (escala con pieza)");
+        var spSufijo    = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+        var llevaSP     = (nombrePieza === "ESPALDA") ? jugador.LLEVA_SPONSOR_PRINCIPAL_E : jugador.LLEVA_SPONSOR_PRINCIPAL_F;
+        if (llevaSP !== "SI") {
+            itemSponsorPrincipal.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL ocultado (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": SPONSOR_PRINCIPAL sin valores válidos en CSV — no escalado");
+            escalarConRef(
+                itemSponsorPrincipal,
+                jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ANCHO"],
+                jugador["SPONSOR_PRINCIPAL" + spSufijo + "_ALTO"],
+                jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"],
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL"
+            );
         }
     }
 
@@ -371,24 +341,18 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     if (itemSponsorSecundario) {
         var ssSufijo  = (nombrePieza === "ESPALDA") ? "_E" : "_F";
-        var ssRef     = trim((jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_REF"] || "") + "").toUpperCase();
-        var ssAncho   = parseFloat(jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ANCHO"]);
-        var ssAlto    = parseFloat(jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ALTO"]);
-
-        if (ssRef === "ANCHO" && !isNaN(ssAncho) && ssAncho > 0) {
-            escalarItemDesdecentro(itemSponsorSecundario, ssAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_SECUNDARIO → ancho " + ssAncho.toFixed(1) + "cm");
-        } else if (ssRef === "ALTO" && !isNaN(ssAlto) && ssAlto > 0) {
-            escalarItemDesdecentro(itemSponsorSecundario, ssAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_SECUNDARIO → alto " + ssAlto.toFixed(1) + "cm");
-        } else if (ssRef === "PROPORCIONAL") {
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": SPONSOR_SECUNDARIO → proporcional (escala con pieza)");
+        var llevaSS   = (nombrePieza === "ESPALDA") ? jugador.LLEVA_SPONSOR_SECUNDARIO_E : jugador.LLEVA_SPONSOR_SECUNDARIO_F;
+        if (llevaSS !== "SI") {
+            itemSponsorSecundario.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO ocultado (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": SPONSOR_SECUNDARIO sin valores válidos en CSV — no escalado");
+            escalarConRef(
+                itemSponsorSecundario,
+                jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ANCHO"],
+                jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_ALTO"],
+                jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_REF"],
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO"
+            );
         }
     }
 
@@ -396,116 +360,146 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     var itemEtiquetaTop = findItemByNameRecursivo(dinamico, "ETIQUETA_TOP");
 
     if (itemEtiquetaTop) {
-        var etiquetaTopAlto = parseFloat(jugador.ETIQUETA_TOP_ALTO);
-        if (!isNaN(etiquetaTopAlto) && etiquetaTopAlto > 0) {
-            escalarItemDesdecentro(itemEtiquetaTop, etiquetaTopAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": ETIQUETA_TOP → alto " + etiquetaTopAlto.toFixed(1) + "cm");
+        if (jugador.LLEVA_ETIQUETA_TOP !== "SI") {
+            itemEtiquetaTop.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_TOP ocultada (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": ETIQUETA_TOP_ALTO inválido — no escalado");
+            escalarConRef(
+                itemEtiquetaTop,
+                jugador.ETIQUETA_TOP_ANCHO,
+                jugador.ETIQUETA_TOP_ALTO,
+                jugador.ETIQUETA_TOP_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_TOP"
+            );
         }
     }
 
     // ── LOGO_MARCA ───────────────────────────────────────────
-    // Escala el logo del fabricante usando ANCHO o ALTO como referencia según CSV.
-    // LOGO_MARCA_REF = "ANCHO" → el ancho queda en LOGO_MARCA_ANCHO cm
-    // LOGO_MARCA_REF = "ALTO"  → el alto queda en LOGO_MARCA_ALTO cm
-    // Si el item no existe o faltan valores en CSV → se omite sin error
     var itemLogoMarca = findItemByNameRecursivo(dinamico, "LOGO_MARCA");
 
     if (itemLogoMarca) {
-        var logoMarcaRef   = trim((jugador.LOGO_MARCA_REF || "") + "").toUpperCase();
-        var logoMarcaAncho = parseFloat(jugador.LOGO_MARCA_ANCHO);
-        var logoMarcaAlto  = parseFloat(jugador.LOGO_MARCA_ALTO);
-
-        if (logoMarcaRef === "ANCHO" && !isNaN(logoMarcaAncho) && logoMarcaAncho > 0) {
-            escalarItemDesdecentro(itemLogoMarca, logoMarcaAncho, "ANCHO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": LOGO_MARCA → ancho " + logoMarcaAncho.toFixed(1) + "cm");
-        } else if (logoMarcaRef === "ALTO" && !isNaN(logoMarcaAlto) && logoMarcaAlto > 0) {
-            escalarItemDesdecentro(itemLogoMarca, logoMarcaAlto, "ALTO");
-            Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                   ": LOGO_MARCA → alto " + logoMarcaAlto.toFixed(1) + "cm");
+        if (jugador.LLEVA_LOGO_MARCA !== "SI") {
+            itemLogoMarca.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": LOGO_MARCA ocultado (LLEVA=NO)");
         } else {
-            Log.info(nombrePieza + " | " + jugador.NOMBRE +
-                     ": LOGO_MARCA sin valores válidos en CSV — no escalado");
+            escalarConRef(
+                itemLogoMarca,
+                jugador.LOGO_MARCA_ANCHO,
+                jugador.LOGO_MARCA_ALTO,
+                jugador.LOGO_MARCA_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": LOGO_MARCA"
+            );
         }
     }
 
     // ── COSTILLAS ────────────────────────────────────────────
-    // Solo se procesan si el diseño las lleva Y el CSV tiene COSTILLA_ANCHO
-    // Si no existe el grupo o falta el valor en CSV → se omite sin error
     if (llevaElemento(jugador, nombrePieza, "COSTILLA")) {
-        var costillaAncho = parseFloat(jugador.COSTILLA_ANCHO);
-        if (!isNaN(costillaAncho) && costillaAncho > 0) {
-            procesarCostilla(
-                findItemByNameRecursivo(dinamico, "COSTILLA_IZQ"),
-                "IZQ", costillaAncho, grupoCopia, jugador.NOMBRE, nombrePieza
-            );
-            procesarCostilla(
-                findItemByNameRecursivo(dinamico, "COSTILLA_DER"),
-                "DER", costillaAncho, grupoCopia, jugador.NOMBRE, nombrePieza
-            );
-        } else {
-            Log.info(
-                nombrePieza + " | " + jugador.NOMBRE +
-                ": COSTILLA_ANCHO sin valor — costillas omitidas"
-            );
-        }
+        var sufCostilla   = (nombrePieza === "ESPALDA") ? "_E" : "_F";
+        var costillaRef   = trim((jugador["COSTILLA" + sufCostilla + "_REF"] || "") + "").toUpperCase();
+        var costillaAncho = parseFloat(jugador["COSTILLA" + sufCostilla + "_ANCHO"]);
+        var costillaAlto  = parseFloat(jugador["COSTILLA" + sufCostilla + "_ALTO"]);
+
+        procesarCostilla(
+            findItemByNameRecursivo(dinamico, "COSTILLA_IZQ"),
+            "IZQ", costillaAncho, costillaAlto, costillaRef, grupoCopia, jugador.NOMBRE, nombrePieza
+        );
+        procesarCostilla(
+            findItemByNameRecursivo(dinamico, "COSTILLA_DER"),
+            "DER", costillaAncho, costillaAlto, costillaRef, grupoCopia, jugador.NOMBRE, nombrePieza
+        );
     }
 
     // ── ETIQUETA ─────────────────────────────────────────────
-    // En FRENTE y ESPALDA, usando los mismos márgenes del CSV
-    // Si faltan valores o el grupo no existe → omite sin error
     if (nombrePieza === "FRENTE" || nombrePieza === "ESPALDA") {
         var etiquetaMarginInf = parseFloat(jugador.ETIQUETA_MARGIN_INF);
         var etiquetaMarginLat = parseFloat(jugador.ETIQUETA_MARGIN_LAT);
         var etiquetaLado      = trim((jugador.ETIQUETA_LADO || "DER") + "").toUpperCase();
         var grupoEtiqueta     = findItemByNameRecursivo(dinamico, "ETIQUETA");
 
-        if (grupoEtiqueta &&
-            !isNaN(etiquetaMarginInf) && etiquetaMarginInf >= 0 &&
-            !isNaN(etiquetaMarginLat) && etiquetaMarginLat >= 0) {
-            posicionarEtiqueta(
-                grupoEtiqueta, grupoCopia,
-                etiquetaMarginInf, etiquetaMarginLat, etiquetaLado,
-                jugador.NOMBRE, nombrePieza
-            );
+        if (grupoEtiqueta) {
+            if (jugador.LLEVA_ETIQUETA !== "SI") {
+                grupoEtiqueta.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA ocultada (LLEVA=NO)");
+            } else {
+                // Escalar antes de posicionar
+                escalarConRef(
+                    grupoEtiqueta,
+                    jugador.ETIQUETA_ANCHO,
+                    jugador.ETIQUETA_ALTO,
+                    jugador.ETIQUETA_REF,
+                    nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA"
+                );
+
+                if (!isNaN(etiquetaMarginInf) && etiquetaMarginInf >= 0 &&
+                    !isNaN(etiquetaMarginLat) && etiquetaMarginLat >= 0) {
+                    posicionarEtiqueta(
+                        grupoEtiqueta, grupoCopia,
+                        etiquetaMarginInf, etiquetaMarginLat, etiquetaLado,
+                        jugador.NOMBRE, nombrePieza
+                    );
+                }
+            }
         }
     }
 
     // ── LÍNEAS DE MANGA ──────────────────────────────────────
-    // Cada línea se procesa independientemente según su valor en CSV
-    // Si el valor está vacío o el grupo no existe → se omite sin error
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
 
-        // Línea izquierda — ancho fijo, alto escala con la manga
-        var lineaIzqAncho = parseFloat(jugador.MANGA_LINEA_IZQ_ANCHO);
-        if (!isNaN(lineaIzqAncho) && lineaIzqAncho > 0) {
-            procesarLineaManga(
-                findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ"),
-                "IZQ", lineaIzqAncho, jugador.NOMBRE, nombrePieza, factorPieza
-            );
+        var itemLineaIzq = findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ");
+        if (itemLineaIzq && jugador.LLEVA_MANGA_LINEA_IZQ !== "SI") {
+            itemLineaIzq.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_IZQ ocultada (LLEVA=NO)");
+        } else {
+            var lineaIzqAncho = parseFloat(jugador.MANGA_LINEA_IZQ_ANCHO);
+            var lineaIzqAlto  = parseFloat(jugador.MANGA_LINEA_IZQ_ALTO);
+            var lineaIzqRef   = trim((jugador.MANGA_LINEA_IZQ_REF || "") + "").toUpperCase();
+            procesarLineaManga(itemLineaIzq, "IZQ", lineaIzqAncho, lineaIzqAlto, lineaIzqRef,
+                               jugador.NOMBRE, nombrePieza, factorPieza);
         }
 
-        // Línea derecha — ancho fijo, alto escala con la manga
-        var lineaDerAncho = parseFloat(jugador.MANGA_LINEA_DER_ANCHO);
-        if (!isNaN(lineaDerAncho) && lineaDerAncho > 0) {
-            procesarLineaManga(
-                findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER"),
-                "DER", lineaDerAncho, jugador.NOMBRE, nombrePieza, factorPieza
-            );
+        var itemLineaDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
+        if (itemLineaDer && jugador.LLEVA_MANGA_LINEA_DER !== "SI") {
+            itemLineaDer.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_DER ocultada (LLEVA=NO)");
+        } else {
+            var lineaDerAncho = parseFloat(jugador.MANGA_LINEA_DER_ANCHO);
+            var lineaDerAlto  = parseFloat(jugador.MANGA_LINEA_DER_ALTO);
+            var lineaDerRef   = trim((jugador.MANGA_LINEA_DER_REF || "") + "").toUpperCase();
+            procesarLineaManga(itemLineaDer, "DER", lineaDerAncho, lineaDerAlto, lineaDerRef,
+                               jugador.NOMBRE, nombrePieza, factorPieza);
         }
 
-        // Línea inferior — alto fijo, ancho escala con la manga
-        var lineaInfAlto = parseFloat(jugador.MANGA_LINEA_INF_ALTO);
-        if (!isNaN(lineaInfAlto) && lineaInfAlto > 0) {
-            procesarLineaMangaInf(
-                findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF"),
-                lineaInfAlto, jugador.NOMBRE, nombrePieza, factorPieza
-            );
+        var grupoLineaInf = findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF");
+        if (grupoLineaInf && jugador.LLEVA_MANGA_LINEA_INF !== "SI") {
+            grupoLineaInf.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_INF ocultada (LLEVA=NO)");
+        } else {
+            var lineaInfAncho = parseFloat(jugador.MANGA_LINEA_INF_ANCHO);
+            var lineaInfAlto  = parseFloat(jugador.MANGA_LINEA_INF_ALTO);
+            var lineaInfRef   = trim((jugador.MANGA_LINEA_INF_REF || "") + "").toUpperCase();
+            procesarLineaMangaInf(grupoLineaInf, lineaInfAncho, lineaInfAlto, lineaInfRef,
+                                  jugador.NOMBRE, nombrePieza, factorPieza);
         }
+    }
+}
+
+// ── Helper: escalar un item usando la lógica ANCHO / ALTO / PROPORCIONAL ──
+// PROPORCIONAL = no hacer nada extra (el item ya escaló con la pieza en scaleGroupExact)
+function escalarConRef(item, ancho, alto, ref, logPrefijo) {
+    var r = trim((ref || "") + "").toUpperCase();
+    var a = parseFloat(ancho);
+    var h = parseFloat(alto);
+
+    if (r === "ANCHO" && !isNaN(a) && a > 0) {
+        escalarItemDesdecentro(item, a, "ANCHO");
+        Log.ok(logPrefijo + " → ancho " + a.toFixed(1) + "cm");
+    } else if (r === "ALTO" && !isNaN(h) && h > 0) {
+        escalarItemDesdecentro(item, h, "ALTO");
+        Log.ok(logPrefijo + " → alto " + h.toFixed(1) + "cm");
+    } else if (r === "PROPORCIONAL") {
+        Log.ok(logPrefijo + " → proporcional (escala con pieza)");
+    } else {
+        Log.info(logPrefijo + " sin valores válidos en CSV — no escalado");
     }
 }
 
@@ -541,34 +535,22 @@ function inicialPieza(nombrePieza) {
 //  POSICIONAMIENTO DE ETIQUETA
 // ============================================================
 
-// Posiciona la etiqueta en el FRENTE según márgenes del CSV.
-// La etiqueta NO escala — solo cambia su posición.
-//
-// ETIQUETA_MARGIN_INF → distancia desde el borde inferior de la pieza (cm)
-// ETIQUETA_MARGIN_LAT → distancia desde el borde lateral más cercano (cm)
 function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza) {
     try {
-        // Usar ESTATICO como referencia de bordes reales de la camiseta
         var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds   = estatico ? estatico.geometricBounds
                                    : grupoPieza.geometricBounds;
-        // geometricBounds = [left, top, right, bottom]
-        // En AI: top es el valor más GRANDE (menos negativo), bottom el más pequeño
         var piezaLeft   = refBounds[0];
-        var piezaTop    = refBounds[1];  // valor mayor (menos negativo = arriba)
         var piezaRight  = refBounds[2];
-        var piezaBottom = refBounds[3];  // valor menor (más negativo = abajo)
+        var piezaBottom = refBounds[3];
 
-        // Tamaño de la etiqueta — no escala
         var etqBounds = etiqueta.geometricBounds;
         var etqAncho  = Math.abs(etqBounds[2] - etqBounds[0]);
         var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
 
-        // Convertir márgenes a puntos
         var marginInfPt = cmToPt(marginInfCm);
         var marginLatPt = cmToPt(marginLatCm);
 
-        // Usar las costillas ya posicionadas como referencia
         var dinamicoPieza = findGroupByNameRecursivo(grupoPieza, "DINAMICO");
         var costillaIzq   = dinamicoPieza
                             ? findItemByNameRecursivo(dinamicoPieza, "COSTILLA_IZQ")
@@ -577,37 +559,22 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
                             ? findItemByNameRecursivo(dinamicoPieza, "COSTILLA_DER")
                             : null;
 
-        // Referencia lateral: borde EXTERNO de la costilla = borde del ESTATICO
-        var refLeft  = costillaIzq
-                       ? costillaIzq.geometricBounds[0]  // left de costilla IZQ
-                       : piezaLeft;
-        var refRight = costillaDer
-                       ? costillaDer.geometricBounds[2]  // right de costilla DER
-                       : piezaRight;
+        var refLeft  = costillaIzq ? costillaIzq.geometricBounds[0] : piezaLeft;
+        var refRight = costillaDer ? costillaDer.geometricBounds[2] : piezaRight;
 
-        // Referencia inferior: bottom de la costilla
         var refBottom = piezaBottom;
         if (costillaIzq) {
-            var cIzqB = costillaIzq.geometricBounds;
-            // bottom = top - alto (en AI, top es menos negativo que bottom)
-            var cIzqBottom = cIzqB[1] - Math.abs(cIzqB[1] - cIzqB[3]);
-            refBottom = cIzqBottom;
+            var cIzqB      = costillaIzq.geometricBounds;
+            refBottom = cIzqB[1] - Math.abs(cIzqB[1] - cIzqB[3]);
         } else if (costillaDer) {
-            var cDerB = costillaDer.geometricBounds;
-            var cDerBottom = cDerB[1] - Math.abs(cDerB[1] - cDerB[3]);
-            refBottom = cDerBottom;
+            var cDerB      = costillaDer.geometricBounds;
+            refBottom = cDerB[1] - Math.abs(cDerB[1] - cDerB[3]);
         }
 
-        // Posición vertical: top etiqueta = refBottom + marginInf + etqAlto
-        var nuevoTop = refBottom + marginInfPt + etqAlto;
-
-        // Posición horizontal según lado
-        var nuevoLeft;
-        if (lado === "IZQ") {
-            nuevoLeft = refLeft + marginLatPt;
-        } else {
-            nuevoLeft = refRight - marginLatPt - etqAncho;
-        }
+        var nuevoTop  = refBottom + marginInfPt + etqAlto;
+        var nuevoLeft = (lado === "IZQ")
+                        ? refLeft  + marginLatPt
+                        : refRight - marginLatPt - etqAncho;
 
         etiqueta.left = nuevoLeft;
         etiqueta.top  = nuevoTop;
@@ -627,11 +594,20 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
 //  PROCESAMIENTO DE LÍNEAS DE MANGA
 // ============================================================
 
-// Líneas laterales (IZQ y DER): ancho fijo del CSV, alto escala con la manga
-function procesarLineaManga(item, lado, targetAnchoCmd, nombreJugador, nombrePieza, factorPieza) {
+// Líneas laterales (IZQ y DER)
+// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga (comportamiento original)
+// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga
+// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
+function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
     if (!item) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_" + lado + " no encontrada — omitida");
+        return;
+    }
+
+    if (ref === "PROPORCIONAL") {
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": MANGA_LINEA_" + lado + " → proporcional (escala con pieza)");
         return;
     }
 
@@ -640,31 +616,39 @@ function procesarLineaManga(item, lado, targetAnchoCmd, nombreJugador, nombrePie
         var leftAntes   = boundsAntes[0];
         var rightAntes  = boundsAntes[2];
         var topAntes    = boundsAntes[1];
+        var botAntes    = boundsAntes[3];
 
-        var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
-        if (anchoRealCm <= 0) return;
-        var factorAncho = (targetAnchoCmd / anchoRealCm) * 100;
+        if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
+            var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
+            if (anchoRealCm <= 0) return;
+            var factorAncho = (targetAncho / anchoRealCm) * 100;
 
-        // resize() funciona tanto para GroupItem como RasterItem
-        item.resize(
-            factorAncho, 100,
-            true, true, true, true, 100,
-            Transformation.TOPLEFT
-        );
+            item.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
 
-        // Restaurar posición según lado
-        var boundsDespues = item.geometricBounds;
-        var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
+            var boundsDespues = item.geometricBounds;
+            var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
+            item.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAncho;
+            item.top  = topAntes;
 
-        if (lado === "IZQ") {
-            item.left = leftAntes;
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": MANGA_LINEA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
+
+        } else if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
+            var altoRealCm = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            if (altoRealCm <= 0) return;
+            var factorAlto = (targetAlto / altoRealCm) * 100;
+
+            item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
+            item.left = boundsAntes[0];
+            item.top  = topAntes;
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": MANGA_LINEA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
+
         } else {
-            item.left = rightAntes - nuevoAncho;
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_" + lado + " sin valores válidos en CSV — no escalada");
         }
-        item.top = topAntes;
-
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": MANGA_LINEA_" + lado + " → " + targetAnchoCmd.toFixed(1) + "cm");
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
@@ -672,42 +656,58 @@ function procesarLineaManga(item, lado, targetAnchoCmd, nombreJugador, nombrePie
     }
 }
 
-// Línea inferior: alto fijo del CSV, ancho escala con la manga
-function procesarLineaMangaInf(grupoLinea, targetAltoCmd, nombreJugador, nombrePieza, factorPieza) {
+// Línea inferior
+// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga (comportamiento original)
+// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga
+// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
+function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
     if (!grupoLinea) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_INF no encontrada — omitida");
         return;
     }
 
+    if (ref === "PROPORCIONAL") {
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": MANGA_LINEA_INF → proporcional (escala con pieza)");
+        return;
+    }
+
     try {
         var boundsAntes = grupoLinea.geometricBounds;
         var leftAntes   = boundsAntes[0];
-        var bottomAntes = boundsAntes[3];  // borde inferior (valor negativo en AI)
-        var altoActPt   = Math.abs(boundsAntes[1] - boundsAntes[3]);
-        if (altoActPt <= 0) return;
+        var bottomAntes = boundsAntes[3];
 
-        // Usar factor Y (alto) — la línea inferior depende del alto de la manga
-        var altoActualReal = CONFIG.lineaMangaBase.inf_alto * factorPieza.y;
-        var factorAlto     = (targetAltoCmd / altoActualReal) * 100;
+        if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
+            var altoActualReal = CONFIG.lineaMangaBase.inf_alto * factorPieza.y;
+            var factorAlto     = (targetAlto / altoActualReal) * 100;
 
-        // Resize solo en Y — ancho no se toca
-        grupoLinea.resize(
-            100, factorAlto,
-            true, true, true, true, 100,
-            Transformation.BOTTOMLEFT  // anclar desde abajo para que suba hacia arriba
-        );
+            grupoLinea.resize(100, factorAlto, true, true, true, true, 100, Transformation.BOTTOMLEFT);
 
-        // Restaurar posición: left fijo, bottom fijo (pegada al borde inferior)
-        var boundsDespues = grupoLinea.geometricBounds;
-        var nuevoAlto     = Math.abs(boundsDespues[1] - boundsDespues[3]);
+            var boundsDespues = grupoLinea.geometricBounds;
+            var nuevoAlto     = Math.abs(boundsDespues[1] - boundsDespues[3]);
+            grupoLinea.left = leftAntes;
+            grupoLinea.top  = bottomAntes + nuevoAlto;
 
-        grupoLinea.left = leftAntes;
-        // Anclar borde inferior: top = bottomAntes + nuevoAlto
-        grupoLinea.top  = bottomAntes + nuevoAlto;
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": MANGA_LINEA_INF → alto " + targetAlto.toFixed(1) + "cm");
 
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": MANGA_LINEA_INF → " + targetAltoCmd.toFixed(1) + "cm");
+        } else if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
+            var anchoActualCm = ptToCm(Math.abs(boundsAntes[2] - boundsAntes[0]));
+            if (anchoActualCm <= 0) return;
+            var factorAncho2  = (targetAncho / anchoActualCm) * 100;
+
+            grupoLinea.resize(factorAncho2, 100, true, true, true, true, 100, Transformation.BOTTOMLEFT);
+            grupoLinea.left = leftAntes;
+            grupoLinea.top  = bottomAntes + Math.abs(grupoLinea.geometricBounds[1] - grupoLinea.geometricBounds[3]);
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": MANGA_LINEA_INF → ancho " + targetAncho.toFixed(1) + "cm");
+
+        } else {
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_INF sin valores válidos en CSV — no escalada");
+        }
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
@@ -719,54 +719,59 @@ function procesarLineaMangaInf(grupoLinea, targetAltoCmd, nombreJugador, nombreP
 //  PROCESAMIENTO DE COSTILLAS
 // ============================================================
 
-// Procesa una costilla (IZQ o DER):
-//   1. Corrige SOLO el ancho al valor del CSV (el alto ya quedó bien del scaleGroupExact)
-//   2. La posiciona pegada al borde izquierdo o derecho de la pieza
-function procesarCostilla(grupoCostilla, lado, targetAnchoCmd, grupoPieza, nombreJugador, nombrePieza) {
-    // Si no existe el grupo en el .ai → omitir sin error
+// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la pieza (comportamiento original)
+// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la pieza
+// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
+function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, grupoPieza, nombreJugador, nombrePieza) {
     if (!grupoCostilla) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": COSTILLA_" + lado + " no encontrada en DINAMICO — omitida");
         return;
     }
 
-    try {
-        // ── 1. Guardar posición ANTES del resize ─────────────
-        var boundsAntes  = grupoCostilla.geometricBounds;
-        var leftAntes    = boundsAntes[0];   // borde izquierdo
-        var rightAntes   = boundsAntes[2];   // borde derecho
-        var topAntes     = boundsAntes[1];   // posición vertical
-        var anchoActPt   = Math.abs(rightAntes - leftAntes);
-        if (anchoActPt <= 0) return;
-
-        var anchoActCm  = ptToCm(anchoActPt);
-        var factorAncho = (targetAnchoCmd / anchoActCm) * 100;
-
-        // ── 2. Resize SOLO en X desde TOPLEFT ────────────────
-        grupoCostilla.resize(
-            factorAncho, 100,
-            true, true, true, true, 100,
-            Transformation.TOPLEFT
-        );
-
-        // ── 3. Restaurar posición según lado ─────────────────
-        // TOPLEFT ancla el resize desde la esquina superior-izquierda,
-        // así que el left no cambia pero el right sí.
-        // Para DER necesitamos que el right quede donde estaba.
-        var boundsDespues = grupoCostilla.geometricBounds;
-        var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
-
-        if (lado === "IZQ") {
-            // Left fijo — la costilla crece hacia adentro (derecha)
-            grupoCostilla.left = leftAntes;
-        } else {
-            // Right fijo — la costilla crece hacia adentro (izquierda)
-            grupoCostilla.left = rightAntes - nuevoAncho;
-        }
-        grupoCostilla.top = topAntes;
-
+    if (ref === "PROPORCIONAL") {
         Log.ok(nombrePieza + " | " + nombreJugador +
-               ": COSTILLA_" + lado + " → " + targetAnchoCmd.toFixed(1) + "cm");
+               ": COSTILLA_" + lado + " → proporcional (escala con pieza)");
+        return;
+    }
+
+    try {
+        var boundsAntes  = grupoCostilla.geometricBounds;
+        var leftAntes    = boundsAntes[0];
+        var rightAntes   = boundsAntes[2];
+        var topAntes     = boundsAntes[1];
+
+        if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
+            var anchoActCm  = ptToCm(Math.abs(rightAntes - leftAntes));
+            if (anchoActCm <= 0) return;
+            var factorAncho = (targetAncho / anchoActCm) * 100;
+
+            grupoCostilla.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
+
+            var boundsDespues = grupoCostilla.geometricBounds;
+            var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
+            grupoCostilla.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAncho;
+            grupoCostilla.top  = topAntes;
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": COSTILLA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
+
+        } else if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
+            var altoActCm  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            if (altoActCm <= 0) return;
+            var factorAlto = (targetAlto / altoActCm) * 100;
+
+            grupoCostilla.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
+            grupoCostilla.left = boundsAntes[0];
+            grupoCostilla.top  = topAntes;
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": COSTILLA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
+
+        } else {
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": COSTILLA_" + lado + " sin valores válidos en CSV — no escalada");
+        }
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
@@ -778,35 +783,23 @@ function procesarCostilla(grupoCostilla, lado, targetAnchoCmd, grupoPieza, nombr
 //  CENTRADO HORIZONTAL DE TEXTO
 // ============================================================
 
-// Centra un TextFrame horizontalmente respecto a su pieza contenedora.
-// Mantiene la posición vertical intacta.
 function centrarHorizontalmente(textFrame, grupoPieza) {
     try {
-        // Centro horizontal de la pieza completa
         var piezaBounds  = grupoPieza.geometricBounds;
-        // geometricBounds = [left, top, right, bottom]
         var piezaLeft    = piezaBounds[0];
         var piezaRight   = piezaBounds[2];
         var piezaCentroX = (piezaLeft + piezaRight) / 2;
 
-        // Forzar alineación centrada en el párrafo del TextFrame
         try {
             var parrafo = textFrame.textRange.paragraphAttributes;
             parrafo.justification = Justification.CENTER;
         } catch(e) { /* ignorar si no es accesible */ }
 
-        // Obtener ancho actual del TextFrame después de cambiar el contenido
         var tfBounds = textFrame.visibleBounds;
         var tfAncho  = Math.abs(tfBounds[2] - tfBounds[0]);
-
-        // Calcular nueva posición left para centrar
-        var nuevoLeft = piezaCentroX - (tfAncho / 2);
-
-        // Aplicar solo la posición horizontal, mantener vertical intacta
-        textFrame.left = nuevoLeft;
+        textFrame.left = piezaCentroX - (tfAncho / 2);
 
     } catch(e) {
-        // Si falla el centrado, no interrumpir el proceso
-        // El texto queda en su posición original
+        // Si falla el centrado, el texto queda en su posición original
     }
 }

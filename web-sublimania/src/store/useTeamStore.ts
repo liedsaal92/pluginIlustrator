@@ -1,0 +1,168 @@
+// ============================================================
+//  store/useTeamStore.ts — Estado principal del generador
+// ============================================================
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Player, Rules, Overrides, GlobalConfig, Screen, ConfigTab, PiezaKey } from '../types';
+import { buildEmptyRules, getDefaultGlobal } from '../utils/schema';
+
+interface TeamState {
+  // Datos
+  players: Player[];
+  tallas: string[];
+  tallaRules: Record<string, Rules>;
+  overrides: Overrides;
+  globalConfig: GlobalConfig;
+
+  // Navegación
+  screen: Screen;
+  configTab: ConfigTab;
+  activeTalla: string | null;
+  activePieza: PiezaKey;
+  expandedPlayer: number | null;
+  expandedPlayerPieza: PiezaKey;
+
+  // Acciones — datos
+  setPlayers: (players: Player[], tallas: string[]) => void;
+  setTallaRule: (talla: string, key: string, value: string) => void;
+  setOverride: (idx: number, key: string, value: string) => void;
+  clearOverride: (idx: number) => void;
+  applyTallaToAll: (talla: string) => void;
+  copyTallaRules: (from: string, to: string) => void;
+  copyTallaRulesToAll: (from: string) => void;
+  setGlobalConfig: (key: string, value: string) => void;
+
+  // Acciones — navegación
+  setScreen: (screen: Screen) => void;
+  setConfigTab: (tab: ConfigTab) => void;
+  setActiveTalla: (talla: string) => void;
+  setActivePieza: (pieza: PiezaKey) => void;
+  setExpandedPlayer: (idx: number | null) => void;
+  setExpandedPlayerPieza: (pieza: PiezaKey) => void;
+
+  // Getters
+  getPlayerRules: (idx: number) => Rules;
+  hasOverride: (idx: number) => boolean;
+}
+
+export const useTeamStore = create<TeamState>()(
+  persist(
+    (set, get) => ({
+      // ── Estado inicial ──────────────────────────────────────
+      players: [],
+      tallas: [],
+      tallaRules: {},
+      overrides: {},
+      globalConfig: getDefaultGlobal(),
+      screen: 'upload',
+      configTab: 'rules',
+      activeTalla: null,
+      activePieza: 'frente',
+      expandedPlayer: null,
+      expandedPlayerPieza: 'frente',
+
+      // ── Datos ───────────────────────────────────────────────
+      setPlayers: (players, tallas) => {
+        const { tallaRules } = get();
+        const newRules: Record<string, Rules> = { ...tallaRules };
+        tallas.forEach(t => {
+          if (!newRules[t]) newRules[t] = buildEmptyRules();
+        });
+        set({
+          players,
+          tallas,
+          tallaRules: newRules,
+          overrides: {},
+          screen: 'configure',
+          configTab: 'rules',
+          activeTalla: tallas[0] ?? null,
+          globalConfig: get().globalConfig.EQUIPO ? get().globalConfig : getDefaultGlobal(),
+        });
+      },
+
+      setTallaRule: (talla, key, value) => {
+        const rules = { ...get().tallaRules };
+        if (!rules[talla]) rules[talla] = buildEmptyRules();
+        rules[talla] = { ...rules[talla], [key]: value };
+        set({ tallaRules: rules });
+      },
+
+      setOverride: (idx, key, value) => {
+        const { overrides, players, tallaRules } = get();
+        const talla = players[idx]?.TALLA ?? '';
+        const base = tallaRules[talla] ?? {};
+        const current = { ...(overrides[idx] ?? {}) };
+
+        if (String(value) === String(base[key] ?? '')) {
+          delete current[key];
+        } else {
+          current[key] = value;
+        }
+
+        const next = { ...overrides };
+        if (Object.keys(current).length === 0) {
+          delete next[idx];
+        } else {
+          next[idx] = current;
+        }
+        set({ overrides: next });
+      },
+
+      clearOverride: (idx) => {
+        const next = { ...get().overrides };
+        delete next[idx];
+        set({ overrides: next });
+      },
+
+      applyTallaToAll: (talla) => {
+        const { players, overrides } = get();
+        const next = { ...overrides };
+        players.forEach((p, idx) => {
+          if (String(p.TALLA ?? '') === talla) delete next[idx];
+        });
+        set({ overrides: next });
+      },
+
+      copyTallaRules: (from, to) => {
+        const rules = { ...get().tallaRules };
+        rules[to] = { ...(rules[from] ?? {}) };
+        set({ tallaRules: rules });
+      },
+
+      copyTallaRulesToAll: (from) => {
+        const { tallas, tallaRules } = get();
+        const rules = { ...tallaRules };
+        tallas.filter(t => t !== from).forEach(t => {
+          rules[t] = { ...(rules[from] ?? {}) };
+        });
+        set({ tallaRules: rules });
+      },
+
+      setGlobalConfig: (key, value) => {
+        set({ globalConfig: { ...get().globalConfig, [key]: value } });
+      },
+
+      // ── Navegación ──────────────────────────────────────────
+      setScreen: (screen) => set({ screen }),
+      setConfigTab: (configTab) => set({ configTab }),
+      setActiveTalla: (activeTalla) => set({ activeTalla }),
+      setActivePieza: (activePieza) => set({ activePieza }),
+      setExpandedPlayer: (expandedPlayer) => set({ expandedPlayer }),
+      setExpandedPlayerPieza: (expandedPlayerPieza) => set({ expandedPlayerPieza }),
+
+      // ── Getters ─────────────────────────────────────────────
+      getPlayerRules: (idx) => {
+        const { players, tallaRules, overrides } = get();
+        const talla = players[idx]?.TALLA ?? '';
+        const base = tallaRules[talla] ?? {};
+        return { ...base, ...(overrides[idx] ?? {}) };
+      },
+
+      hasOverride: (idx) => {
+        const ov = get().overrides[idx];
+        return !!ov && Object.keys(ov).length > 0;
+      },
+    }),
+    { name: 'sublimania_team_v1' }
+  )
+);

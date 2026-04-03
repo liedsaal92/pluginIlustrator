@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -Command \"Set-Location ''C:\\\\Users\\\\lieds\\\\Desktop''; & ''C:\\\\Program Files\\\\nodejs\\\\npm.cmd'' create vite@latest sublimacion-app -- --template react-ts 2>&1\")",
+      "Bash(powershell.exe -Command \"Remove-Item ''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src'' -Recurse -Force; New-Item -ItemType Directory -Path ''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\types'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\store'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\utils'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\components\\\\ui'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\components\\\\layout'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\registro'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\empleados'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\pagos'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\inventario'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\compresor'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\reportes'',''C:\\\\Users\\\\lieds\\\\Desktop\\\\sublimacion-app\\\\src\\\\modules\\\\configuracion'' -Force | Out-Null; Write-Host ''Structure created''\")",
+      "Bash(/tmp/build.ps1:*)",
+      "Bash(powershell.exe -File /tmp/build.ps1)",
+      "Bash(/tmp/dev.ps1:*)",
+      "Bash(powershell.exe -File /tmp/dev.ps1)",
+      "Bash(robocopy \"C:\\\\Program Files\\\\Adobe\\\\Adobe Illustrator 2024\\\\Presets\\\\es_ES\\\\Secuencias de comandos\\\\IA\" \"C:\\\\Users\\\\lieds\\\\Documents\\\\GitHub\\\\pluginIlustrator\\\\IA\" /E /XD web /NFL /NDL /NJH)",
+      "Bash(echo \"EXIT_CODE_1=$?\")",
+      "Bash(cmd /c \"robocopy \\\\\"C:\\\\Program Files\\\\Adobe\\\\Adobe Illustrator 2024\\\\Presets\\\\es_ES\\\\Secuencias de comandos\\\\IA\\\\\" \\\\\"C:\\\\Users\\\\lieds\\\\Documents\\\\GitHub\\\\pluginIlustrator\\\\IA\\\\\" /E /XD web /NFL /NDL /NJH\")"
+    ]
+  }
+}
