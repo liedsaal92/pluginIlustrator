@@ -61,6 +61,12 @@ export function UploadScreen({ onToast }: Props) {
           />
         </div>
 
+        <div className="upload-template-link">
+          <a href="/EJEMPLO-CARGA.xlsx" download="EJEMPLO-CARGA.xlsx" className="btn btn-outline-secondary btn-sm">
+            ⬇ Descargar plantilla de ejemplo
+          </a>
+        </div>
+
         <div className="upload-cols-preview">
           <div className="cols-label">COLUMNAS DEL EXCEL</div>
           <div className="cols-list">
