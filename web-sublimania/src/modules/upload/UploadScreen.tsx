@@ -3,8 +3,9 @@
 // ============================================================
 import { useRef } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
+import { useTeamsStore } from '../../store/useTeamsStore';
 import { parseExcelFile, extractTallas } from '../../utils/excelReader';
-import { PLAYER_KEYS } from '../../utils/schema';
+import { PLAYER_KEYS, buildEmptyRules, getDefaultGlobal } from '../../utils/schema';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -12,12 +13,41 @@ interface Props {
 
 export function UploadScreen({ onToast }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { setPlayers } = useTeamStore();
+  const { setPlayers, setScreen } = useTeamStore();
+  const hasTeams = useTeamsStore(s => s.teams.length > 0);
 
   async function handleFile(file: File) {
     try {
       const players = await parseExcelFile(file);
       const tallas = extractTallas(players);
+
+      // Construir reglas vacías por talla
+      const tallaRules: Record<string, ReturnType<typeof buildEmptyRules>> = {};
+      tallas.forEach(t => { tallaRules[t] = buildEmptyRules(); });
+
+      const globalConfig = getDefaultGlobal();
+
+      // Crear o actualizar entrada en useTeamsStore
+      const { activeTeamId, createTeam, saveTeam, getActiveTeam } = useTeamsStore.getState();
+      if (activeTeamId) {
+        // Ya existe un equipo activo (re-carga de Excel) — actualizar jugadores
+        const current = getActiveTeam();
+        saveTeam(activeTeamId, {
+          nombre: current?.nombre || globalConfig.EQUIPO || 'Sin nombre',
+          players, tallas, tallaRules,
+          overrides: {}, globalConfig,
+          exportHistory: current?.exportHistory ?? {},
+        });
+      } else {
+        // Equipo nuevo
+        createTeam({
+          nombre: globalConfig.EQUIPO || 'Nuevo equipo',
+          players, tallas, tallaRules,
+          overrides: {}, globalConfig,
+          exportHistory: {},
+        });
+      }
+
       setPlayers(players, tallas);
       onToast(`${players.length} jugadores cargados — ${tallas.length} tallas detectadas`, 'ok');
     } catch (err) {
@@ -34,6 +64,11 @@ export function UploadScreen({ onToast }: Props) {
 
   return (
     <div className="screen upload-screen">
+      {hasTeams && (
+        <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
+          ← EQUIPOS
+        </button>
+      )}
       <div className="upload-box">
         <div className="upload-badge">PASO 01</div>
         <h2 className="upload-title">CARGÁ TU EXCEL</h2>

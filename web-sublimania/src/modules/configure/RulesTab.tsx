@@ -3,7 +3,7 @@
 // ============================================================
 import { useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
-import { SCHEMA } from '../../utils/schema';
+import { SCHEMA, TALLAS_ESTANDAR } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
 import type { PiezaKey } from '../../types';
@@ -25,20 +25,29 @@ export function RulesTab({ onToast }: Props) {
   const rules = activeTalla ? (tallaRules[activeTalla] ?? {}) : {};
   const schema = SCHEMA[activePieza];
 
+  // Tallas con jugadores primero (en el orden del Excel), luego las estándar sin jugadores
+  const tallasExtras = tallas.filter(t => !TALLAS_ESTANDAR.includes(t));
+  const tallasConJugadores = [...tallas, ...tallasExtras.filter(t => !tallas.includes(t))];
+  const tallasSinJugadores = [...TALLAS_ESTANDAR, ...tallasExtras].filter(t => !tallasConJugadores.includes(t));
+  const todasLasTallas = [...tallasConJugadores, ...tallasSinJugadores];
+
   return (
     <div className="rules-layout">
       <div className="tallas-sidebar">
         <div className="sidebar-label">TALLAS</div>
-        {tallas.map(t => (
-          <button
-            key={t}
-            className={`talla-btn ${activeTalla === t ? 'active' : ''}`}
-            onClick={() => setActiveTalla(t)}
-          >
-            <span className="talla-code">{t}</span>
-            <span className="talla-count">{players.filter(p => p.TALLA === t).length} jug.</span>
-          </button>
-        ))}
+        {todasLasTallas.map(t => {
+          const count = players.filter(p => p.TALLA === t).length;
+          return (
+            <button
+              key={t}
+              className={`talla-btn ${activeTalla === t ? 'active' : ''} ${count > 0 ? 'has-players' : 'no-players'}`}
+              onClick={() => setActiveTalla(t)}
+            >
+              <span className="talla-code">{t}</span>
+              <span className="talla-count">{count > 0 ? `${count} jug.` : '—'}</span>
+            </button>
+          );
+        })}
 
         <div className="sidebar-actions">
           <button
@@ -52,7 +61,7 @@ export function RulesTab({ onToast }: Props) {
             <div className="copy-label">Copiar a:</div>
             <select className="select-copy" value={copyTo} onChange={e => setCopyTo(e.target.value)}>
               <option value="">— talla —</option>
-              {tallas.filter(t => t !== activeTalla).map(t => <option key={t} value={t}>{t}</option>)}
+              {todasLasTallas.filter(t => t !== activeTalla).map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             <button
               className="btn btn-ghost btn-sm btn-full"

@@ -2,7 +2,7 @@
 //  utils/configFile.ts — Guardar/cargar config JSON
 //  Usa File System Access API + IndexedDB para el file handle
 // ============================================================
-import type { Player, Rules, Overrides, GlobalConfig } from '../types';
+import type { Player, Rules, Overrides, GlobalConfig, TeamEntry } from '../types';
 import { getDefaultGlobal } from './schema';
 
 // ── TIPOS ────────────────────────────────────────────────────
@@ -104,6 +104,39 @@ export async function loadFromFile(): Promise<{ handle: FileSystemFileHandle; sn
   const text = await file.text();
   const snapshot = parseSnapshot(JSON.parse(text));
   return { handle, snapshot };
+}
+
+// ── RESPALDO GLOBAL (todos los equipos) ───────────────────────
+export interface GlobalBackup {
+  version: number;
+  exportedAt: string;
+  teams: TeamEntry[];
+}
+
+export async function exportBackup(teams: TeamEntry[]): Promise<void> {
+  const backup: GlobalBackup = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    teams,
+  };
+  const handle = await window.showSaveFilePicker({
+    suggestedName: `sublimania_backup_${new Date().toISOString().slice(0, 10)}.json`,
+    types: [{ description: 'Respaldo JSON', accept: { 'application/json': ['.json'] } }],
+  });
+  const writable = await handle.createWritable();
+  await writable.write(JSON.stringify(backup, null, 2));
+  await writable.close();
+}
+
+export async function importBackup(): Promise<TeamEntry[]> {
+  const [handle] = await window.showOpenFilePicker({
+    types: [{ description: 'Respaldo JSON', accept: { 'application/json': ['.json'] } }],
+  });
+  const file = await handle.getFile();
+  const text = await file.text();
+  const raw = JSON.parse(text) as Partial<GlobalBackup>;
+  if (!Array.isArray(raw.teams)) throw new Error('Archivo de respaldo inválido');
+  return raw.teams;
 }
 
 export async function tryReconnectFile(): Promise<

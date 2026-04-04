@@ -199,3 +199,9 @@ export function buildEmptyRules(): Rules {
 export function getDefaultGlobal(): GlobalConfig {
   return { EQUIPO: '', NOTAS: '' };
 }
+
+// Tallas estándar — siempre visibles en la pantalla de exportación
+export const TALLAS_ESTANDAR = [
+  '24H','26H','28H','30H','32H','34H','35H','36H','38H','40H','42H','44H',
+  '24M','26M','28M','30M','32M','34M','35M','36M','38M','40M','42M','44M',
+];

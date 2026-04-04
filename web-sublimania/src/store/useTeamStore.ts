@@ -1,9 +1,9 @@
 // ============================================================
-//  store/useTeamStore.ts — Estado principal del generador
+//  store/useTeamStore.ts — Working store del equipo activo
 // ============================================================
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Player, Rules, Overrides, GlobalConfig, Screen, ConfigTab, PiezaKey } from '../types';
+import type { Player, Rules, Overrides, GlobalConfig, Screen, ConfigTab, PiezaKey, TeamEntry } from '../types';
 import { buildEmptyRules, getDefaultGlobal } from '../utils/schema';
 
 interface TeamState {
@@ -43,6 +43,9 @@ interface TeamState {
   // Getters
   getPlayerRules: (idx: number) => Rules;
   hasOverride: (idx: number) => boolean;
+
+  // Carga el estado completo desde un TeamEntry (al cambiar de equipo)
+  loadFromEntry: (entry: TeamEntry, targetScreen?: Screen) => void;
 }
 
 export const useTeamStore = create<TeamState>()(
@@ -162,7 +165,37 @@ export const useTeamStore = create<TeamState>()(
         const ov = get().overrides[idx];
         return !!ov && Object.keys(ov).length > 0;
       },
+
+      loadFromEntry: (entry, targetScreen = 'configure') => {
+        set({
+          players:      entry.players,
+          tallas:       entry.tallas,
+          tallaRules:   entry.tallaRules,
+          overrides:    entry.overrides,
+          globalConfig: entry.globalConfig,
+          screen:       targetScreen,
+          configTab:    'rules',
+          activeTalla:  entry.tallas[0] ?? '24H',
+          expandedPlayer: null,
+        });
+      },
     }),
     { name: 'sublimania_team_v1' }
   )
 );
+
+// ── Helper: guarda el working store en useTeamsStore ──────────
+// Importar aquí causaría dependencia circular; se importa desde
+// los componentes que necesitan guardar antes de navegar.
+export function buildTeamEntryFromWorkingStore(): Omit<TeamEntry, 'id' | 'createdAt' | 'updatedAt'> {
+  const s = useTeamStore.getState();
+  return {
+    nombre:        s.globalConfig.EQUIPO || 'Sin nombre',
+    players:       s.players,
+    tallas:        s.tallas,
+    tallaRules:    s.tallaRules,
+    overrides:     s.overrides,
+    globalConfig:  s.globalConfig,
+    exportHistory: {},   // lo preserva el caller desde useTeamsStore
+  };
+}

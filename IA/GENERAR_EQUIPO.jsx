@@ -47,12 +47,43 @@ function main() {
     );
     if (!logFolder) logFolder = csvFile.parent;
 
+    // ── Ventana de progreso ──────────────────────────────────
+    var progWin = new Window("palette", "Sublimania — Generando equipo", undefined, {closeButton: false});
+    progWin.orientation = "column";
+    progWin.alignChildren = "fill";
+    progWin.margins = [20, 16, 20, 16];
+    progWin.spacing = 10;
+
+    var stTitulo = progWin.add("statictext", undefined, doc.name);
+    stTitulo.graphics.font = ScriptUI.newFont("dialog", "BOLD", 11);
+
+    var stEstado = progWin.add("statictext", undefined, "Leyendo CSV...");
+    stEstado.preferredSize.width = 380;
+
+    var pb = progWin.add("progressbar", undefined, 0, 100);
+    pb.preferredSize = [380, 14];
+
+    var stDetalle = progWin.add("statictext", undefined, " ");
+    stDetalle.preferredSize.width = 380;
+
+    progWin.show();
+
+    function progActualizar(estado, detalle, valor) {
+        stEstado.text  = estado  || stEstado.text;
+        stDetalle.text = detalle || " ";
+        if (typeof valor === "number") pb.value = valor;
+        progWin.update();
+    }
+    // ────────────────────────────────────────────────────────
+
     Log._linea("-----", "Documento : " + doc.name);
     Log._linea("-----", "CSV       : " + csvFile.fsName);
 
     // 4. Leer CSV
+    progActualizar("Leyendo CSV...", csvFile.name, 5);
     var jugadores = leerXlsx(csvFile);
     if (jugadores === null || jugadores.length === 0) {
+        progWin.close();
         Log.fatal("No se encontraron jugadores válidos en el CSV");
         var lp = Log.exportar(logFolder.fsName);
         alert("ERROR FATAL: No hay jugadores válidos.\nRevisa el log: " + lp);
@@ -61,8 +92,10 @@ function main() {
     Log._linea("-----", "Jugadores : " + jugadores.length);
 
     // 5. Validar plantilla ANTES de modificar nada
+    progActualizar("Validando plantilla...", doc.name, 15);
     var validacion = validarPlantilla(doc);
     if (!validacion.ok) {
+        progWin.close();
         Log.fatal(validacion.mensaje);
         var lp = Log.exportar(logFolder.fsName);
         alert("ERROR FATAL: " + validacion.mensaje + "\n\nRevisa el log: " + lp);
@@ -102,8 +135,10 @@ function main() {
     templateLayer.visible = false;
 
     // 8. Procesar piezas
-    var docAncho  = doc.width;
-    var currentY  = 0;
+    var docAncho   = doc.width;
+    var currentY   = 0;
+    var totalPasos = jugadores.length * CONFIG.piezas.length;
+    var pasoActual = 0;
 
     for (var p = 0; p < CONFIG.piezas.length; p++) {
         var nombrePieza   = CONFIG.piezas[p];
@@ -111,6 +146,7 @@ function main() {
 
         if (!grupoTemplate) {
             Log.info("Pieza '" + nombrePieza + "' no encontrada en plantilla — omitida");
+            pasoActual += jugadores.length;
             continue;
         }
 
@@ -122,6 +158,14 @@ function main() {
 
         for (var i = 0; i < jugadores.length; i++) {
             var j = jugadores[i];
+
+            pasoActual++;
+            var progValor = 20 + Math.round((pasoActual / totalPasos) * 75);
+            progActualizar(
+                nombrePieza + "  (" + pasoActual + "/" + totalPasos + ")",
+                j.NOMBRE + "  —  " + j.TALLA,
+                progValor
+            );
 
             try {
                 var dims = getDimensiones(j, nombrePieza);
@@ -183,7 +227,10 @@ function main() {
     templateLayer.locked  = templateLocked;
 
     // 10. Log y resumen
+    progActualizar("Exportando log...", " ", 98);
     var logPath = Log.exportar(logFolder.fsName);
+
+    progWin.close();
 
     alert(
         "Proceso completado\n\n" +

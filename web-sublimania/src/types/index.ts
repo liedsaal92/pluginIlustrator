@@ -56,7 +56,21 @@ export interface SchemaPieza {
 
 export type Schema = Record<string, SchemaPieza>;
 
+// ── TEAM ENTRY (registro completo de un equipo) ───────────────
+export interface TeamEntry {
+  id: string;
+  nombre: string;         // display name (= globalConfig.EQUIPO al crear)
+  createdAt: string;      // ISO
+  updatedAt: string;      // ISO
+  players: Player[];
+  tallas: string[];
+  tallaRules: Record<string, Rules>;
+  overrides: Overrides;
+  globalConfig: GlobalConfig;
+  exportHistory: Record<string, { exportedAt: string }>; // talla → fecha
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'upload' | 'configure' | 'export';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export';
 export type ConfigTab = 'rules' | 'players';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

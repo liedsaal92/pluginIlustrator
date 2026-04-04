@@ -16,10 +16,12 @@ export function buildCSV(
   tallaRules: Record<string, Rules>,
   overrides: Overrides,
   globalConfig: GlobalConfig,
+  tallasSeleccionadas?: string[],
 ): string {
   const rows: string[] = [CSV_COLUMN_ORDER.join(',')];
 
   players.forEach((player, idx) => {
+    if (tallasSeleccionadas && !tallasSeleccionadas.includes(player.TALLA ?? '')) return;
     const talla = player.TALLA ?? '';
     const base = tallaRules[talla] ?? {};
     const override = overrides[idx] ?? {};
