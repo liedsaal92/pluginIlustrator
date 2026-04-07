@@ -4,17 +4,45 @@
 import { useRef } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
+import { useTallasStore } from '../../store/useTallasStore';
 import { parseExcelFile, extractTallas } from '../../utils/excelReader';
 import { PLAYER_KEYS, buildEmptyRules, getDefaultGlobal } from '../../utils/schema';
+import { exportBackup, importBackup } from '../../utils/configBackup';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
 }
 
 export function UploadScreen({ onToast }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef   = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const { setPlayers, setScreen } = useTeamStore();
-  const hasTeams = useTeamsStore(s => s.teams.length > 0);
+  const { teams, replaceAll } = useTeamsStore();
+  const { tallas: tallaDims, resetToDefault, tallas } = useTallasStore();
+  const hasTeams = teams.length > 0;
+
+  function handleExportBackup() {
+    exportBackup(tallaDims, teams);
+    onToast('Configuración exportada', 'ok');
+  }
+
+  async function handleImportBackup(file: File) {
+    try {
+      const backup = await importBackup(file);
+      // Restaurar tallas
+      useTallasStore.setState({ tallas: backup.tallas });
+      // Restaurar equipos
+      replaceAll(backup.teams);
+      onToast(
+        `Configuración importada — ${backup.teams.length} equipo(s), ${Object.keys(backup.tallas).length} tallas`,
+        'ok',
+      );
+    } catch (err) {
+      onToast(err instanceof Error ? err.message : 'Error al importar', 'error');
+    }
+  }
+
+  void resetToDefault; void tallas; // evitar warnings
 
   async function handleFile(file: File) {
     try {
@@ -100,6 +128,28 @@ export function UploadScreen({ onToast }: Props) {
           <a href="/EJEMPLO-CARGA.xlsx" download="EJEMPLO-CARGA.xlsx" className="btn btn-outline-secondary btn-sm">
             ⬇ Descargar plantilla de ejemplo
           </a>
+        </div>
+
+        <div className="upload-backup">
+          <div className="upload-backup-label">CONFIGURACIÓN</div>
+          <div className="upload-backup-actions">
+            <button className="btn btn-ghost btn-sm" onClick={handleExportBackup}>
+              ⬆ Exportar configuración
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => importInputRef.current?.click()}>
+              ⬇ Importar configuración
+            </button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: 'none' }}
+              onChange={e => {
+                if (e.target.files?.[0]) handleImportBackup(e.target.files[0]);
+                e.target.value = '';
+              }}
+            />
+          </div>
         </div>
 
         <div className="upload-cols-preview">

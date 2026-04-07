@@ -181,6 +181,27 @@ body {
   max-width: 360px;
 }
 
+.upload-backup {
+  margin-top: 1.5rem;
+  border-top: var(--border);
+  padding-top: 1rem;
+}
+
+.upload-backup-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.upload-backup-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .upload-cols-preview { margin-top: 1.5rem; }
 .cols-label {
   font-family: var(--mono);
