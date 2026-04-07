@@ -24,6 +24,9 @@ interface TeamState {
 
   // Acciones — datos
   setPlayers: (players: Player[], tallas: string[]) => void;
+  addPlayer: (player: Player) => void;
+  removePlayer: (idx: number) => void;
+  updatePlayer: (idx: number, fields: Partial<Player>) => void;
   setTallaRule: (talla: string, key: string, value: string) => void;
   setOverride: (idx: number, key: string, value: string) => void;
   clearOverride: (idx: number) => void;
@@ -81,6 +84,38 @@ export const useTeamStore = create<TeamState>()(
           activeTalla: tallas[0] ?? null,
           globalConfig: get().globalConfig.EQUIPO ? get().globalConfig : getDefaultGlobal(),
         });
+      },
+
+      addPlayer: (player) => {
+        const { players, tallas, tallaRules } = get();
+        const newPlayers = [...players, player];
+        const newTallas = tallas.includes(player.TALLA) ? tallas : [...tallas, player.TALLA];
+        const newRules = { ...tallaRules };
+        if (!newRules[player.TALLA]) newRules[player.TALLA] = buildEmptyRules();
+        set({ players: newPlayers, tallas: newTallas, tallaRules: newRules });
+      },
+
+      removePlayer: (idx) => {
+        const { players, overrides } = get();
+        const newPlayers = players.filter((_, i) => i !== idx);
+        // Re-indexar overrides (los índices mayores a idx bajan uno)
+        const newOverrides: Overrides = {};
+        Object.entries(overrides).forEach(([k, v]) => {
+          const i = Number(k);
+          if (i < idx) newOverrides[i] = v;
+          else if (i > idx) newOverrides[i - 1] = v;
+        });
+        const newTallas = [...new Set(newPlayers.map(p => p.TALLA))];
+        set({ players: newPlayers, overrides: newOverrides, tallas: newTallas });
+      },
+
+      updatePlayer: (idx, fields) => {
+        const { players, tallas, tallaRules } = get();
+        const newPlayers = players.map((p, i) => i === idx ? { ...p, ...fields } : p);
+        const newTallas = [...new Set(newPlayers.map(p => p.TALLA))];
+        const newRules = { ...tallaRules };
+        newTallas.forEach(t => { if (!newRules[t]) newRules[t] = buildEmptyRules(); });
+        set({ players: newPlayers, tallas: newTallas, tallaRules: newRules });
       },
 
       setTallaRule: (talla, key, value) => {

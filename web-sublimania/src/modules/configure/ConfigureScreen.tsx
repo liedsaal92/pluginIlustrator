@@ -6,6 +6,8 @@ import { GLOBAL_FIELDS } from '../../utils/schema';
 import { SaveStatus } from '../../components/ui/SaveStatus';
 import { RulesTab } from './RulesTab';
 import { PlayerCard } from './PlayerCard';
+import { TallasTab } from './TallasTab';
+import { AddPlayerForm } from './AddPlayerForm';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -64,15 +66,23 @@ export function ConfigureScreen({ onToast }: Props) {
         >
           👤 JUGADORES ({players.length})
         </button>
+        <button
+          className={`tab-btn ${configTab === 'tallas' ? 'active' : ''}`}
+          onClick={() => setConfigTab('tallas')}
+        >
+          📐 TALLAS
+        </button>
       </div>
 
       <div className="config-body">
         {configTab === 'rules' && <RulesTab onToast={onToast} />}
         {configTab === 'players' && (
           <div className="players-layout">
+            <AddPlayerForm />
             {players.map((_, idx) => <PlayerCard key={idx} idx={idx} />)}
           </div>
         )}
+        {configTab === 'tallas' && <TallasTab />}
       </div>
     </div>
   );

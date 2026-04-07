@@ -82,7 +82,7 @@ export function UploadScreen({ onToast }: Props) {
         >
           <div className="drop-label">SOLTÁ TU .XLSX ACÁ</div>
           <div className="drop-sub-label">
-            Columnas requeridas: NOMBRE · TALLA · ALTO · ANCHO · MANGA_ALTO · MANGA_ANCHO
+            Columnas requeridas: NOMBRE · NOMBRE_CAMISETA · NUMERO · TALLA
           </div>
           <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()}>
             SELECCIONAR ARCHIVO

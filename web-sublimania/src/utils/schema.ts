@@ -7,10 +7,7 @@ const REF_OPTIONS = ['PROPORCIONAL', 'ANCHO', 'ALTO'];
 const LADO_OPTIONS = ['IZQ', 'DER'];
 
 // Columnas fijas del Excel (no configurables por reglas)
-export const PLAYER_KEYS = [
-  'NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA',
-  'ALTO', 'ANCHO', 'MANGA_ALTO', 'MANGA_ANCHO',
-];
+export const PLAYER_KEYS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA'];
 
 // Orden exacto de columnas del CSV final
 export const CSV_COLUMN_ORDER: string[] = [

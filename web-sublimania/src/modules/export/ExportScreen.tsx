@@ -4,6 +4,7 @@
 import { useState, useMemo } from 'react';
 import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
+import { useTallasStore } from '../../store/useTallasStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
 
@@ -19,6 +20,7 @@ function formatDate(iso: string): string {
 export function ExportScreen({ onToast }: Props) {
   const { players, tallas, tallaRules, overrides, globalConfig, setScreen } = useTeamStore();
   const { activeTeamId, getActiveTeam, markExported, saveTeam } = useTeamsStore();
+  const tallaDims = useTallasStore(s => s.tallas);
 
   const activeTeam = getActiveTeam();
   const teamHistory = activeTeam?.exportHistory ?? {};
@@ -47,16 +49,16 @@ export function ExportScreen({ onToast }: Props) {
 
   const csv = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
-      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : undefined),
+      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : undefined, tallaDims),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(',')]
+    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
   );
 
   const previewCSV = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
-      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : []),
+      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : [], tallaDims),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(',')]
+    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
   );
 
   const preview = previewCSV.split('\r\n').slice(0, 6).join('\n');

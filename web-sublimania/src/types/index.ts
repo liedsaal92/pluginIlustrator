@@ -8,10 +8,6 @@ export interface Player {
   NOMBRE_CAMISETA: string;
   NUMERO: string;
   TALLA: string;
-  ALTO: string;
-  ANCHO: string;
-  MANGA_ALTO: string;
-  MANGA_ANCHO: string;
 }
 
 // ── REGLAS (valores configurables por talla o por jugador) ────
@@ -70,7 +66,15 @@ export interface TeamEntry {
   exportHistory: Record<string, { exportedAt: string }>; // talla → fecha
 }
 
+// ── TALLAS ESTÁNDAR (dimensiones globales por talla) ──────────
+export interface TallaDims {
+  ALTO: string;
+  ANCHO: string;
+  MANGA_ANCHO: string;
+  MANGA_ALTO: string;
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
 export type Screen = 'teams' | 'upload' | 'configure' | 'export';
-export type ConfigTab = 'rules' | 'players';
+export type ConfigTab = 'rules' | 'players' | 'tallas';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

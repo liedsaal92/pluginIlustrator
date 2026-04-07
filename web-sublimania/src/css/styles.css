@@ -488,6 +488,245 @@ body {
   gap: 0;
 }
 
+/* ── TALLAS TAB ──────────────────────────────────────────── */
+.tallas-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.tallas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tallas-add {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-talla-nueva {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 5px 8px;
+  border: var(--border);
+  background: var(--white);
+  width: 160px;
+  text-transform: uppercase;
+}
+
+.tallas-table-wrap {
+  overflow-x: auto;
+  border: var(--border);
+}
+
+.tallas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: var(--font-mono, monospace);
+}
+
+.tallas-table thead {
+  background: #f0ece4;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.tallas-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  border-bottom: var(--border);
+  white-space: nowrap;
+}
+
+.tallas-table th.col-dim {
+  text-align: right;
+  padding-right: 10px;
+}
+
+.tallas-table th .unit {
+  font-weight: 400;
+  color: #888;
+  margin-left: 2px;
+}
+
+.tallas-table th,
+.tallas-table td {
+  border-right: var(--border);
+}
+
+.tallas-table th:last-child,
+.tallas-table td:last-child {
+  border-right: none;
+}
+
+.tallas-table td {
+  padding: 6px 8px;
+  border-bottom: var(--border);
+}
+
+.tallas-table tbody tr:last-child td { border-bottom: none; }
+
+.tallas-table tbody tr:hover { background: #faf8f2; }
+
+.col-talla { width: 80px; }
+.col-dim   { width: 120px; text-align: right; }
+.col-del   { width: 36px; text-align: center; }
+
+.talla-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  border: 1.5px solid var(--black);
+}
+
+.input-dim {
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  padding: 4px 4px 4px 0;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: right;
+  box-sizing: border-box;
+}
+
+.input-dim:focus {
+  outline: none;
+  border-color: var(--accent, #333);
+  background: var(--white);
+}
+
+.btn-del-talla {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.btn-del-talla:hover { color: #c0392b; }
+
+.btn-danger {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+
+.tallas-hint {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+}
+
+/* ── ADD PLAYER FORM ─────────────────────────────────────── */
+.add-player-bar {
+  padding: 10px 12px;
+  border-bottom: var(--border);
+  background: #faf8f2;
+}
+
+.add-player-form {
+  padding: 12px 16px;
+  border-bottom: var(--border);
+  background: #f5f1e8;
+}
+
+.add-player-form-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.add-player-fields,
+.player-edit-fields {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.add-player-field,
+.player-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.add-player-field--sm,
+.player-edit-field--sm {
+  flex: 0 0 90px;
+  min-width: 90px;
+}
+
+.add-player-field label,
+.player-edit-field label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #666;
+}
+
+.input-player {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 5px 7px;
+  border: var(--border);
+  background: var(--white);
+}
+
+.input-player:focus { outline: none; border-color: #333; }
+
+.add-player-actions,
+.player-edit-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* ── PLAYER CARD: edit + delete buttons ──────────────────── */
+.btn-edit-player,
+.btn-del-player {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 5px;
+  color: #aaa;
+}
+
+.btn-edit-player:hover { color: #333; }
+.btn-del-player:hover  { color: #c0392b; }
+
+.player-dims--missing {
+  color: #c0392b;
+  font-size: 10px;
+}
+
+.player-edit-form {
+  padding: 10px 14px;
+  background: #f5f1e8;
+  border-bottom: var(--border);
+}
+
 .player-card {
   border: var(--border);
   border-bottom: none;

@@ -1,7 +1,7 @@
 // ============================================================
 //  utils/csvExport.ts — Generador del CSV final
 // ============================================================
-import type { Player, Rules, Overrides, GlobalConfig } from '../types';
+import type { Player, Rules, Overrides, GlobalConfig, TallaDims } from '../types';
 import { CSV_COLUMN_ORDER } from './schema';
 
 function escapeCell(val: string): string {
@@ -17,6 +17,7 @@ export function buildCSV(
   overrides: Overrides,
   globalConfig: GlobalConfig,
   tallasSeleccionadas?: string[],
+  tallaDims?: Record<string, TallaDims>,
 ): string {
   const rows: string[] = [CSV_COLUMN_ORDER.join(',')];
 
@@ -26,6 +27,7 @@ export function buildCSV(
     const base = tallaRules[talla] ?? {};
     const override = overrides[idx] ?? {};
     const merged: Record<string, string> = { ...base, ...override };
+    const dims = tallaDims?.[talla] ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '' };
 
     const row: Record<string, string> = {
       ...merged,
@@ -33,11 +35,11 @@ export function buildCSV(
       NOMBRE_CAMISETA: player.NOMBRE_CAMISETA ?? '',
       NUMERO:          player.NUMERO          ?? '',
       TIENE_NUMERO:    (player.NUMERO ?? '') !== '' ? 'SI' : 'NO',
-      TALLA:           player.TALLA           ?? '',
-      ALTO:            player.ALTO            ?? '',
-      ANCHO:           player.ANCHO           ?? '',
-      MANGA_ALTO:      player.MANGA_ALTO      ?? '',
-      MANGA_ANCHO:     player.MANGA_ANCHO     ?? '',
+      TALLA:           talla,
+      ALTO:            dims.ALTO,
+      ANCHO:           dims.ANCHO,
+      MANGA_ALTO:      dims.MANGA_ALTO,
+      MANGA_ANCHO:     dims.MANGA_ANCHO,
       EQUIPO:          globalConfig.EQUIPO    ?? '',
       NOTAS:           globalConfig.NOTAS     ?? '',
     };
