@@ -1,28 +1,31 @@
 // ============================================================
 //  utils/configBackup.ts — Exportar / importar configuración
-//  completa: tallas globales + todos los equipos
+//  completa: clientes, tallas por cliente + todos los equipos
 // ============================================================
-import type { TeamEntry, TallaDims } from '../types';
+import type { TeamEntry, TallaDims, Cliente } from '../types';
 
-const BACKUP_VERSION = 1;
+const BACKUP_VERSION = 2;
 
 export interface ConfigBackup {
   version: number;
   exportedAt: string;
-  tallas: Record<string, TallaDims>;
+  clientes: Cliente[];
+  tallasPorCliente: Record<string, Record<string, TallaDims>>;
   teams: TeamEntry[];
 }
 
 // ── Exportar ─────────────────────────────────────────────────
 
 export function exportBackup(
-  tallas: Record<string, TallaDims>,
+  clientes: Cliente[],
+  tallasPorCliente: Record<string, Record<string, TallaDims>>,
   teams: TeamEntry[],
 ): void {
   const backup: ConfigBackup = {
     version:    BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    tallas,
+    clientes,
+    tallasPorCliente,
     teams,
   };
 
@@ -48,13 +51,19 @@ export function importBackup(file: File): Promise<ConfigBackup> {
       try {
         const parsed = JSON.parse(e.target!.result as string) as ConfigBackup;
 
-        if (!parsed.version || !parsed.tallas || !Array.isArray(parsed.teams)) {
+        if (!parsed.version || !Array.isArray(parsed.teams)) {
           reject(new Error('Archivo inválido: no es una configuración de Sublimania'));
           return;
         }
         if (parsed.version > BACKUP_VERSION) {
           reject(new Error(`Versión ${parsed.version} no soportada (máx. ${BACKUP_VERSION})`));
           return;
+        }
+
+        // Migrar v1 → v2: tallas planas → tallasPorCliente vacío
+        if (parsed.version === 1) {
+          (parsed as ConfigBackup).clientes = (parsed as ConfigBackup).clientes ?? [];
+          (parsed as ConfigBackup).tallasPorCliente = {};
         }
 
         resolve(parsed);
@@ -65,4 +74,72 @@ export function importBackup(file: File): Promise<ConfigBackup> {
     reader.onerror = () => reject(new Error('Error al leer el archivo'));
     reader.readAsText(file, 'utf-8');
   });
+}
+
+// ── Merge ─────────────────────────────────────────────────────
+
+export interface MergeResult {
+  clientes:          Cliente[];
+  tallasPorCliente:  Record<string, Record<string, TallaDims>>;
+  teams:             TeamEntry[];
+  clientesAdded:     number;
+  clientesUpdated:   number;
+  tallasUpdated:     number;
+  teamsAdded:        number;
+  teamsUpdated:      number;
+}
+
+export function mergeBackup(
+  backup:               ConfigBackup,
+  currentClientes:      Cliente[],
+  currentTallas:        Record<string, Record<string, TallaDims>>,
+  currentTeams:         TeamEntry[],
+): MergeResult {
+  // ── Clientes: el archivo importado gana en conflicto ────────
+  let clientesAdded = 0, clientesUpdated = 0;
+  const clientesById = new Map<string, Cliente>(currentClientes.map(c => [c.id, c]));
+  (backup.clientes ?? []).forEach(incoming => {
+    if (clientesById.has(incoming.id)) clientesUpdated++;
+    else clientesAdded++;
+    clientesById.set(incoming.id, incoming);
+  });
+  const mergedClientes = Array.from(clientesById.values());
+
+  // ── Tallas por cliente: el archivo importado gana ───────────
+  let tallasUpdated = 0;
+  const mergedTallas = { ...currentTallas };
+  Object.entries(backup.tallasPorCliente ?? {}).forEach(([cid, tallas]) => {
+    if (mergedTallas[cid]) tallasUpdated++;
+    mergedTallas[cid] = { ...(mergedTallas[cid] ?? {}), ...tallas };
+  });
+
+  // ── Equipos: gana el que tenga updatedAt más reciente ───────
+  let teamsAdded = 0, teamsUpdated = 0;
+  const teamsById = new Map<string, TeamEntry>(currentTeams.map(t => [t.id, t]));
+  backup.teams.forEach(incoming => {
+    const existing = teamsById.get(incoming.id);
+    if (!existing) {
+      teamsById.set(incoming.id, incoming);
+      teamsAdded++;
+    } else {
+      // El backup gana si es más reciente O si el existente quedó corrupto (sin nombre)
+      const incomingNewer = new Date(incoming.updatedAt) >= new Date(existing.updatedAt);
+      const existingCorrupt = !existing.nombre || existing.nombre === 'Sin nombre';
+      if (incomingNewer || existingCorrupt) {
+        teamsById.set(incoming.id, incoming);
+        teamsUpdated++;
+      }
+    }
+  });
+
+  return {
+    clientes:         mergedClientes,
+    tallasPorCliente: mergedTallas,
+    teams:            Array.from(teamsById.values()),
+    clientesAdded,
+    clientesUpdated,
+    tallasUpdated,
+    teamsAdded,
+    teamsUpdated,
+  };
 }

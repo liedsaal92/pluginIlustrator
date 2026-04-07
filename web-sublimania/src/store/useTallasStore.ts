@@ -1,6 +1,7 @@
 // ============================================================
-//  store/useTallasStore.ts — Dimensiones globales por talla
-//  Global: independiente del equipo, persiste en localStorage
+//  store/useTallasStore.ts — Dimensiones de tallas por cliente
+//  Estructura: clienteId → tallaNombre → TallaDims
+//  Global, persiste en localStorage como "sublimania_tallas_v2"
 // ============================================================
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -35,48 +36,78 @@ export const TALLAS_DEFAULT: Record<string, TallaDims> = {
   '44M': { ALTO: '80.5',  ANCHO: '62.5',  MANGA_ANCHO: '49',   MANGA_ALTO: '27'   },
 };
 
-interface TallasState {
-  tallas: Record<string, TallaDims>;
-  setDim: (talla: string, field: keyof TallaDims, value: string) => void;
-  addTalla: (talla: string) => void;
-  removeTalla: (talla: string) => void;
-  resetToDefault: () => void;
-  getDims: (talla: string) => TallaDims | undefined;
-}
-
 const EMPTY_DIMS: TallaDims = { ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '' };
+
+interface TallasState {
+  // clienteId → tallaNombre → TallaDims
+  tallasPorCliente: Record<string, Record<string, TallaDims>>;
+
+  getTallas:              (clienteId: string) => Record<string, TallaDims>;
+  setDim:                 (clienteId: string, talla: string, field: keyof TallaDims, value: string) => void;
+  addTalla:               (clienteId: string, talla: string) => void;
+  removeTalla:            (clienteId: string, talla: string) => void;
+  initClienteFromDefault: (clienteId: string) => void;
+  removeCliente:          (clienteId: string) => void;
+}
 
 export const useTallasStore = create<TallasState>()(
   persist(
     (set, get) => ({
-      tallas: { ...TALLAS_DEFAULT },
+      tallasPorCliente: {},
 
-      setDim: (talla, field, value) => {
-        const prev = get().tallas;
+      getTallas: (clienteId) => get().tallasPorCliente[clienteId] ?? {},
+
+      setDim: (clienteId, talla, field, value) => {
+        const prev = get().tallasPorCliente;
+        const clienteTallas = prev[clienteId] ?? {};
         set({
-          tallas: {
+          tallasPorCliente: {
             ...prev,
-            [talla]: { ...(prev[talla] ?? EMPTY_DIMS), [field]: value },
+            [clienteId]: {
+              ...clienteTallas,
+              [talla]: { ...(clienteTallas[talla] ?? EMPTY_DIMS), [field]: value },
+            },
           },
         });
       },
 
-      addTalla: (talla) => {
+      addTalla: (clienteId, talla) => {
         const t = talla.trim().toUpperCase();
-        if (!t || get().tallas[t]) return;
-        set({ tallas: { ...get().tallas, [t]: { ...EMPTY_DIMS } } });
+        if (!t) return;
+        const prev = get().tallasPorCliente;
+        const clienteTallas = prev[clienteId] ?? {};
+        if (clienteTallas[t]) return; // ya existe
+        set({
+          tallasPorCliente: {
+            ...prev,
+            [clienteId]: { ...clienteTallas, [t]: { ...EMPTY_DIMS } },
+          },
+        });
       },
 
-      removeTalla: (talla) => {
-        const next = { ...get().tallas };
-        delete next[talla];
-        set({ tallas: next });
+      removeTalla: (clienteId, talla) => {
+        const prev = get().tallasPorCliente;
+        const clienteTallas = { ...(prev[clienteId] ?? {}) };
+        delete clienteTallas[talla];
+        set({ tallasPorCliente: { ...prev, [clienteId]: clienteTallas } });
       },
 
-      resetToDefault: () => set({ tallas: { ...TALLAS_DEFAULT } }),
+      initClienteFromDefault: (clienteId) => {
+        const prev = get().tallasPorCliente;
+        set({
+          tallasPorCliente: {
+            ...prev,
+            [clienteId]: { ...TALLAS_DEFAULT },
+          },
+        });
+      },
 
-      getDims: (talla) => get().tallas[talla],
+      removeCliente: (clienteId) => {
+        const next = { ...get().tallasPorCliente };
+        delete next[clienteId];
+        set({ tallasPorCliente: next });
+      },
     }),
-    { name: 'sublimania_tallas_v1' }
+    { name: 'sublimania_tallas_v2' }
   )
 );

@@ -5,9 +5,10 @@ import { useRef } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { useClientesStore } from '../../store/useClientesStore';
 import { parseExcelFile, extractTallas } from '../../utils/excelReader';
 import { PLAYER_KEYS, buildEmptyRules, getDefaultGlobal } from '../../utils/schema';
-import { exportBackup, importBackup } from '../../utils/configBackup';
+import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -18,31 +19,39 @@ export function UploadScreen({ onToast }: Props) {
   const importInputRef = useRef<HTMLInputElement>(null);
   const { setPlayers, setScreen } = useTeamStore();
   const { teams, replaceAll } = useTeamsStore();
-  const { tallas: tallaDims, resetToDefault, tallas } = useTallasStore();
-  const hasTeams = teams.length > 0;
 
   function handleExportBackup() {
-    exportBackup(tallaDims, teams);
+    const { clientes } = useClientesStore.getState();
+    const { tallasPorCliente } = useTallasStore.getState();
+    exportBackup(clientes, tallasPorCliente, teams);
     onToast('Configuración exportada', 'ok');
   }
 
   async function handleImportBackup(file: File) {
     try {
       const backup = await importBackup(file);
-      // Restaurar tallas
-      useTallasStore.setState({ tallas: backup.tallas });
-      // Restaurar equipos
-      replaceAll(backup.teams);
+      const { clientes: curClientes } = useClientesStore.getState();
+      const { tallasPorCliente: curTallas } = useTallasStore.getState();
+      const result = mergeBackup(backup, curClientes, curTallas, teams);
+
+      useClientesStore.setState({ clientes: result.clientes });
+      useTallasStore.setState({ tallasPorCliente: result.tallasPorCliente });
+      replaceAll(result.teams);
+
+      const parts: string[] = [];
+      if (result.teamsAdded)      parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
+      if (result.teamsUpdated)    parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
+      if (result.clientesAdded)   parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
+      if (result.clientesUpdated) parts.push(`${result.clientesUpdated} cliente(s) actualizado(s)`);
+
       onToast(
-        `Configuración importada — ${backup.teams.length} equipo(s), ${Object.keys(backup.tallas).length} tallas`,
+        parts.length ? `Combinado: ${parts.join(', ')}` : 'Sin cambios nuevos',
         'ok',
       );
     } catch (err) {
       onToast(err instanceof Error ? err.message : 'Error al importar', 'error');
     }
   }
-
-  void resetToDefault; void tallas; // evitar warnings
 
   async function handleFile(file: File) {
     try {
@@ -92,11 +101,9 @@ export function UploadScreen({ onToast }: Props) {
 
   return (
     <div className="screen upload-screen">
-      {hasTeams && (
-        <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
-          ← EQUIPOS
-        </button>
-      )}
+      <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
+        ← EQUIPOS
+      </button>
       <div className="upload-box">
         <div className="upload-badge">PASO 01</div>
         <h2 className="upload-title">CARGÁ TU EXCEL</h2>

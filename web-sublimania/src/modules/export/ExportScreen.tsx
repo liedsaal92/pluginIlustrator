@@ -5,7 +5,9 @@ import { useState, useMemo } from 'react';
 import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { useClientesStore } from '../../store/useClientesStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
+import { saveActiveTeam } from '../../store/useTeamsStore';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
 
 interface Props {
@@ -20,7 +22,10 @@ function formatDate(iso: string): string {
 export function ExportScreen({ onToast }: Props) {
   const { players, tallas, tallaRules, overrides, globalConfig, setScreen } = useTeamStore();
   const { activeTeamId, getActiveTeam, markExported, saveTeam } = useTeamsStore();
-  const tallaDims = useTallasStore(s => s.tallas);
+  const { getTallas } = useTallasStore();
+  const clientes = useClientesStore(s => s.clientes);
+
+  const [clienteId, setClienteId] = useState<string>('');
 
   const activeTeam = getActiveTeam();
   const teamHistory = activeTeam?.exportHistory ?? {};
@@ -47,6 +52,8 @@ export function ExportScreen({ onToast }: Props) {
 
   const tallasSeleccionadasArr = Array.from(seleccionadas);
 
+  const tallaDims = clienteId ? getTallas(clienteId) : {};
+
   const csv = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
       tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : undefined, tallaDims),
@@ -67,6 +74,10 @@ export function ExportScreen({ onToast }: Props) {
   function handleDownload() {
     if (!equipo) {
       onToast('Completá el nombre del equipo antes de exportar.', 'error');
+      return;
+    }
+    if (!clienteId) {
+      onToast('Seleccioná un cliente para usar sus tallas.', 'error');
       return;
     }
     if (seleccionadas.size === 0) {
@@ -97,13 +108,13 @@ export function ExportScreen({ onToast }: Props) {
   return (
     <div className="screen export-screen">
       <div className="export-header">
-        <button className="btn btn-ghost" onClick={() => setScreen('configure')}>← VOLVER</button>
+        <button className="btn btn-ghost" onClick={() => { saveActiveTeam(); setScreen('configure'); }}>← VOLVER</button>
         <h2>EXPORTAR CSV</h2>
         <button
           className="btn btn-primary"
           onClick={handleDownload}
-          disabled={seleccionadas.size === 0 || !equipo}
-          title={!equipo ? 'Completá el nombre del equipo' : seleccionadas.size === 0 ? 'Seleccioná al menos una talla' : ''}
+          disabled={seleccionadas.size === 0 || !equipo || !clienteId}
+          title={!equipo ? 'Completá el nombre del equipo' : !clienteId ? 'Seleccioná un cliente' : seleccionadas.size === 0 ? 'Seleccioná al menos una talla' : ''}
         >
           ⬇ DESCARGAR CSV
         </button>
@@ -116,6 +127,32 @@ export function ExportScreen({ onToast }: Props) {
       )}
 
       <div className="export-body">
+
+        {/* ── Selector de cliente ────────────────────────── */}
+        <div className="export-cliente">
+          <div className="export-cliente-label">
+            CLIENTE / COSTURERA <span className="export-required">*requerido</span>
+          </div>
+          {clientes.length === 0 ? (
+            <div className="export-no-clientes">
+              ⚠ Sin clientes registrados — creá uno en <strong>⚙ Configuración → Clientes</strong>
+            </div>
+          ) : (
+            <select
+              className="export-cliente-select"
+              value={clienteId}
+              onChange={e => setClienteId(e.target.value)}
+            >
+              <option value="">— Seleccionar cliente —</option>
+              {clientes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}{c.casaCosturera ? ` — ${c.casaCosturera}` : ''}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
         {/* ── Selector de tallas ─────────────────────────── */}
         <div className="export-tallas">
           <div className="export-tallas-title">SELECCIONÁ LAS TALLAS A EXPORTAR</div>

@@ -1,10 +1,12 @@
 // ============================================================
 //  modules/teams/TeamsScreen.tsx — Lista y gestión de equipos
 // ============================================================
-import { useState } from 'react';
-import { useTeamsStore } from '../../store/useTeamsStore';
-import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTeamStore';
-import { exportBackup, importBackup } from '../../utils/configFile';
+import { useRef, useState } from 'react';
+import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
+import { useTeamStore } from '../../store/useTeamStore';
+import { useTallasStore } from '../../store/useTallasStore';
+import { useClientesStore } from '../../store/useClientesStore';
+import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
 import type { TeamEntry } from '../../types';
 
@@ -31,6 +33,7 @@ const EMPTY_ENTRY: TeamEntry = {
 };
 
 export function TeamsScreen({ onToast }: Props) {
+  const importInputRef = useRef<HTMLInputElement>(null);
   const { teams, activeTeamId, switchTeam, deleteTeam, replaceAll, createTeam } = useTeamsStore();
   const { setScreen, loadFromEntry } = useTeamStore();
 
@@ -38,23 +41,14 @@ export function TeamsScreen({ onToast }: Props) {
   const [showNewModal, setShowNewModal] = useState(false);
   const [newNombre, setNewNombre] = useState('');
 
-  // Guarda el equipo activo antes de cualquier navegación
-  function saveActive() {
-    const { activeTeamId: aid, getActiveTeam, saveTeam } = useTeamsStore.getState();
-    if (!aid) return;
-    const current = getActiveTeam();
-    const partial = buildTeamEntryFromWorkingStore();
-    saveTeam(aid, { ...partial, exportHistory: current?.exportHistory ?? {} });
-  }
-
   function handleOpen(entry: TeamEntry) {
-    saveActive();
+    saveActiveTeam();
     switchTeam(entry.id);
     loadFromEntry(entry, 'configure');
   }
 
   function handleLoadPlayers(entry: TeamEntry) {
-    saveActive();
+    saveActiveTeam();
     switchTeam(entry.id);
     useTeamStore.getState().loadFromEntry(entry, 'upload');
   }
@@ -65,7 +59,7 @@ export function TeamsScreen({ onToast }: Props) {
   }
 
   function handleCreateWithExcel() {
-    saveActive();
+    saveActiveTeam();
     loadFromEntry(EMPTY_ENTRY, 'upload');
     useTeamsStore.setState({ activeTeamId: null });
     setShowNewModal(false);
@@ -77,7 +71,7 @@ export function TeamsScreen({ onToast }: Props) {
       onToast('Ingresá un nombre para el equipo', 'error');
       return;
     }
-    saveActive();
+    saveActiveTeam();
     const globalConfig = { ...getDefaultGlobal(), EQUIPO: nombre };
     const id = createTeam({
       nombre,
@@ -103,30 +97,36 @@ export function TeamsScreen({ onToast }: Props) {
     onToast('Equipo eliminado', 'ok');
   }
 
-  async function handleExportBackup() {
-    saveActive();
+  function handleExportBackup() {
+    saveActiveTeam();
     const { teams: allTeams } = useTeamsStore.getState();
-    try {
-      await exportBackup(allTeams);
-      onToast('Respaldo exportado', 'ok');
-    } catch (e) {
-      if ((e as DOMException).name !== 'AbortError') {
-        onToast('Error al exportar: ' + (e as Error).message, 'error');
-      }
-    }
+    const { clientes } = useClientesStore.getState();
+    const { tallasPorCliente } = useTallasStore.getState();
+    exportBackup(clientes, tallasPorCliente, allTeams);
+    onToast('Configuración exportada', 'ok');
   }
 
-  async function handleImportBackup() {
+  async function handleImportBackupFile(file: File) {
     try {
-      const importedTeams = await importBackup();
-      replaceAll(importedTeams);
-      const first = importedTeams[0];
-      if (first) loadFromEntry(first, 'configure');
-      onToast(`${importedTeams.length} equipo${importedTeams.length !== 1 ? 's' : ''} importados`, 'ok');
+      const backup = await importBackup(file);
+      const { clientes: curClientes } = useClientesStore.getState();
+      const { tallasPorCliente: curTallas } = useTallasStore.getState();
+      const result = mergeBackup(backup, curClientes, curTallas, useTeamsStore.getState().teams);
+
+      useClientesStore.setState({ clientes: result.clientes });
+      useTallasStore.setState({ tallasPorCliente: result.tallasPorCliente });
+      replaceAll(result.teams);
+
+      const parts: string[] = [];
+      if (result.teamsAdded)      parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
+      if (result.teamsUpdated)    parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
+      if (result.clientesAdded)   parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
+      if (result.clientesUpdated) parts.push(`${result.clientesUpdated} cliente(s) actualizado(s)`);
+      if (result.tallasUpdated)   parts.push(`${result.tallasUpdated} cliente(s) con tallas actualizadas`);
+
+      onToast(parts.length ? `Combinado: ${parts.join(', ')}` : 'Sin cambios nuevos', 'ok');
     } catch (e) {
-      if ((e as DOMException).name !== 'AbortError') {
-        onToast('Error al importar: ' + (e as Error).message, 'error');
-      }
+      onToast((e as Error).message ?? 'Error al importar', 'error');
     }
   }
 
@@ -138,11 +138,21 @@ export function TeamsScreen({ onToast }: Props) {
       <div className="teams-header">
         <h1 className="teams-title">SUBLIMANIA</h1>
         <div className="teams-actions">
-          <button className="btn btn-ghost btn-sm" onClick={handleImportBackup} title="Importar respaldo JSON">
-            📂 IMPORTAR
+          <button className="btn btn-ghost btn-sm" onClick={() => importInputRef.current?.click()} title="Importar y combinar configuración">
+            ⬇ IMPORTAR
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={handleExportBackup} title="Exportar respaldo de todos los equipos">
-            💾 RESPALDAR
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={e => {
+              if (e.target.files?.[0]) handleImportBackupFile(e.target.files[0]);
+              e.target.value = '';
+            }}
+          />
+          <button className="btn btn-ghost btn-sm" onClick={handleExportBackup} title="Exportar configuración completa">
+            ⬆ EXPORTAR
           </button>
           <button className="btn btn-primary" onClick={openNewModal}>
             + NUEVO EQUIPO
@@ -214,7 +224,7 @@ export function TeamsScreen({ onToast }: Props) {
         {teams.length > 0 && (
           <button className="btn btn-ghost btn-sm" onClick={() => {
             const active = useTeamsStore.getState().getActiveTeam();
-            if (active && active.players.length > 0) { saveActive(); setScreen('configure'); }
+            if (active && active.players.length > 0) { saveActiveTeam(); setScreen('configure'); }
             else onToast('No hay equipo activo con jugadores', 'error');
           }}>
             ← VOLVER AL EQUIPO ACTIVO

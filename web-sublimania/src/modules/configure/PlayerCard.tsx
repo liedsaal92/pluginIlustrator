@@ -24,8 +24,10 @@ interface Props {
 
 export function PlayerCard({ idx }: Props) {
   const { players, overrides, getPlayerRules, hasOverride, setOverride, clearOverride, removePlayer, updatePlayer } = useTeamStore();
-  const tallaDims = useTallasStore(s => s.tallas);
-  const tallaOptions = Object.keys(tallaDims).sort((a, b) => a.localeCompare(b));
+  const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
+  const tallaOptions = [...new Set(
+    Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
+  )].sort((a, b) => a.localeCompare(b));
 
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -36,7 +38,6 @@ export function PlayerCard({ idx }: Props) {
 
   const rules = getPlayerRules(idx);
   const isOverridden = (key: string) => !!(overrides[idx] && overrides[idx][key] !== undefined);
-  const dims = tallaDims[player.TALLA];
 
   function handleEditSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,10 +67,6 @@ export function PlayerCard({ idx }: Props) {
           {player.NUMERO
             ? <span className="player-num">#{player.NUMERO}</span>
             : <span className="player-num-empty">S/N</span>
-          }
-          {dims
-            ? <span className="player-dims">{dims.ALTO}×{dims.ANCHO} cm</span>
-            : <span className="player-dims player-dims--missing" title="Talla sin dimensiones definidas">⚠ sin dims</span>
           }
           {hasOverride(idx) && <span className="override-badge">✎ OVERRIDE</span>}
           <button

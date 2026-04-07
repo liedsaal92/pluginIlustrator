@@ -5,6 +5,16 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TeamEntry } from '../types';
+import { buildTeamEntryFromWorkingStore } from './useTeamStore';
+
+// Guarda el working store en el equipo activo — usable desde cualquier pantalla
+export function saveActiveTeam(): void {
+  const { activeTeamId, getActiveTeam, saveTeam } = useTeamsStore.getState();
+  if (!activeTeamId) return;
+  const current = getActiveTeam();
+  const partial = buildTeamEntryFromWorkingStore();
+  saveTeam(activeTeamId, { ...partial, exportHistory: current?.exportHistory ?? {} });
+}
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -97,7 +107,12 @@ export const useTeamsStore = create<TeamsState>()(
       },
 
       replaceAll: (teams) => {
-        set({ teams, activeTeamId: teams[0]?.id ?? null });
+        set(state => ({
+          teams,
+          // Mantener el equipo activo si sigue existiendo en la lista importada;
+          // si no, null para que saveActive() no sobreescriba equipos recién importados
+          activeTeamId: teams.find(t => t.id === state.activeTeamId)?.id ?? null,
+        }));
       },
     }),
     { name: 'sublimania_teams_v1' },

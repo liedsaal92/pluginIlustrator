@@ -11,11 +11,13 @@ const EMPTY: Player = { NOMBRE: '', NOMBRE_CAMISETA: '', NUMERO: '', TALLA: '' }
 
 export function AddPlayerForm() {
   const addPlayer = useTeamStore(s => s.addPlayer);
-  const tallaDims = useTallasStore(s => s.tallas);
+  const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
   const [form, setForm] = useState<Player>({ ...EMPTY });
   const [open, setOpen] = useState(false);
 
-  const tallaOptions = Object.keys(tallaDims).sort((a, b) => a.localeCompare(b));
+  const tallaOptions = [...new Set(
+    Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
+  )].sort((a, b) => a.localeCompare(b));
 
   function set(field: keyof Player, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));

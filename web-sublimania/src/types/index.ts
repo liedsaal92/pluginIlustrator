@@ -74,7 +74,15 @@ export interface TallaDims {
   MANGA_ALTO: string;
 }
 
+// ── CLIENTE (costurera) ───────────────────────────────────────
+export interface Cliente {
+  id: string;
+  nombre: string;
+  casaCosturera: string;
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'teams' | 'upload' | 'configure' | 'export';
-export type ConfigTab = 'rules' | 'players' | 'tallas';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'settings';
+export type ConfigTab = 'rules' | 'players';
+export type SettingsTab = 'clientes' | 'tallas';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

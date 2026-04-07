@@ -2,11 +2,11 @@
 //  modules/configure/ConfigureScreen.tsx
 // ============================================================
 import { useTeamStore } from '../../store/useTeamStore';
+import { saveActiveTeam } from '../../store/useTeamsStore';
 import { GLOBAL_FIELDS } from '../../utils/schema';
 import { SaveStatus } from '../../components/ui/SaveStatus';
 import { RulesTab } from './RulesTab';
 import { PlayerCard } from './PlayerCard';
-import { TallasTab } from './TallasTab';
 import { AddPlayerForm } from './AddPlayerForm';
 
 interface Props {
@@ -24,7 +24,7 @@ export function ConfigureScreen({ onToast }: Props) {
     <div className="screen configure-screen">
       <div className="config-header">
         <div className="config-header-left">
-          <button className="btn btn-ghost btn-sm" onClick={() => setScreen('upload')}>← VOLVER</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('upload'); }}>← VOLVER</button>
           <div className="config-stats">
             <span className="stat-badge stat-players">{players.length} JUGADORES</span>
             <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
@@ -48,7 +48,7 @@ export function ConfigureScreen({ onToast }: Props) {
 
         <SaveStatus onToast={onToast} />
 
-        <button className="btn btn-primary" onClick={() => setScreen('export')}>
+        <button className="btn btn-primary" onClick={() => { saveActiveTeam(); setScreen('export'); }}>
           EXPORTAR CSV →
         </button>
       </div>
@@ -66,12 +66,6 @@ export function ConfigureScreen({ onToast }: Props) {
         >
           👤 JUGADORES ({players.length})
         </button>
-        <button
-          className={`tab-btn ${configTab === 'tallas' ? 'active' : ''}`}
-          onClick={() => setConfigTab('tallas')}
-        >
-          📐 TALLAS
-        </button>
       </div>
 
       <div className="config-body">
@@ -82,7 +76,6 @@ export function ConfigureScreen({ onToast }: Props) {
             {players.map((_, idx) => <PlayerCard key={idx} idx={idx} />)}
           </div>
         )}
-        {configTab === 'tallas' && <TallasTab />}
       </div>
     </div>
   );
