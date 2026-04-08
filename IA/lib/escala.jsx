@@ -102,8 +102,3 @@ function getDimensiones(jugador, nombrePieza) {
     return null;
 }
 
-// Devuelve las dimensiones base del template para la pieza indicada
-function getBaseParaPieza(nombrePieza) {
-    var key = nombrePieza.toLowerCase();
-    return CONFIG.templateBase[key] || CONFIG.templateBase.frente;
-}

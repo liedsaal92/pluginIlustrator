@@ -177,8 +177,40 @@ function main() {
                 // Duplicar a capa GENERADO
                 var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
 
+                // Medir dimensiones reales del template en este momento.
+                // Si el grupo tiene clip mask, medimos el clip path (evita que
+                // contenido que desborda el clip infle las dimensiones).
+                // Si no tiene clip, .width/.height del grupo es suficiente.
+                var base;
+                var _clipBounds = null;
+                if (grupoTemplate.clipped) {
+                    for (var _ci = 0; _ci < grupoTemplate.pageItems.length; _ci++) {
+                        try {
+                            if (grupoTemplate.pageItems[_ci].clipping === true) {
+                                _clipBounds = grupoTemplate.pageItems[_ci].geometricBounds;
+                                break;
+                            }
+                        } catch (_e) {}
+                    }
+                }
+                if (_clipBounds) {
+                    // geometricBounds = [top, left, bottom, right] en puntos (coords doc)
+                    base = {
+                        ancho: ptToCm(Math.abs(_clipBounds[3] - _clipBounds[1])),
+                        alto:  ptToCm(Math.abs(_clipBounds[0] - _clipBounds[2]))
+                    };
+                } else {
+                    base = {
+                        ancho: ptToCm(Math.abs(grupoTemplate.width)),
+                        alto:  ptToCm(Math.abs(grupoTemplate.height))
+                    };
+                }
+                if (i === 0) {
+                    Log._linea("-----", nombrePieza + " base medida: " +
+                        base.ancho.toFixed(2) + " x " + base.alto.toFixed(2) + " cm");
+                }
+
                 // Escalar — capturar el factor real aplicado
-                var base        = getBaseParaPieza(nombrePieza);
                 var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, base);
 
                 // Aplicar dinámicos pasando el factor para compensar en líneas
