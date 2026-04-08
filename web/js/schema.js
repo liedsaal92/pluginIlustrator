@@ -18,14 +18,14 @@ const CSV_COLUMN_ORDER = [
   // FRENTE — NÚMERO
   'LLEVA_NUMERO_F','NUMERO_FRENTE_ANCHO','NUMERO_FRENTE_ALTO','NUMERO_FRENTE_REF',
   // FRENTE — ESCUDO CENTRAL
-  'LLEVA_ESCUDO_CENTRAL','ESCUDO_CENTRAL_ANCHO','ESCUDO_CENTRAL_ALTO','ESCUDO_CENTRAL_REF',
+  'LLEVA_ESCUDO_CENTRAL','ESCUDO_CENTRAL_ANCHO','ESCUDO_CENTRAL_ALTO','ESCUDO_CENTRAL_REF','ESCUDO_CENTRAL_MARGIN_SUP',
   // FRENTE — LOGO MARCA
-  'LLEVA_LOGO_MARCA','LOGO_MARCA_ANCHO','LOGO_MARCA_ALTO','LOGO_MARCA_REF',
+  'LLEVA_LOGO_MARCA','LOGO_MARCA_ANCHO','LOGO_MARCA_ALTO','LOGO_MARCA_REF','LOGO_MARCA_MARGIN_SUP',
   // FRENTE — SPONSORS TOP
   'LLEVA_SPONSOR_TOP_IZQ','SPONSOR_TOP_IZQ_ANCHO','SPONSOR_TOP_IZQ_ALTO','SPONSOR_TOP_IZQ_REF',
   'LLEVA_SPONSOR_TOP_DER','SPONSOR_TOP_DER_ANCHO','SPONSOR_TOP_DER_ALTO','SPONSOR_TOP_DER_REF',
   // FRENTE — SPONSOR PRINCIPAL / SECUNDARIO
-  'LLEVA_SPONSOR_PRINCIPAL_F','SPONSOR_PRINCIPAL_F_ANCHO','SPONSOR_PRINCIPAL_F_ALTO','SPONSOR_PRINCIPAL_F_REF',
+  'LLEVA_SPONSOR_PRINCIPAL_F','SPONSOR_PRINCIPAL_F_ANCHO','SPONSOR_PRINCIPAL_F_ALTO','SPONSOR_PRINCIPAL_F_REF','SPONSOR_PRINCIPAL_F_MARGIN_SUP',
   'LLEVA_SPONSOR_SECUNDARIO_F','SPONSOR_SECUNDARIO_F_ANCHO','SPONSOR_SECUNDARIO_F_ALTO','SPONSOR_SECUNDARIO_F_REF',
   // FRENTE — COSTILLA
   'LLEVA_COSTILLA_F','COSTILLA_F_ANCHO','COSTILLA_F_ALTO','COSTILLA_F_REF',
@@ -102,18 +102,20 @@ const SCHEMA = {
         id: 'escudo_central', label: 'ESCUDO CENTRAL', icon: '⬡',
         toggleKey: 'LLEVA_ESCUDO_CENTRAL',
         fields: [
-          { key: 'ESCUDO_CENTRAL_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
-          { key: 'ESCUDO_CENTRAL_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
-          { key: 'ESCUDO_CENTRAL_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+          { key: 'ESCUDO_CENTRAL_ANCHO',       label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_CENTRAL_ALTO',        label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ESCUDO_CENTRAL_REF',         label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ESCUDO_CENTRAL_MARGIN_SUP',  label: 'Margen sup', type: 'number', unit: 'cm' },
         ]
       },
       {
         id: 'logo_marca', label: 'LOGO MARCA', icon: '◈',
         toggleKey: 'LLEVA_LOGO_MARCA',
         fields: [
-          { key: 'LOGO_MARCA_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
-          { key: 'LOGO_MARCA_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
-          { key: 'LOGO_MARCA_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+          { key: 'LOGO_MARCA_ANCHO',       label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'LOGO_MARCA_ALTO',        label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'LOGO_MARCA_REF',         label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'LOGO_MARCA_MARGIN_SUP',  label: 'Margen sup', type: 'number', unit: 'cm' },
         ]
       },
       {
@@ -138,9 +140,10 @@ const SCHEMA = {
         id: 'sponsor_principal_f', label: 'SPONSOR PRINCIPAL', icon: '★',
         toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_F',
         fields: [
-          { key: 'SPONSOR_PRINCIPAL_F_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
-          { key: 'SPONSOR_PRINCIPAL_F_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
-          { key: 'SPONSOR_PRINCIPAL_F_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+          { key: 'SPONSOR_PRINCIPAL_F_ANCHO',       label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_PRINCIPAL_F_ALTO',        label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'SPONSOR_PRINCIPAL_F_REF',         label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'SPONSOR_PRINCIPAL_F_MARGIN_SUP',  label: 'Margen sup', type: 'number', unit: 'cm' },
         ]
       },
       {

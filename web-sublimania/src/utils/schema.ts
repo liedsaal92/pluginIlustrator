@@ -18,16 +18,16 @@ export const CSV_COLUMN_ORDER: string[] = [
   // FRENTE — NÚMERO
   'LLEVA_NUMERO_F', 'NUMERO_FRENTE_ANCHO', 'NUMERO_FRENTE_ALTO', 'NUMERO_FRENTE_REF',
   // FRENTE — ESCUDO
-  'LLEVA_ESCUDO_F', 'ESCUDO_F_ANCHO', 'ESCUDO_F_ALTO', 'ESCUDO_F_REF',
+  'LLEVA_ESCUDO_F', 'ESCUDO_F_ANCHO', 'ESCUDO_F_ALTO', 'ESCUDO_F_REF', 'ESCUDO_F_MARGIN_SUP',
   // FRENTE — ESCUDO CENTRAL
-  'LLEVA_ESCUDO_CENTRAL', 'ESCUDO_CENTRAL_ANCHO', 'ESCUDO_CENTRAL_ALTO', 'ESCUDO_CENTRAL_REF',
+  'LLEVA_ESCUDO_CENTRAL', 'ESCUDO_CENTRAL_ANCHO', 'ESCUDO_CENTRAL_ALTO', 'ESCUDO_CENTRAL_REF', 'ESCUDO_CENTRAL_MARGIN_SUP',
   // FRENTE — LOGO MARCA
-  'LLEVA_LOGO_MARCA', 'LOGO_MARCA_ANCHO', 'LOGO_MARCA_ALTO', 'LOGO_MARCA_REF',
+  'LLEVA_LOGO_MARCA', 'LOGO_MARCA_ANCHO', 'LOGO_MARCA_ALTO', 'LOGO_MARCA_REF', 'LOGO_MARCA_MARGIN_SUP',
   // FRENTE — SPONSORS TOP
   'LLEVA_SPONSOR_TOP_IZQ', 'SPONSOR_TOP_IZQ_ANCHO', 'SPONSOR_TOP_IZQ_ALTO', 'SPONSOR_TOP_IZQ_REF',
   'LLEVA_SPONSOR_TOP_DER', 'SPONSOR_TOP_DER_ANCHO', 'SPONSOR_TOP_DER_ALTO', 'SPONSOR_TOP_DER_REF',
   // FRENTE — SPONSOR PRINCIPAL / SECUNDARIO
-  'LLEVA_SPONSOR_PRINCIPAL_F', 'SPONSOR_PRINCIPAL_F_ANCHO', 'SPONSOR_PRINCIPAL_F_ALTO', 'SPONSOR_PRINCIPAL_F_REF',
+  'LLEVA_SPONSOR_PRINCIPAL_F', 'SPONSOR_PRINCIPAL_F_ANCHO', 'SPONSOR_PRINCIPAL_F_ALTO', 'SPONSOR_PRINCIPAL_F_REF', 'SPONSOR_PRINCIPAL_F_MARGIN_SUP',
   'LLEVA_SPONSOR_SECUNDARIO_F', 'SPONSOR_SECUNDARIO_F_ANCHO', 'SPONSOR_SECUNDARIO_F_ALTO', 'SPONSOR_SECUNDARIO_F_REF',
   // FRENTE — COSTILLA
   'LLEVA_COSTILLA_F', 'COSTILLA_F_ANCHO', 'COSTILLA_F_ALTO', 'COSTILLA_F_REF',
@@ -85,17 +85,17 @@ export const SCHEMA: Schema = {
       { id: 'numero_f', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_F',
         fields: [numField('NUMERO_FRENTE_ANCHO', 'Ancho'), numField('NUMERO_FRENTE_ALTO', 'Alto'), refField('NUMERO_FRENTE_REF')] },
       { id: 'escudo_f', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_F',
-        fields: [numField('ESCUDO_F_ANCHO', 'Ancho'), numField('ESCUDO_F_ALTO', 'Alto'), refField('ESCUDO_F_REF')] },
+        fields: [numField('ESCUDO_F_ANCHO', 'Ancho'), numField('ESCUDO_F_ALTO', 'Alto'), refField('ESCUDO_F_REF'), numField('ESCUDO_F_MARGIN_SUP', 'Margen sup')] },
       { id: 'escudo_central', label: 'ESCUDO CENTRAL', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_CENTRAL',
-        fields: [numField('ESCUDO_CENTRAL_ANCHO', 'Ancho'), numField('ESCUDO_CENTRAL_ALTO', 'Alto'), refField('ESCUDO_CENTRAL_REF')] },
+        fields: [numField('ESCUDO_CENTRAL_ANCHO', 'Ancho'), numField('ESCUDO_CENTRAL_ALTO', 'Alto'), refField('ESCUDO_CENTRAL_REF'), numField('ESCUDO_CENTRAL_MARGIN_SUP', 'Margen sup')] },
       { id: 'logo_marca', label: 'LOGO MARCA', icon: '◈', toggleKey: 'LLEVA_LOGO_MARCA',
-        fields: [numField('LOGO_MARCA_ANCHO', 'Ancho'), numField('LOGO_MARCA_ALTO', 'Alto'), refField('LOGO_MARCA_REF')] },
+        fields: [numField('LOGO_MARCA_ANCHO', 'Ancho'), numField('LOGO_MARCA_ALTO', 'Alto'), refField('LOGO_MARCA_REF'), numField('LOGO_MARCA_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_top_izq', label: 'SPONSOR TOP IZQ', icon: '◧', toggleKey: 'LLEVA_SPONSOR_TOP_IZQ',
         fields: [numField('SPONSOR_TOP_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_REF')] },
       { id: 'sponsor_top_der', label: 'SPONSOR TOP DER', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER',
         fields: [numField('SPONSOR_TOP_DER_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_REF')] },
       { id: 'sponsor_principal_f', label: 'SPONSOR PRINCIPAL', icon: '★', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_F',
-        fields: [numField('SPONSOR_PRINCIPAL_F_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_F_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_F_REF')] },
+        fields: [numField('SPONSOR_PRINCIPAL_F_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_F_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_F_REF'), numField('SPONSOR_PRINCIPAL_F_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_secundario_f', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_F',
         fields: [numField('SPONSOR_SECUNDARIO_F_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_F_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_F_REF')] },
       { id: 'costilla_f', label: 'COSTILLA', icon: '|||', toggleKey: 'LLEVA_COSTILLA_F',

@@ -125,6 +125,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador["ESCUDO" + sufEscudo + "_REF"],
                 nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO"
             );
+            if (nombrePieza === "FRENTE") {
+                var escudoMarginSup = parseFloat(jugador.ESCUDO_F_MARGIN_SUP);
+                if (!isNaN(escudoMarginSup) && escudoMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        grupoEscudo, grupoCopia,
+                        escudoMarginSup,
+                        jugador.NOMBRE, nombrePieza, "ESCUDO_F"
+                    );
+                }
+            }
         }
     }
 
@@ -143,6 +153,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.ESCUDO_CENTRAL_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO_CENTRAL"
             );
+            var escudoCentralMarginSup = parseFloat(jugador.ESCUDO_CENTRAL_MARGIN_SUP);
+            if (!isNaN(escudoCentralMarginSup) && escudoCentralMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    grupoEscudoCentral, grupoCopia,
+                    escudoCentralMarginSup,
+                    jugador.NOMBRE, nombrePieza, "ESCUDO_CENTRAL"
+                );
+            }
         }
     }
 
@@ -331,6 +349,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"],
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL"
             );
+            if (nombrePieza === "FRENTE") {
+                var spMarginSup = parseFloat(jugador.SPONSOR_PRINCIPAL_F_MARGIN_SUP);
+                if (!isNaN(spMarginSup) && spMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSponsorPrincipal, grupoCopia,
+                        spMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_PRINCIPAL_F"
+                    );
+                }
+            }
         }
     }
 
@@ -373,10 +401,10 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             );
             var etqTopMarginSup = parseFloat(jugador.ETIQUETA_TOP_MARGIN_SUP);
             if (!isNaN(etqTopMarginSup) && etqTopMarginSup >= 0) {
-                posicionarEtiquetaTop(
+                posicionarItemDesdeTop(
                     itemEtiquetaTop, grupoCopia,
                     etqTopMarginSup,
-                    jugador.NOMBRE, nombrePieza
+                    jugador.NOMBRE, nombrePieza, "ETIQUETA_TOP"
                 );
             }
         }
@@ -397,6 +425,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.LOGO_MARCA_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": LOGO_MARCA"
             );
+            var logoMarginSup = parseFloat(jugador.LOGO_MARCA_MARGIN_SUP);
+            if (!isNaN(logoMarginSup) && logoMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemLogoMarca, grupoCopia,
+                    logoMarginSup,
+                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
+                );
+            }
         }
     }
 
@@ -573,28 +609,24 @@ function inicialPieza(nombrePieza) {
 //  POSICIONAMIENTO DE ETIQUETA
 // ============================================================
 
-function posicionarEtiquetaTop(etiqueta, grupoPieza, marginSupCm, nombreJugador, nombrePieza) {
+function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, nombrePieza, labelItem) {
     try {
         var estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds = estatico ? estatico.geometricBounds
                                  : grupoPieza.geometricBounds;
-        var piezaTop  = refBounds[1]; // borde superior del ESTATICO (coordenada Y en pts, positivo hacia arriba)
-
-        var etqBounds = etiqueta.geometricBounds;
-        var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
+        var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
 
         var marginSupPt = cmToPt(marginSupCm);
 
-        // En Illustrator top = borde superior del objeto; Y crece hacia arriba,
-        // así que para bajar desde piezaTop sumamos el margen y el alto del objeto.
-        etiqueta.top = piezaTop - marginSupPt;
+        // item.top es el borde superior del objeto en coordenadas Illustrator
+        item.top = piezaTop - marginSupPt;
 
         Log.ok(nombrePieza + " | " + nombreJugador +
-               ": ETIQUETA_TOP posicionada (sup:" + marginSupCm.toFixed(1) + "cm)");
+               ": " + labelItem + " posicionado (sup:" + marginSupCm.toFixed(1) + "cm)");
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
-                 ": ETIQUETA_TOP error al posicionar (" + e.message + ") — omitida");
+                 ": " + labelItem + " error al posicionar (" + e.message + ") — omitido");
     }
 }
 
