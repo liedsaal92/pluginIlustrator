@@ -43,6 +43,7 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_NUMERO_E', 'NUMERO_ESPALDA_ANCHO', 'NUMERO_ESPALDA_ALTO', 'NUMERO_ESPALDA_REF',
   // ESPALDA — ETIQUETA TOP
   'LLEVA_ETIQUETA_TOP', 'ETIQUETA_TOP_ANCHO', 'ETIQUETA_TOP_ALTO', 'ETIQUETA_TOP_REF',
+  'ETIQUETA_TOP_MARGIN_SUP',
   // ESPALDA — ETIQUETA PRINCIPAL
   'LLEVA_ETIQUETA_PRINCIPAL_E', 'ETIQUETA_PRINCIPAL_E_ANCHO', 'ETIQUETA_PRINCIPAL_E_ALTO', 'ETIQUETA_PRINCIPAL_E_REF',
   'ETIQUETA_PRINCIPAL_E_MARGIN_INF', 'ETIQUETA_PRINCIPAL_E_MARGIN_LAT', 'ETIQUETA_PRINCIPAL_E_LADO',
@@ -123,7 +124,10 @@ export const SCHEMA: Schema = {
       { id: 'numero_e', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_E',
         fields: [numField('NUMERO_ESPALDA_ANCHO', 'Ancho'), numField('NUMERO_ESPALDA_ALTO', 'Alto'), refField('NUMERO_ESPALDA_REF')] },
       { id: 'etiqueta_top', label: 'ETIQUETA TOP', icon: '⬒', toggleKey: 'LLEVA_ETIQUETA_TOP',
-        fields: [numField('ETIQUETA_TOP_ANCHO', 'Ancho'), numField('ETIQUETA_TOP_ALTO', 'Alto'), refField('ETIQUETA_TOP_REF')] },
+        fields: [
+          numField('ETIQUETA_TOP_ANCHO', 'Ancho'), numField('ETIQUETA_TOP_ALTO', 'Alto'), refField('ETIQUETA_TOP_REF'),
+          numField('ETIQUETA_TOP_MARGIN_SUP', 'Margen sup'),
+        ] },
       { id: 'etiqueta_principal_e', label: 'ETIQUETA PRINCIPAL', icon: '⬚', toggleKey: 'LLEVA_ETIQUETA_PRINCIPAL_E',
         fields: [
           numField('ETIQUETA_PRINCIPAL_E_ANCHO', 'Ancho'), numField('ETIQUETA_PRINCIPAL_E_ALTO', 'Alto'), refField('ETIQUETA_PRINCIPAL_E_REF'),

@@ -371,6 +371,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.ETIQUETA_TOP_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_TOP"
             );
+            var etqTopMarginSup = parseFloat(jugador.ETIQUETA_TOP_MARGIN_SUP);
+            if (!isNaN(etqTopMarginSup) && etqTopMarginSup >= 0) {
+                posicionarEtiquetaTop(
+                    itemEtiquetaTop, grupoCopia,
+                    etqTopMarginSup,
+                    jugador.NOMBRE, nombrePieza
+                );
+            }
         }
     }
 
@@ -564,6 +572,31 @@ function inicialPieza(nombrePieza) {
 // ============================================================
 //  POSICIONAMIENTO DE ETIQUETA
 // ============================================================
+
+function posicionarEtiquetaTop(etiqueta, grupoPieza, marginSupCm, nombreJugador, nombrePieza) {
+    try {
+        var estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        var refBounds = estatico ? estatico.geometricBounds
+                                 : grupoPieza.geometricBounds;
+        var piezaTop  = refBounds[1]; // borde superior del ESTATICO (coordenada Y en pts, positivo hacia arriba)
+
+        var etqBounds = etiqueta.geometricBounds;
+        var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
+
+        var marginSupPt = cmToPt(marginSupCm);
+
+        // En Illustrator top = borde superior del objeto; Y crece hacia arriba,
+        // así que para bajar desde piezaTop sumamos el margen y el alto del objeto.
+        etiqueta.top = piezaTop - marginSupPt;
+
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": ETIQUETA_TOP posicionada (sup:" + marginSupCm.toFixed(1) + "cm)");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": ETIQUETA_TOP error al posicionar (" + e.message + ") — omitida");
+    }
+}
 
 function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza, labelEtiqueta) {
     try {

@@ -43,6 +43,7 @@ const CSV_COLUMN_ORDER = [
   'LLEVA_ESCUDO_E','ESCUDO_E_ANCHO','ESCUDO_E_ALTO','ESCUDO_E_REF',
   // ESPALDA — ETIQUETA TOP
   'LLEVA_ETIQUETA_TOP','ETIQUETA_TOP_ANCHO','ETIQUETA_TOP_ALTO','ETIQUETA_TOP_REF',
+  'ETIQUETA_TOP_MARGIN_SUP',
   // ESPALDA — ETIQUETA PRINCIPAL
   'LLEVA_ETIQUETA_PRINCIPAL_E','ETIQUETA_PRINCIPAL_E_ANCHO','ETIQUETA_PRINCIPAL_E_ALTO','ETIQUETA_PRINCIPAL_E_REF',
   'ETIQUETA_PRINCIPAL_E_MARGIN_INF','ETIQUETA_PRINCIPAL_E_MARGIN_LAT','ETIQUETA_PRINCIPAL_E_LADO',
@@ -222,9 +223,10 @@ const SCHEMA = {
         id: 'etiqueta_top', label: 'ETIQUETA TOP', icon: '⬒',
         toggleKey: 'LLEVA_ETIQUETA_TOP',
         fields: [
-          { key: 'ETIQUETA_TOP_ANCHO', label: 'Ancho', type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_TOP_ALTO',  label: 'Alto',  type: 'number', unit: 'cm' },
-          { key: 'ETIQUETA_TOP_REF',   label: 'Ref',   type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_TOP_ANCHO',       label: 'Ancho',      type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_TOP_ALTO',        label: 'Alto',       type: 'number', unit: 'cm' },
+          { key: 'ETIQUETA_TOP_REF',         label: 'Ref',        type: 'select', options: REF_OPTIONS },
+          { key: 'ETIQUETA_TOP_MARGIN_SUP',  label: 'Margen sup', type: 'number', unit: 'cm' },
         ]
       },
       {
