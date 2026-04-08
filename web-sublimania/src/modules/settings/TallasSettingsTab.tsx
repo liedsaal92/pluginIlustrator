@@ -23,6 +23,7 @@ function tallaColor(talla: string): string {
   return colorMap[talla];
 }
 
+
 export function TallasSettingsTab() {
   const { clientes } = useClientesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
@@ -32,7 +33,13 @@ export function TallasSettingsTab() {
   const [confirmReset, setConfirmReset] = useState(false);
 
   const tallas = clienteId ? getTallas(clienteId) : {};
-  const sorted = Object.keys(tallas).sort((a, b) => a.localeCompare(b));
+  const allKeys = Object.keys(tallas).sort((a, b) => {
+    const numA = parseInt(a), numB = parseInt(b);
+    return numA !== numB ? numA - numB : a.localeCompare(b);
+  });
+  const hombres = allKeys.filter(t => t.toUpperCase().endsWith('H'));
+  const mujeres = allKeys.filter(t => t.toUpperCase().endsWith('M'));
+  const otros   = allKeys.filter(t => !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M'));
 
   function handleAdd() {
     const t = newTalla.trim().toUpperCase();
@@ -104,58 +111,72 @@ export function TallasSettingsTab() {
             </button>
           </div>
 
-          <div className="tallas-table-wrap">
-            <table className="tallas-table">
-              <thead>
-                <tr>
-                  <th className="col-talla">TALLA</th>
-                  {FIELDS.map(f => (
-                    <th key={f.key} className="col-dim">{f.label} <span className="unit">cm</span></th>
-                  ))}
-                  <th className="col-del"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '16px', color: '#888', fontSize: '12px' }}>
-                      Sin tallas — agregá una o usá ↺ RESTABLECER DEFAULTS
-                    </td>
-                  </tr>
-                ) : sorted.map(talla => (
-                  <tr key={talla}>
-                    <td className="col-talla">
-                      <span className="talla-badge" style={{ background: tallaColor(talla) }}>{talla}</span>
-                    </td>
-                    {FIELDS.map(f => (
-                      <td key={f.key} className="col-dim">
-                        <input
-                          className="input-dim"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={tallas[talla][f.key]}
-                          onChange={e => setDim(clienteId, talla, f.key, e.target.value)}
-                        />
-                      </td>
-                    ))}
-                    <td className="col-del">
-                      <button
-                        className="btn-del-talla"
-                        title="Eliminar talla"
-                        onClick={() => removeTalla(clienteId, talla)}
-                      >
-                        ×
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {allKeys.length === 0 ? (
+            <p className="tallas-hint" style={{ textAlign: 'center' }}>
+              Sin tallas — agregá una o usá ↺ RESTABLECER DEFAULTS
+            </p>
+          ) : (
+            <div className="tallas-generos">
+              {([
+                { label: 'HOMBRES', grupo: hombres, badgeClass: 'badge-hombre' },
+                { label: 'MUJERES', grupo: mujeres, badgeClass: 'badge-mujer'  },
+                ...(otros.length > 0 ? [{ label: 'OTROS', grupo: otros, badgeClass: '' }] : []),
+              ] as { label: string; grupo: string[]; badgeClass: string }[])
+                .filter(g => g.grupo.length > 0)
+                .map(({ label, grupo, badgeClass }) => (
+                  <div key={label} className="tallas-genero-block">
+                    <div className={`tallas-genero-title ${badgeClass}`}>{label}</div>
+                    <div className="tallas-table-wrap">
+                      <table className="tallas-table">
+                        <thead>
+                          <tr>
+                            <th className="col-talla">TALLA</th>
+                            {FIELDS.map(f => (
+                              <th key={f.key} className="col-dim">{f.label} <span className="unit">cm</span></th>
+                            ))}
+                            <th className="col-del"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {grupo.map(talla => (
+                            <tr key={talla}>
+                              <td className="col-talla">
+                                <span className="talla-badge" style={{ background: tallaColor(talla) }}>{talla}</span>
+                              </td>
+                              {FIELDS.map(f => (
+                                <td key={f.key} className="col-dim">
+                                  <input
+                                    className="input-dim"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={tallas[talla][f.key]}
+                                    onChange={e => setDim(clienteId, talla, f.key, e.target.value)}
+                                  />
+                                </td>
+                              ))}
+                              <td className="col-del">
+                                <button
+                                  className="btn-del-talla"
+                                  title="Eliminar talla"
+                                  onClick={() => removeTalla(clienteId, talla)}
+                                >
+                                  ×
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          )}
 
           <p className="tallas-hint">
-            {sorted.length} tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong>.
+            {allKeys.length} tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong>.
             Los valores se aplican al exportar el CSV según el cliente seleccionado.
           </p>
         </>

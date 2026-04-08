@@ -7,10 +7,10 @@ var CONFIG = {
     // Dimensiones base de la plantilla .ai (en cm)
     // Si cambias el tamaño del template, actualiza estos valores
     templateBase: {
-        frente:    { ancho: 55,   alto: 79.5  }, // medido en plantilla .ai
-        espalda:   { ancho: 55,   alto: 79.5  }, // medido en plantilla .ai
-        manga_izq: { ancho: 46,   alto: 28.5  }, // medido en plantilla .ai
-        manga_der: { ancho: 46,   alto: 28.5  }  // simetrica a manga_izq
+        frente: { ancho: 55, alto: 79.5 }, // medido en plantilla .ai
+        espalda: { ancho: 55, alto: 79.5 }, // medido en plantilla .ai
+        manga_izq: { ancho: 46.5, alto: 28.5 }, // medido en plantilla .ai
+        manga_der: { ancho: 46.5, alto: 28.5 }  // simetrica a manga_izq
     },
 
     // Dimensiones base de líneas de manga en el template .ai (en cm)
@@ -18,7 +18,7 @@ var CONFIG = {
     lineaMangaBase: {
         izq_ancho: 3.0057, // ancho de MANGA_LINEA_IZQ en el template
         der_ancho: 3.0057, // ancho de MANGA_LINEA_DER en el template
-        inf_alto:  6.0     // alto de MANGA_LINEA_INF en el template
+        inf_alto: 6.0     // alto de MANGA_LINEA_INF en el template
     },
 
     // Ancho máximo del plóter en cm

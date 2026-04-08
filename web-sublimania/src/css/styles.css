@@ -337,6 +337,16 @@ body {
   background: var(--black);
   color: var(--white);
 }
+.sidebar-genero-label {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  padding: 4px 12px;
+  background: #f0f0f0;
+  color: #555;
+  border-top: 1px solid #ddd;
+}
+.sidebar-genero-label.genero-mujer-label { color: #F050A0; background: #fff0f7; }
 .talla-btn {
   width: 100%;
   display: flex;
@@ -354,6 +364,8 @@ body {
 .talla-btn.active { background: var(--black); color: var(--white); }
 .talla-btn.has-players .talla-code { color: var(--green); font-weight: 800; }
 .talla-btn.active.has-players .talla-code { color: var(--green); }
+.talla-btn.genero-mujer.has-players .talla-code { color: #F050A0; }
+.talla-btn.active.genero-mujer.has-players .talla-code { color: #F050A0; }
 .talla-btn.no-players { opacity: 0.45; }
 .talla-code { font-weight: 700; font-size: 0.9rem; }
 .talla-count { font-family: var(--mono); font-size: 0.6rem; opacity: 0.6; }
@@ -365,8 +377,59 @@ body {
   flex-direction: column;
   gap: 8px;
 }
-.copy-section { display: flex; flex-direction: column; gap: 4px; }
-.copy-label { font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; color: #666; }
+.copy-section { display: flex; flex-direction: column; gap: 6px; }
+.copy-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: #666;
+}
+.copy-toggle-all {
+  background: none;
+  border: none;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--black);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.copy-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  padding: 4px 0;
+}
+.copy-no-options {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: #aaa;
+  padding: 6px 8px;
+}
+.copy-check-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #333;
+  transition: background 0.1s;
+}
+.copy-check-item:hover { background: #f0f0f0; }
+.copy-check-item.checked { background: rgba(0,0,0,0.06); }
+.copy-check-item input[type="checkbox"] { accent-color: var(--black); cursor: pointer; }
+.copy-checklist.genero-mujer .copy-check-item input[type="checkbox"] { accent-color: #F050A0; }
+.copy-checklist.genero-mujer .copy-check-item.checked { background: rgba(240,80,160,0.08); }
 .btn-full { width: 100%; }
 
 /* Pieza tabs */
@@ -539,6 +602,20 @@ body {
   width: 160px;
   text-transform: uppercase;
 }
+
+.tallas-generos { display: flex; flex-direction: column; gap: 2rem; }
+.tallas-genero-block { display: flex; flex-direction: column; gap: 0.5rem; }
+.tallas-genero-title {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 4px 10px;
+  background: var(--black);
+  color: var(--white);
+  width: fit-content;
+}
+.tallas-genero-title.badge-mujer { background: #F050A0; }
 
 .tallas-table-wrap {
   overflow-x: auto;
@@ -1202,21 +1279,6 @@ body {
 }
 .input-global:focus { border-color: var(--blue); }
 
-.btn-copy-all {
-  border-style: dashed;
-  color: #555;
-}
-.btn-copy-all:hover { background: #fff5ee; border-color: var(--orange); color: var(--orange); box-shadow: var(--shadow-sm); }
-
-.select-copy {
-  font-family: var(--mono);
-  font-size: 0.65rem;
-  padding: 5px 8px;
-  border: 2px solid var(--black);
-  background: var(--white);
-  width: 100%;
-  cursor: pointer;
-}
 
 /* ── TOAST ───────────────────────────────────────────────────── */
 .toast {
