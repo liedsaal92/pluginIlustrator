@@ -104,6 +104,80 @@ function findAllItemsByName(parent, nombre) {
 }
 
 // ============================================================
+//  CLIP MASK AUTOMÁTICO PARA MANGAS
+// ============================================================
+
+// Devuelve los geometricBounds del clip path directo de un grupo, o null si no tiene.
+function buscarClipBounds(grupo) {
+    if (!grupo.clipped) return null;
+    for (var _k = 0; _k < grupo.pageItems.length; _k++) {
+        try {
+            if (grupo.pageItems[_k].clipping === true) {
+                return grupo.pageItems[_k].geometricBounds;
+            }
+        } catch (_e) {}
+    }
+    return null;
+}
+
+// Acumula el PathItem/CompoundPathItem de mayor bounding box en un contenedor,
+// buscando recursivamente dentro de sub-grupos.
+function _buscarMayorPath(parent, ref) {
+    for (var _i = 0; _i < parent.pageItems.length; _i++) {
+        var _item = parent.pageItems[_i];
+        var _t    = _item.typename;
+        if (_t === "PathItem" || _t === "CompoundPathItem") {
+            try {
+                var _b    = _item.geometricBounds;
+                var _area = Math.abs(_b[3] - _b[1]) * Math.abs(_b[0] - _b[2]);
+                if (_area > ref.area) { ref.area = _area; ref.item = _item; }
+            } catch(_e) {}
+        } else if (_t === "GroupItem") {
+            _buscarMayorPath(_item, ref);
+        }
+    }
+}
+
+// Busca el path de silueta de una manga: el PathItem/CompoundPathItem con mayor
+// área de bounding box dentro de ESTATICO (o del grupo completo si no hay ESTATICO).
+// Ese path es casi siempre la silueta exterior de la manga.
+function encontrarSiluetaManga(grupo) {
+    var contenedor = findGroupByNameRecursivo(grupo, "ESTATICO") || grupo;
+    var ref = { item: null, area: 0 };
+    _buscarMayorPath(contenedor, ref);
+    return ref.item;
+}
+
+// Aplica un clip mask automático al grupo de manga si no tiene uno.
+// Duplica el path de silueta y lo coloca al frente del grupo como clip.
+// Modifica el grupoTemplate en el documento — el cambio persiste en el .ai.
+function asegurarClipMask(grupo, nombrePieza) {
+    if (grupo.clipped) {
+        Log.info(nombrePieza + ": ya tiene clip mask — no se modifica");
+        return;
+    }
+    // Desbloquear el grupo completo antes de buscar y duplicar
+    try { grupo.locked = false; } catch(e) {}
+    desbloquearTodo(grupo);
+
+    var silueta = encontrarSiluetaManga(grupo);
+    if (!silueta) {
+        Log.info(nombrePieza + ": no se encontró path de silueta para clip mask automático");
+        return;
+    }
+    try {
+        try { silueta.locked = false; } catch(e) {}
+        var clip = silueta.duplicate(grupo, ElementPlacement.PLACEATBEGINNING);
+        try { clip.filled  = false; } catch(e) {}
+        try { clip.stroked = false; } catch(e) {}
+        grupo.clipped = true;
+        Log.ok(nombrePieza + ": clip mask automático aplicado desde silueta en ESTATICO");
+    } catch(e) {
+        Log.info(nombrePieza + ": error al crear clip mask (" + e.message + ") — continuando sin clip");
+    }
+}
+
+// ============================================================
 //  DOCUMENTO NUEVO
 // ============================================================
 

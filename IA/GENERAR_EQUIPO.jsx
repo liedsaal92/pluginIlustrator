@@ -134,7 +134,40 @@ function main() {
     desbloquearTodo(templateLayer);   // desbloquea sublayers y grupos anidados
     templateLayer.visible = false;
 
-    // 8. Procesar piezas
+    // 8. Detectar la talla del template comparando la base de FRENTE con el CSV.
+    //    Si FRENTE tiene clip mask, sus bounds revelan a qué talla fue diseñado el .ai.
+    //    Ese mismo jugador/talla se usa para deducir las dimensiones base de MANGA_IZQ/DER
+    //    cuando esos grupos no tienen clip mask propio.
+    var _tallaTemplate = null;
+    var _frenteGrupo   = gruposDisponibles.grupos["FRENTE"];
+    if (_frenteGrupo) {
+        var _fcb   = buscarClipBounds(_frenteGrupo);
+        var _fAncho = _fcb
+            ? ptToCm(Math.abs(_fcb[3] - _fcb[1]))
+            : ptToCm(Math.abs(_frenteGrupo.width));
+        var _fAlto  = _fcb
+            ? ptToCm(Math.abs(_fcb[0] - _fcb[2]))
+            : ptToCm(Math.abs(_frenteGrupo.height));
+
+        var _mejorDiff = 999;
+        for (var _ti = 0; _ti < jugadores.length; _ti++) {
+            var _tj   = jugadores[_ti];
+            var _ta   = parseFloat(_tj.ANCHO);
+            var _th   = parseFloat(_tj.ALTO);
+            if (isNaN(_ta) || isNaN(_th)) continue;
+            var _diff = Math.abs(_ta - _fAncho) + Math.abs(_th - _fAlto);
+            if (_diff < _mejorDiff) { _mejorDiff = _diff; _tallaTemplate = _tj; }
+        }
+        if (_tallaTemplate && _mejorDiff < 2) {
+            Log.ok("Template detectado: talla " + _tallaTemplate.TALLA +
+                   " (" + _fAncho.toFixed(1) + " x " + _fAlto.toFixed(1) + " cm)");
+        } else {
+            _tallaTemplate = null;
+            Log.info("No se pudo detectar talla del template desde FRENTE");
+        }
+    }
+
+    // 9. Procesar piezas
     var docAncho   = doc.width;
     var currentY   = 0;
     var totalPasos = jugadores.length * CONFIG.piezas.length;
@@ -152,6 +185,38 @@ function main() {
 
         Log._linea("-----", "");
         Log._linea("-----", "=== " + nombrePieza + " ===");
+
+        // Pre-calcular base UNA VEZ por pieza (el template no cambia entre jugadores).
+        // Para mangas sin clip mask: buscar la silueta (path más grande en ESTATICO)
+        // y leer sus bounds directamente — sin modificar el template.
+        // Medir base del template para esta pieza (una vez por pieza).
+        // Prioridad:
+        //   1. Clip mask directo en el grupo → bounds exactos del clip path
+        //   2. Manga sin clip mask + talla detectada desde FRENTE → dims del CSV de esa talla
+        //   3. Fallback: bounding box completo del grupo (puede ser incorrecto si el artwork desborda)
+        var basePieza;
+        var _cbPieza = buscarClipBounds(grupoTemplate);
+        if (_cbPieza) {
+            basePieza = {
+                ancho: ptToCm(Math.abs(_cbPieza[3] - _cbPieza[1])),
+                alto:  ptToCm(Math.abs(_cbPieza[0] - _cbPieza[2]))
+            };
+        } else if ((nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") && _tallaTemplate) {
+            basePieza = {
+                ancho: parseFloat(_tallaTemplate.MANGA_ANCHO),
+                alto:  parseFloat(_tallaTemplate.MANGA_ALTO)
+            };
+            Log.ok(nombrePieza + ": base deducida de talla template (" +
+                   _tallaTemplate.TALLA + ") → " +
+                   basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
+        } else {
+            basePieza = {
+                ancho: ptToCm(Math.abs(grupoTemplate.width)),
+                alto:  ptToCm(Math.abs(grupoTemplate.height))
+            };
+        }
+        Log._linea("-----", nombrePieza + " base medida: " +
+            basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
 
         var offsetX       = 0;
         var filaMaxHeight = 0;
@@ -177,41 +242,8 @@ function main() {
                 // Duplicar a capa GENERADO
                 var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
 
-                // Medir dimensiones reales del template en este momento.
-                // Si el grupo tiene clip mask, medimos el clip path (evita que
-                // contenido que desborda el clip infle las dimensiones).
-                // Si no tiene clip, .width/.height del grupo es suficiente.
-                var base;
-                var _clipBounds = null;
-                if (grupoTemplate.clipped) {
-                    for (var _ci = 0; _ci < grupoTemplate.pageItems.length; _ci++) {
-                        try {
-                            if (grupoTemplate.pageItems[_ci].clipping === true) {
-                                _clipBounds = grupoTemplate.pageItems[_ci].geometricBounds;
-                                break;
-                            }
-                        } catch (_e) {}
-                    }
-                }
-                if (_clipBounds) {
-                    // geometricBounds = [top, left, bottom, right] en puntos (coords doc)
-                    base = {
-                        ancho: ptToCm(Math.abs(_clipBounds[3] - _clipBounds[1])),
-                        alto:  ptToCm(Math.abs(_clipBounds[0] - _clipBounds[2]))
-                    };
-                } else {
-                    base = {
-                        ancho: ptToCm(Math.abs(grupoTemplate.width)),
-                        alto:  ptToCm(Math.abs(grupoTemplate.height))
-                    };
-                }
-                if (i === 0) {
-                    Log._linea("-----", nombrePieza + " base medida: " +
-                        base.ancho.toFixed(2) + " x " + base.alto.toFixed(2) + " cm");
-                }
-
                 // Escalar — capturar el factor real aplicado
-                var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, base);
+                var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, basePieza);
 
                 // Aplicar dinámicos pasando el factor para compensar en líneas
                 aplicarDinamicos(copia, j, nombrePieza, factorPieza);
