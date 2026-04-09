@@ -23,13 +23,13 @@ interface Props {
 }
 
 export function PlayerCard({ idx }: Props) {
-  const { players, overrides, getPlayerRules, hasOverride, setOverride, clearOverride, removePlayer, updatePlayer } = useTeamStore();
+  const { players, overrides, getPlayerRules, hasOverride, setOverride, clearOverride, removePlayer, updatePlayer, expandedPlayer, setExpandedPlayer } = useTeamStore();
   const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
   const tallaOptions = [...new Set(
     Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
   )].sort((a, b) => a.localeCompare(b));
 
-  const [expanded, setExpanded] = useState(false);
+  const expanded = expandedPlayer === idx;
   const [editing, setEditing] = useState(false);
   const [pieza, setPieza] = useState<PiezaKey>('frente');
 
@@ -43,17 +43,17 @@ export function PlayerCard({ idx }: Props) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     updatePlayer(idx, {
-      NOMBRE:          String(fd.get('NOMBRE') ?? '').trim(),
+      NOMBRE: String(fd.get('NOMBRE') ?? '').trim(),
       NOMBRE_CAMISETA: String(fd.get('NOMBRE_CAMISETA') ?? '').trim(),
-      NUMERO:          String(fd.get('NUMERO') ?? '').trim(),
-      TALLA:           String(fd.get('TALLA') ?? '').trim().toUpperCase(),
+      NUMERO: String(fd.get('NUMERO') ?? '').trim(),
+      TALLA: String(fd.get('TALLA') ?? '').trim().toUpperCase(),
     });
     setEditing(false);
   }
 
   return (
     <div className={`player-card ${hasOverride(idx) ? 'has-override' : ''}`}>
-      <div className="player-card-header" onClick={() => !editing && setExpanded(v => !v)}>
+      <div className="player-card-header" onClick={() => !editing && setExpandedPlayer(expanded ? null : idx)}>
         <div className="player-info">
           <span className="player-talla-badge" style={{ background: tallaColor(player.TALLA) }}>
             {player.TALLA || '—'}
@@ -72,7 +72,7 @@ export function PlayerCard({ idx }: Props) {
           <button
             className="btn-edit-player"
             title="Editar datos del jugador"
-            onClick={e => { e.stopPropagation(); setEditing(v => !v); setExpanded(false); }}
+            onClick={e => { e.stopPropagation(); setEditing(v => !v); setExpandedPlayer(null); }}
           >
             ✎
           </button>

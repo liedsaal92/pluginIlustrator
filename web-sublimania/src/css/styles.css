@@ -48,24 +48,6 @@ body {
   border-bottom: var(--border);
 }
 
-.ticker-wrap {
-  background: var(--red);
-  overflow: hidden;
-  padding: 6px 0;
-  border-bottom: 2px solid var(--black);
-}
-.ticker {
-  display: flex;
-  white-space: nowrap;
-  animation: ticker 20s linear infinite;
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--white);
-}
-.ticker span { padding-right: 4rem; }
-@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 .header-main {
   display: flex;
@@ -408,7 +390,7 @@ body {
 .talla-btn.active.genero-mujer.has-players .talla-code { color: #F050A0; }
 .talla-btn.no-players { opacity: 0.45; }
 .talla-code { font-weight: 700; font-size: 0.9rem; }
-.talla-count { font-family: var(--mono); font-size: 0.6rem; opacity: 0.6; }
+.talla-count { font-family: var(--mono); font-size: 0.72rem; opacity: 0.6; }
 
 .sidebar-actions {
   padding: 10px;
@@ -804,9 +786,9 @@ body {
   border: none;
   cursor: pointer;
   color: #aaa;
-  font-size: 16px;
+  font-size: 24px;
   line-height: 1;
-  padding: 2px 4px;
+  padding: 2px 6px;
 }
 
 .btn-del-talla:hover { color: #c0392b; }
@@ -914,9 +896,9 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 21px;
   line-height: 1;
-  padding: 2px 5px;
+  padding: 2px 7px;
   color: #aaa;
 }
 
@@ -987,17 +969,19 @@ body {
 
 .player-pieza-tabs {
   display: flex;
+  align-items: stretch;
   gap: 0;
   border-bottom: var(--border);
   background: var(--white);
-  flex-wrap: wrap;
-  padding: 0 0.5rem;
-  align-items: center;
+  padding: 0;
 }
 .pieza-tab-sm {
-  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  height: var(--header-item-h);
   border: none;
-  border-right: 1.5px solid #e0dbd0;
+  border-right: var(--border);
   background: transparent;
   font-family: var(--mono);
   font-size: 0.6rem;
@@ -1005,12 +989,20 @@ body {
   letter-spacing: 0.08em;
   cursor: pointer;
   color: #666;
+  box-sizing: border-box;
 }
 .pieza-tab-sm.active {
   background: var(--pieza-color, var(--black));
   color: var(--black);
 }
 .pieza-tab-sm:hover:not(.active) { background: var(--cream); }
+
+.player-pieza-tabs .btn {
+  height: var(--header-item-h);
+  box-shadow: none;
+  margin-left: 0.75rem;
+}
+.player-pieza-tabs .btn:hover { box-shadow: var(--shadow-sm); }
 
 .player-elements {
   padding: 1rem;
@@ -1420,7 +1412,7 @@ body {
 }
 .save-time {
   font-family: var(--mono);
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   color: #888;
 }
 .save-ok   .save-file { color: var(--green); }

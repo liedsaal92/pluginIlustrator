@@ -24,8 +24,8 @@ function idbOpen() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('sublimania_db', 1);
     req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
-    req.onsuccess  = e => resolve(e.target.result);
-    req.onerror    = () => reject(req.error);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = () => reject(req.error);
   });
 }
 
@@ -33,38 +33,38 @@ async function idbPut(key, value) {
   try {
     const db = await idbOpen();
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction('handles', 'readwrite');
+      const tx = db.transaction('handles', 'readwrite');
       tx.objectStore('handles').put(value, key);
       tx.oncomplete = () => resolve();
-      tx.onerror    = () => reject(tx.error);
+      tx.onerror = () => reject(tx.error);
     });
-  } catch(e) {}
+  } catch (e) { }
 }
 
 async function idbGet(key) {
   try {
     const db = await idbOpen();
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction('handles', 'readonly');
+      const tx = db.transaction('handles', 'readonly');
       const req = tx.objectStore('handles').get(key);
       req.onsuccess = () => resolve(req.result);
-      req.onerror   = () => reject(req.error);
+      req.onerror = () => reject(req.error);
     });
-  } catch(e) { return null; }
+  } catch (e) { return null; }
 }
 
 // ── PERSISTENCIA localStorage ─────────────────────────────────
 function saveState() {
   try {
     localStorage.setItem('sublimania_state', JSON.stringify({
-      players:      APP.players,
-      tallas:       APP.tallas,
-      tallaRules:   APP.tallaRules,
-      overrides:    APP.overrides,
+      players: APP.players,
+      tallas: APP.tallas,
+      tallaRules: APP.tallaRules,
+      overrides: APP.overrides,
       globalConfig: APP.globalConfig,
-      lastSaved:    APP.lastSaved,
+      lastSaved: APP.lastSaved,
     }));
-  } catch(e) {}
+  } catch (e) { }
 }
 
 function loadState() {
@@ -72,15 +72,15 @@ function loadState() {
     const raw = localStorage.getItem('sublimania_state');
     if (!raw) return;
     const saved = JSON.parse(raw);
-    APP.players      = saved.players      || [];
-    APP.tallas       = saved.tallas       || [];
-    APP.tallaRules   = saved.tallaRules   || {};
-    APP.overrides    = saved.overrides    || {};
+    APP.players = saved.players || [];
+    APP.tallas = saved.tallas || [];
+    APP.tallaRules = saved.tallaRules || {};
+    APP.overrides = saved.overrides || {};
     APP.globalConfig = saved.globalConfig || getDefaultGlobal();
-    APP.lastSaved    = saved.lastSaved    || null;
+    APP.lastSaved = saved.lastSaved || null;
     if (APP.players.length > 0) APP.screen = 'configure';
     if (APP.tallas.length > 0) APP.activeTalla = APP.tallas[0];
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // ── PERSISTENCIA ARCHIVO (File System Access API) ─────────────
@@ -88,25 +88,25 @@ function loadState() {
 // Objeto de configuración que se guarda/carga como JSON
 function buildConfigSnapshot() {
   return {
-    version:      1,
-    savedAt:      new Date().toISOString(),
-    players:      APP.players,
-    tallas:       APP.tallas,
-    tallaRules:   APP.tallaRules,
-    overrides:    APP.overrides,
+    version: 1,
+    savedAt: new Date().toISOString(),
+    players: APP.players,
+    tallas: APP.tallas,
+    tallaRules: APP.tallaRules,
+    overrides: APP.overrides,
     globalConfig: APP.globalConfig,
   };
 }
 
 function applyConfigSnapshot(config) {
-  APP.players      = config.players      || [];
-  APP.tallas       = config.tallas       || [];
-  APP.tallaRules   = config.tallaRules   || {};
-  APP.overrides    = config.overrides    || {};
+  APP.players = config.players || [];
+  APP.tallas = config.tallas || [];
+  APP.tallaRules = config.tallaRules || {};
+  APP.overrides = config.overrides || {};
   APP.globalConfig = config.globalConfig || getDefaultGlobal();
-  APP.lastSaved    = config.savedAt      || null;
+  APP.lastSaved = config.savedAt || null;
   if (APP.players.length > 0) APP.screen = 'configure';
-  if (APP.tallas.length > 0)  APP.activeTalla = APP.tallas[0];
+  if (APP.tallas.length > 0) APP.activeTalla = APP.tallas[0];
   saveState(); // sincronizar también a localStorage
 }
 
@@ -130,7 +130,7 @@ async function saveConfigToFile() {
       await idbPut('configHandle', handle); // recordar para próximas sesiones
     }
 
-    const json    = JSON.stringify(buildConfigSnapshot(), null, 2);
+    const json = JSON.stringify(buildConfigSnapshot(), null, 2);
     const writable = await handle.createWritable();
     await writable.write(json);
     await writable.close();
@@ -140,7 +140,7 @@ async function saveConfigToFile() {
     updateSaveStatus();
     showToast('Config guardada → ' + handle.name, 'ok');
 
-  } catch(e) {
+  } catch (e) {
     if (e.name !== 'AbortError') showToast('Error al guardar: ' + e.message, 'error');
   }
 }
@@ -158,13 +158,13 @@ async function loadConfigFromFile() {
     APP.fileHandle = handle;
     await idbPut('configHandle', handle);
 
-    const file   = await handle.getFile();
-    const text   = await file.text();
+    const file = await handle.getFile();
+    const text = await file.text();
     const config = JSON.parse(text);
     applyConfigSnapshot(config);
     render();
     showToast('Config cargada desde ' + handle.name, 'ok');
-  } catch(e) {
+  } catch (e) {
     if (e.name !== 'AbortError') showToast('Error al cargar: ' + e.message, 'error');
   }
 }
@@ -182,13 +182,13 @@ async function tryReconnectFile() {
 
     if (perm === 'granted') {
       // Permiso activo — leer y comparar con localStorage
-      const file   = await handle.getFile();
-      const text   = await file.text();
+      const file = await handle.getFile();
+      const text = await file.text();
       const config = JSON.parse(text);
 
       // Usar el más reciente entre archivo y localStorage
-      const fileDate  = config.savedAt   ? new Date(config.savedAt)   : new Date(0);
-      const localDate = APP.lastSaved    ? new Date(APP.lastSaved)     : new Date(0);
+      const fileDate = config.savedAt ? new Date(config.savedAt) : new Date(0);
+      const localDate = APP.lastSaved ? new Date(APP.lastSaved) : new Date(0);
 
       if (fileDate > localDate) {
         applyConfigSnapshot(config);
@@ -200,7 +200,7 @@ async function tryReconnectFile() {
       // Necesita gesto del usuario — mostrar banner
       showReconnectBanner(handle.name);
     }
-  } catch(e) {}
+  } catch (e) { }
 }
 
 // Banner no intrusivo para reconectar el archivo (necesita gesto de usuario)
@@ -222,15 +222,15 @@ function showReconnectBanner(fileName) {
       const perm = await APP.fileHandle.requestPermission({ mode: 'readwrite' });
       if (perm === 'granted') {
         banner.remove();
-        const file   = await APP.fileHandle.getFile();
-        const text   = await file.text();
+        const file = await APP.fileHandle.getFile();
+        const text = await file.text();
         const config = JSON.parse(text);
         applyConfigSnapshot(config);
         render();
         updateSaveStatus();
         showToast('Config cargada desde ' + APP.fileHandle.name, 'ok');
       }
-    } catch(e) {}
+    } catch (e) { }
   });
   document.getElementById('btnDismissBanner').addEventListener('click', () => banner.remove());
 }
@@ -241,7 +241,7 @@ function updateSaveStatus() {
   if (!el) return;
   if (APP.fileHandle && APP.lastSaved) {
     const d = new Date(APP.lastSaved);
-    const label = d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    const label = d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
     el.innerHTML = `<span class="save-file">${esc(APP.fileHandle.name)}</span><span class="save-time">Guardado ${label}</span>`;
     el.className = 'save-status save-ok';
   } else if (APP.fileHandle) {
@@ -256,11 +256,11 @@ function updateSaveStatus() {
 // ── PARSEO EXCEL ─────────────────────────────────────────────
 function handleFile(file) {
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb   = XLSX.read(data, { type: 'array' });
-      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
       if (!rows.length) {
@@ -300,14 +300,14 @@ function handleFile(file) {
       }
 
       APP.activeTalla = APP.tallas[0];
-      APP.screen      = 'configure';
-      APP.configTab   = 'rules';
-      APP.overrides   = {};
+      APP.screen = 'configure';
+      APP.configTab = 'rules';
+      APP.overrides = {};
 
       saveState();
       render();
       showToast(APP.players.length + ' jugadores cargados — ' + APP.tallas.length + ' tallas detectadas', 'ok');
-    } catch(err) {
+    } catch (err) {
       showToast('Error al leer el archivo: ' + err.message, 'error');
     }
   };
@@ -328,7 +328,7 @@ function buildEmptyRules() {
 // ── GETTERS ──────────────────────────────────────────────────
 function getPlayerRules(idx) {
   const talla = String(APP.players[idx].TALLA || '');
-  const base  = APP.tallaRules[talla] || {};
+  const base = APP.tallaRules[talla] || {};
   return Object.assign({}, base, APP.overrides[idx] || {});
 }
 
@@ -346,7 +346,7 @@ function setTallaRule(talla, key, value) {
 function setOverride(idx, key, value) {
   if (!APP.overrides[idx]) APP.overrides[idx] = {};
   const talla = String(APP.players[idx].TALLA || '');
-  const base  = APP.tallaRules[talla] || {};
+  const base = APP.tallaRules[talla] || {};
   // Si el valor coincide con la base, eliminar el override (volver a heredar)
   if (String(value) === String(base[key] || '')) {
     delete APP.overrides[idx][key];
@@ -467,10 +467,10 @@ function renderConfigure() {
       </div>
 
       <div class="config-tabs">
-        <button class="tab-btn ${APP.configTab==='rules'?'active':''}" data-tab="rules">
+        <button class="tab-btn ${APP.configTab === 'rules' ? 'active' : ''}" data-tab="rules">
           ⚙ REGLAS POR TALLA
         </button>
-        <button class="tab-btn ${APP.configTab==='players'?'active':''}" data-tab="players">
+        <button class="tab-btn ${APP.configTab === 'players' ? 'active' : ''}" data-tab="players">
           👤 JUGADORES (${APP.players.length})
         </button>
       </div>
@@ -489,9 +489,9 @@ function renderRulesTab() {
       <div class="tallas-sidebar">
         <div class="sidebar-label">TALLAS</div>
         ${APP.tallas.map(t => `
-          <button class="talla-btn ${APP.activeTalla===t?'active':''}" data-talla="${t}">
+          <button class="talla-btn ${APP.activeTalla === t ? 'active' : ''}" data-talla="${t}">
             <span class="talla-code">${t}</span>
-            <span class="talla-count">${APP.players.filter(p=>String(p.TALLA||'')===t).length} jug.</span>
+            <span class="talla-count">${APP.players.filter(p => String(p.TALLA || '') === t).length} jug.</span>
           </button>
         `).join('')}
         <div class="sidebar-actions">
@@ -503,7 +503,7 @@ function renderRulesTab() {
             <div class="copy-label">Copiar a:</div>
             <select class="select-copy" id="selectCopyTo">
               <option value="">— talla —</option>
-              ${APP.tallas.filter(t=>t!==APP.activeTalla).map(t=>`<option value="${t}">${t}</option>`).join('')}
+              ${APP.tallas.filter(t => t !== APP.activeTalla).map(t => `<option value="${t}">${t}</option>`).join('')}
             </select>
             <button class="btn btn-ghost btn-sm btn-full" id="btnCopyRules">COPIAR REGLAS</button>
             <button class="btn btn-ghost btn-sm btn-full btn-copy-all" id="btnCopyAll"
@@ -517,7 +517,7 @@ function renderRulesTab() {
       <div class="rules-main">
         <div class="pieza-tabs">
           ${Object.keys(SCHEMA).map(pieza => `
-            <button class="pieza-tab ${APP.activePieza===pieza?'active':''}"
+            <button class="pieza-tab ${APP.activePieza === pieza ? 'active' : ''}"
                     data-pieza="${pieza}"
                     style="--pieza-color:${SCHEMA[pieza].color}">
               ${SCHEMA[pieza].label}
@@ -537,21 +537,21 @@ function renderPlayersTab() {
   return `
     <div class="players-layout">
       ${APP.players.map((p, idx) => `
-        <div class="player-card ${hasOverride(idx)?'has-override':''}" id="playerCard${idx}">
+        <div class="player-card ${hasOverride(idx) ? 'has-override' : ''}" id="playerCard${idx}">
           <div class="player-card-header" data-player="${idx}">
             <div class="player-info">
-              <span class="player-talla-badge" style="background:${tallaColor(p.TALLA)}">${p.TALLA||'—'}</span>
-              <span class="player-name">${esc(p.NOMBRE||'')}</span>
-              ${p.NOMBRE_CAMISETA?`<span class="player-camiseta">"${esc(p.NOMBRE_CAMISETA)}"</span>`:''}
+              <span class="player-talla-badge" style="background:${tallaColor(p.TALLA)}">${p.TALLA || '—'}</span>
+              <span class="player-name">${esc(p.NOMBRE || '')}</span>
+              ${p.NOMBRE_CAMISETA ? `<span class="player-camiseta">"${esc(p.NOMBRE_CAMISETA)}"</span>` : ''}
             </div>
             <div class="player-meta">
-              ${p.NUMERO?`<span class="player-num">#${p.NUMERO}</span>`:'<span class="player-num-empty">S/N</span>'}
-              <span class="player-dims">${p.ALTO||'?'}×${p.ANCHO||'?'} cm</span>
-              ${hasOverride(idx)?'<span class="override-badge">OVERRIDE</span>':''}
-              <span class="player-toggle">${APP.expandedPlayer===idx?'▲':'▼'}</span>
+              ${p.NUMERO ? `<span class="player-num">#${p.NUMERO}</span>` : '<span class="player-num-empty">S/N</span>'}
+              <span class="player-dims">${p.ALTO || '?'}×${p.ANCHO || '?'} cm</span>
+              ${hasOverride(idx) ? '<span class="override-badge">OVERRIDE</span>' : ''}
+              <span class="player-toggle">${APP.expandedPlayer === idx ? '▲' : '▼'}</span>
             </div>
           </div>
-          ${APP.expandedPlayer===idx ? renderPlayerExpanded(idx) : ''}
+          ${APP.expandedPlayer === idx ? renderPlayerExpanded(idx) : ''}
         </div>
       `).join('')}
     </div>
@@ -563,7 +563,7 @@ function renderPlayerExpanded(idx) {
     <div class="player-expanded">
       <div class="player-pieza-tabs">
         ${Object.keys(SCHEMA).map(pieza => `
-          <button class="pieza-tab-sm ${APP.expandedPlayerPieza===pieza?'active':''}"
+          <button class="pieza-tab-sm ${APP.expandedPlayerPieza === pieza ? 'active' : ''}"
                   data-pieza="${pieza}" data-player="${idx}"
                   style="--pieza-color:${SCHEMA[pieza].color}">
             ${SCHEMA[pieza].label}
@@ -598,13 +598,13 @@ function renderElements(context, pieza, mode) {
   };
 
   return schema.elements.map(el => {
-    const rules  = getRules();
+    const rules = getRules();
     const active = el.toggleKey ? rules[el.toggleKey] === 'SI' : true;
     const hasFields = el.fields.length > 0;
     const ctxAttr = mode === 'talla' ? `data-talla="${esc(context)}"` : `data-player="${context}"`;
 
     return `
-      <div class="element-card ${active?'element-active':'element-inactive'}" data-el="${el.id}">
+      <div class="element-card ${active ? 'element-active' : 'element-inactive'}" data-el="${el.id}">
         <div class="element-header">
           <span class="element-icon">${el.icon}</span>
           <span class="element-label">${el.label}</span>
@@ -614,7 +614,7 @@ function renderElements(context, pieza, mode) {
                      ${ctxAttr}
                      data-key="${el.toggleKey}"
                      data-mode="${mode}"
-                     ${active?'checked':''}>
+                     ${active ? 'checked' : ''}>
               <span class="toggle-slider"></span>
             </label>
           ` : `<span class="element-always-on">SIEMPRE</span>`}
@@ -622,10 +622,10 @@ function renderElements(context, pieza, mode) {
         ${hasFields && active ? `
           <div class="element-fields">
             ${el.fields.map(f => `
-              <div class="field-row ${isOverridden(f.key)?'is-overridden':''}">
+              <div class="field-row ${isOverridden(f.key) ? 'is-overridden' : ''}">
                 <label class="field-label">${f.label.toUpperCase()}</label>
                 ${renderField(f, rules[f.key], ctxAttr, mode, isOverridden(f.key))}
-                ${f.unit?`<span class="field-unit">${f.unit}</span>`:''}
+                ${f.unit ? `<span class="field-unit">${f.unit}</span>` : ''}
               </div>
             `).join('')}
           </div>
@@ -643,7 +643,7 @@ function renderField(f, value, ctxAttr, mode, overridden) {
       <select class="field-select ${overClass} field-input"
               ${ctxAttr} data-key="${f.key}" data-mode="${mode}">
         <option value="">—</option>
-        ${f.options.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+        ${f.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
       </select>
     `;
   }
@@ -699,9 +699,9 @@ function renderExport() {
 
 // ── EVENT LISTENERS ──────────────────────────────────────────
 function attachUploadListeners() {
-  const dz   = document.getElementById('dropZone');
-  const fi   = document.getElementById('fileInput');
-  const btn  = document.getElementById('btnSelectFile');
+  const dz = document.getElementById('dropZone');
+  const fi = document.getElementById('fileInput');
+  const btn = document.getElementById('btnSelectFile');
 
   if (!dz) return;
 
@@ -848,8 +848,8 @@ function attachFieldListeners(container) {
   // Toggles
   container.querySelectorAll('.el-toggle').forEach(chk => {
     chk.addEventListener('change', () => {
-      const val  = chk.checked ? 'SI' : 'NO';
-      const key  = chk.dataset.key;
+      const val = chk.checked ? 'SI' : 'NO';
+      const key = chk.dataset.key;
       const mode = chk.dataset.mode;
       if (mode === 'talla') {
         setTallaRule(chk.dataset.talla, key, val);
@@ -873,16 +873,16 @@ function attachFieldListeners(container) {
   // Inputs y selects
   container.querySelectorAll('.field-input').forEach(inp => {
     inp.addEventListener('change', () => {
-      const key  = inp.dataset.key;
+      const key = inp.dataset.key;
       const mode = inp.dataset.mode;
-      const val  = inp.value;
+      const val = inp.value;
       if (mode === 'talla') {
         setTallaRule(inp.dataset.talla, key, val);
       } else {
         setOverride(parseInt(inp.dataset.player), key, val);
         // Marcar visualmente si es override
         const talla = String(APP.players[parseInt(inp.dataset.player)].TALLA || '');
-        const base  = (APP.tallaRules[talla] || {})[key];
+        const base = (APP.tallaRules[talla] || {})[key];
         if (String(val) !== String(base || '')) {
           inp.classList.add('input-overridden');
         } else {
@@ -899,9 +899,9 @@ function attachExportListeners() {
 
   const btnDl = document.getElementById('btnDownload');
   if (btnDl) btnDl.addEventListener('click', () => {
-    const csv      = buildCSV(APP.players, APP.tallaRules, APP.overrides, APP.globalConfig);
-    const equipo   = (APP.globalConfig.EQUIPO || 'EQUIPO').replace(/\s+/g,'_').toUpperCase();
-    const ts       = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const csv = buildCSV(APP.players, APP.tallaRules, APP.overrides, APP.globalConfig);
+    const equipo = (APP.globalConfig.EQUIPO || 'EQUIPO').replace(/\s+/g, '_').toUpperCase();
+    const ts = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     downloadCSV(csv, equipo + '_' + ts + '.csv');
     showToast('CSV descargado', 'ok');
   });
@@ -910,13 +910,13 @@ function attachExportListeners() {
 // ── UTILS ─────────────────────────────────────────────────────
 function esc(str) {
   return String(str || '')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-const TALLA_COLORS = ['#E8462A','#F5C842','#4A9BE8','#7B5CF0','#1DBF73','#F050A0','#FF8C00','#00CED1'];
+const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
 const tallaColorMap = {};
 function tallaColor(talla) {
   if (!tallaColorMap[talla]) {
