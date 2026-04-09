@@ -1045,6 +1045,8 @@ body {
 .modal-input-row { display: flex; gap: 0.5rem; }
 .modal-input-row .input-global { flex: 1; }
 .modal-close { align-self: flex-end; }
+.modal-copy-rules { padding: 1rem; border: var(--border); background: var(--cream); }
+.modal-copy-rules .input-global { width: 100%; }
 
 .upload-back { margin-bottom: 1.5rem; width: fit-content; }
 

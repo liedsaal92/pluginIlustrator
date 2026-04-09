@@ -40,6 +40,12 @@ export function TeamsScreen({ onToast }: Props) {
   // Estado del modal "nuevo equipo"
   const [showNewModal, setShowNewModal] = useState(false);
   const [newNombre, setNewNombre] = useState('');
+  const [sourceTeamId, setSourceTeamId] = useState('');
+
+  // Equipos que tienen al menos una talla con reglas configuradas
+  const teamsWithRules = teams.filter(
+    t => t.tallas.length > 0 && Object.keys(t.tallaRules).length > 0
+  );
 
   function handleOpen(entry: TeamEntry) {
     saveActiveTeam();
@@ -55,12 +61,26 @@ export function TeamsScreen({ onToast }: Props) {
 
   function openNewModal() {
     setNewNombre('');
+    setSourceTeamId('');
     setShowNewModal(true);
+  }
+
+  function getSourceRules(): { tallas: string[]; tallaRules: TeamEntry['tallaRules'] } | null {
+    if (!sourceTeamId) return null;
+    const src = teams.find(t => t.id === sourceTeamId);
+    if (!src) return null;
+    return { tallas: src.tallas, tallaRules: src.tallaRules };
   }
 
   function handleCreateWithExcel() {
     saveActiveTeam();
+    const source = getSourceRules();
+    // Cargar entrada vacía y luego sobrescribir las reglas del equipo fuente
+    // para que UploadScreen las preserve al importar jugadores con tallas coincidentes
     loadFromEntry(EMPTY_ENTRY, 'upload');
+    if (source) {
+      useTeamStore.setState({ tallas: source.tallas, tallaRules: source.tallaRules });
+    }
     useTeamsStore.setState({ activeTeamId: null });
     setShowNewModal(false);
   }
@@ -72,20 +92,23 @@ export function TeamsScreen({ onToast }: Props) {
       return;
     }
     saveActiveTeam();
+    const source = getSourceRules();
     const globalConfig = { ...getDefaultGlobal(), EQUIPO: nombre };
+    const tallaRules = source ? source.tallaRules : {};
+    const tallas = source ? source.tallas : [];
     const id = createTeam({
       nombre,
-      players: [], tallas: [], tallaRules: {}, overrides: {},
+      players: [], tallas, tallaRules, overrides: {},
       globalConfig, exportHistory: {},
     });
-    // Cargar en working store
     useTeamStore.getState().loadFromEntry({
       id, nombre, createdAt: '', updatedAt: '',
-      players: [], tallas: [], tallaRules: {}, overrides: {},
+      players: [], tallas, tallaRules, overrides: {},
       globalConfig, exportHistory: {},
     }, 'configure');
     setShowNewModal(false);
-    onToast(`Equipo "${nombre}" creado`, 'ok');
+    const suffix = source ? ` (reglas copiadas de "${teams.find(t => t.id === sourceTeamId)?.nombre}")` : '';
+    onToast(`Equipo "${nombre}" creado${suffix}`, 'ok');
   }
 
   function handleDelete(id: string) {
@@ -253,20 +276,39 @@ export function TeamsScreen({ onToast }: Props) {
               <div className="modal-option-sub" style={{ marginBottom: '0.75rem' }}>
                 Podrás cargar los jugadores después
               </div>
-              <div className="modal-input-row">
-                <input
-                  className="input-global"
-                  type="text"
-                  placeholder="Nombre del equipo"
-                  value={newNombre}
-                  onChange={e => setNewNombre(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleCreateEmpty()}
-                  autoFocus
-                />
-                <button className="btn btn-primary btn-sm" onClick={handleCreateEmpty}>
-                  CREAR
-                </button>
-              </div>
+              <input
+                className="input-global"
+                style={{ width: '100%', marginBottom: '0.5rem' }}
+                type="text"
+                placeholder="Nombre del equipo"
+                value={newNombre}
+                onChange={e => setNewNombre(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreateEmpty()}
+                autoFocus
+              />
+              {teamsWithRules.length > 0 && (
+                <>
+                  <div className="modal-option-title" style={{ marginBottom: '0.4rem' }}>
+                    COPIAR REGLAS DE (OPCIONAL)
+                  </div>
+                  <select
+                    className="input-global"
+                    style={{ width: '100%', marginBottom: '0.5rem' }}
+                    value={sourceTeamId}
+                    onChange={e => setSourceTeamId(e.target.value)}
+                  >
+                    <option value="">— Sin copiar —</option>
+                    {teamsWithRules.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.nombre} ({t.tallas.join(', ')})
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+              <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={handleCreateEmpty}>
+                CREAR
+              </button>
             </div>
 
             <button className="btn btn-ghost btn-sm modal-close" onClick={() => setShowNewModal(false)}>
