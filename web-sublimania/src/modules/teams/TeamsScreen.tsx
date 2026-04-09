@@ -141,11 +141,11 @@ export function TeamsScreen({ onToast }: Props) {
       replaceAll(result.teams);
 
       const parts: string[] = [];
-      if (result.teamsAdded)      parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
-      if (result.teamsUpdated)    parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
-      if (result.clientesAdded)   parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
+      if (result.teamsAdded) parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
+      if (result.teamsUpdated) parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
+      if (result.clientesAdded) parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
       if (result.clientesUpdated) parts.push(`${result.clientesUpdated} cliente(s) actualizado(s)`);
-      if (result.tallasUpdated)   parts.push(`${result.tallasUpdated} cliente(s) con tallas actualizadas`);
+      if (result.tallasUpdated) parts.push(`${result.tallasUpdated} cliente(s) con tallas actualizadas`);
 
       onToast(parts.length ? `Combinado: ${parts.join(', ')}` : 'Sin cambios nuevos', 'ok');
     } catch (e) {
@@ -159,7 +159,7 @@ export function TeamsScreen({ onToast }: Props) {
   return (
     <div className="screen teams-screen">
       <div className="teams-header">
-        <h1 className="teams-title">SUBLIMANIA</h1>
+        <h1 className="teams-title">EQUIPOS</h1>
         <div className="teams-actions">
           <button className="btn btn-ghost btn-sm" onClick={() => importInputRef.current?.click()} title="Importar y combinar configuración">
             ⬇ IMPORTAR

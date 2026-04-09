@@ -8,10 +8,10 @@ import { useClientesStore } from '../../store/useClientesStore';
 import type { TallaDims } from '../../types';
 
 const FIELDS: { key: keyof TallaDims; label: string }[] = [
-  { key: 'ALTO',        label: 'ALTO'        },
-  { key: 'ANCHO',       label: 'ANCHO'       },
+  { key: 'ALTO', label: 'ALTO' },
+  { key: 'ANCHO', label: 'ANCHO' },
   { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
-  { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
+  { key: 'MANGA_ALTO', label: 'MANGA ALTO' },
 ];
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -29,7 +29,7 @@ export function TallasSettingsTab() {
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
-  const [newTalla, setNewTalla]   = useState('');
+  const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
 
   const tallas = clienteId ? getTallas(clienteId) : {};
@@ -39,7 +39,7 @@ export function TallasSettingsTab() {
   });
   const hombres = allKeys.filter(t => t.toUpperCase().endsWith('H'));
   const mujeres = allKeys.filter(t => t.toUpperCase().endsWith('M'));
-  const otros   = allKeys.filter(t => !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M'));
+  const otros = allKeys.filter(t => !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M'));
 
   function handleAdd() {
     const t = newTalla.trim().toUpperCase();
@@ -68,49 +68,55 @@ export function TallasSettingsTab() {
   return (
     <div className="tallas-tab">
 
-      {/* ── Selector de cliente ── */}
-      <div className="tallas-cliente-selector">
-        <label className="tallas-cliente-label">CLIENTE</label>
-        <select
-          className="input-player tallas-cliente-select"
-          value={clienteId}
-          onChange={e => { setClienteId(e.target.value); setConfirmReset(false); }}
-        >
-          <option value="">— Seleccionar cliente —</option>
-          {clientes.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}{c.casaCosturera ? ` — ${c.casaCosturera}` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* ── Barra de controles unificada ── */}
+      <div className="tallas-toolbar">
 
-      {clienteId && (
-        <>
-          <div className="tallas-toolbar">
-            <div className="tallas-add">
-              <input
-                className="input-talla-nueva"
-                type="text"
-                placeholder="Nueva talla (ej: 46H)"
-                value={newTalla}
-                maxLength={6}
-                onChange={e => setNewTalla(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              />
-              <button className="btn btn-primary btn-sm" onClick={handleAdd}>
-                + AGREGAR
-              </button>
-            </div>
+        <div className="tallas-toolbar-group">
+          <span className="tallas-toolbar-label">CLIENTE</span>
+          <select
+            className="tallas-cliente-select"
+            value={clienteId}
+            onChange={e => { setClienteId(e.target.value); setConfirmReset(false); }}
+          >
+            <option value="">— Seleccionar —</option>
+            {clientes.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}{c.casaCosturera ? ` — ${c.casaCosturera}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {clienteId && (
+          <>
+            <div className="tallas-toolbar-sep" />
+            <input
+              className="input-talla-nueva"
+              type="text"
+              placeholder="NUEVA TALLA (EJ: 46H)"
+              value={newTalla}
+              maxLength={6}
+              onChange={e => setNewTalla(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            />
+            <button className="btn btn-primary btn-sm" onClick={handleAdd}>
+              + AGREGAR
+            </button>
+            <div className="tallas-toolbar-sep" />
             <button
               className={`btn btn-sm ${confirmReset ? 'btn-danger' : 'btn-ghost'}`}
               onClick={handleReset}
               onBlur={() => setConfirmReset(false)}
             >
-              {confirmReset ? '¿Confirmar reset?' : '↺ RESTABLECER DEFAULTS'}
+              {confirmReset ? '¿CONFIRMAR RESET?' : '↺ RESTABLECER DEFAULTS'}
             </button>
-          </div>
+          </>
+        )}
 
+      </div>
+
+      {clienteId && (
+        <>
           {allKeys.length === 0 ? (
             <p className="tallas-hint" style={{ textAlign: 'center' }}>
               Sin tallas — agregá una o usá ↺ RESTABLECER DEFAULTS
@@ -119,7 +125,7 @@ export function TallasSettingsTab() {
             <div className="tallas-generos">
               {([
                 { label: 'HOMBRES', grupo: hombres, badgeClass: 'badge-hombre' },
-                { label: 'MUJERES', grupo: mujeres, badgeClass: 'badge-mujer'  },
+                { label: 'MUJERES', grupo: mujeres, badgeClass: 'badge-mujer' },
                 ...(otros.length > 0 ? [{ label: 'OTROS', grupo: otros, badgeClass: '' }] : []),
               ] as { label: string; grupo: string[]; badgeClass: string }[])
                 .filter(g => g.grupo.length > 0)

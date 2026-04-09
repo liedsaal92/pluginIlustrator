@@ -27,6 +27,7 @@
   --mono:  'Space Mono', monospace;
 
   --radius: 0px;
+  --header-item-h: 32px;
 }
 
 /* ── RESET ──────────────────────────────────────────────────── */
@@ -248,22 +249,56 @@ body {
 
 .config-header {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
+  align-items: stretch;
+  gap: 0;
   border-bottom: var(--border);
   background: var(--white);
-  flex-wrap: wrap;
 }
-.config-header-left { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+.config-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.65rem 1.25rem;
+  border-right: var(--border);
+}
+.config-header-left .btn,
+.config-header .input-global,
+.config-header .stat-badge {
+  height: var(--header-item-h, 32px);
+  box-sizing: border-box;
+}
+.config-header-right {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-left: var(--border);
+}
+.config-actions {
+  display: flex;
+  align-items: stretch;
+  border-left: var(--border);
+}
+.config-actions .btn {
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  border-right: var(--border);
+  height: 100%;
+  align-self: stretch;
+}
+.config-actions .btn:last-child { border-right: none; }
 
 .stat-badge {
   font-family: var(--mono);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  padding: 3px 10px;
-  border: 1.5px solid var(--black);
+  padding: 0 10px;
+  border: 2px solid var(--black);
+  display: inline-flex;
+  align-items: center;
 }
 .stat-players { background: var(--blue); color: var(--white); }
 .stat-tallas  { background: var(--yellow); color: var(--black); }
@@ -273,13 +308,18 @@ body {
   gap: 1rem;
   flex: 1;
   flex-wrap: wrap;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
 }
-.global-field { display: flex; flex-direction: column; gap: 2px; min-width: 160px; }
+.global-field { display: flex; flex-direction: row; align-items: center; gap: 0.5rem; }
 .global-field label {
   font-family: var(--mono);
   font-size: 0.6rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
-  color: #666;
+  color: #888;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .config-tabs {
@@ -572,48 +612,101 @@ body {
   gap: 0;
 }
 
-/* ── TALLAS TAB ──────────────────────────────────────────── */
-.tallas-tab {
+/* ── TALLAS TAB / CLIENTES TAB ───────────────────────────── */
+.tallas-tab,
+.clientes-tab {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
 }
 
 .tallas-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 1rem;
   flex-wrap: wrap;
 }
-
 .tallas-add {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 1rem;
+}
+
+.tallas-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.tallas-toolbar-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #888;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tallas-cliente-select {
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+  cursor: pointer;
+  min-width: 200px;
+  height: var(--header-item-h);
+  box-sizing: border-box;
+}
+.tallas-cliente-select:focus { border-color: var(--blue); }
+
+.tallas-toolbar-sep {
+  width: 1.5px;
+  height: 1.5rem;
+  background: #ccc;
+  flex-shrink: 0;
 }
 
 .input-talla-nueva {
-  font-family: var(--font-mono, monospace);
-  font-size: 12px;
-  padding: 5px 8px;
-  border: var(--border);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border: 2px solid var(--black);
   background: var(--white);
-  width: 160px;
+  width: 180px;
   text-transform: uppercase;
+  box-sizing: border-box;
+  height: var(--header-item-h);
+  outline: none;
+}
+.input-talla-nueva:focus { border-color: var(--blue); }
+
+.tallas-toolbar .btn {
+  height: var(--header-item-h);
+  box-sizing: border-box;
 }
 
 .tallas-generos { display: flex; flex-direction: column; gap: 2rem; }
-.tallas-genero-block { display: flex; flex-direction: column; gap: 0.5rem; }
+.tallas-genero-block { display: flex; flex-direction: column; gap: 0; }
 .tallas-genero-title {
   font-family: var(--mono);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.18em;
-  padding: 4px 10px;
+  padding: 5px 12px;
   background: var(--black);
   color: var(--white);
-  width: fit-content;
+  width: 100%;
+  border: var(--border);
+  border-bottom: none;
+  box-sizing: border-box;
 }
 .tallas-genero-title.badge-mujer { background: #F050A0; }
 
@@ -1237,13 +1330,13 @@ body {
 .btn:hover  { transform: translate(-1px, -1px); box-shadow: var(--shadow); }
 .btn:active { transform: translate(1px, 1px); box-shadow: none; }
 
-.btn-primary { background: var(--black); color: var(--white); box-shadow: var(--shadow); }
-.btn-primary:hover { background: #2a2a2a; box-shadow: var(--shadow-lg); }
+.btn-primary { background: var(--black); color: var(--white); box-shadow: var(--shadow-sm); }
+.btn-primary:hover { background: #2a2a2a; box-shadow: var(--shadow); }
 
 .btn-ghost { background: transparent; box-shadow: none; }
 .btn-ghost:hover { background: var(--cream); box-shadow: var(--shadow-sm); }
 
-.btn-sm { padding: 5px 10px; font-size: 0.62rem; }
+.btn-sm { padding: 8px 12px; }
 
 /* ── INPUTS ──────────────────────────────────────────────────── */
 .field-input {
@@ -1307,19 +1400,13 @@ body {
 .toast.toast-error { background: var(--red);   color: var(--white); }
 
 /* ── SAVE STATUS ─────────────────────────────────────────────── */
-.header-file-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-
 .save-status {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  align-items: flex-end;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0.5rem 1rem;
 }
 .save-file {
   font-family: var(--mono);

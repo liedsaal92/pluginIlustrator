@@ -1,14 +1,17 @@
 // ============================================================
-//  components/ui/SaveStatus.tsx — Estado de guardado auto + acceso a equipos
+//  components/ui/SaveStatus.tsx — Hook de estado de guardado
 // ============================================================
+import { ReactNode } from 'react';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTeamStore';
 
-interface Props {
-  onToast: (msg: string, type: 'ok' | 'error') => void;
+interface SaveStatusData {
+  statusClass: string;
+  statusContent: ReactNode;
+  handleSaveAndGoTeams: () => void;
 }
 
-export function SaveStatus({ onToast: _onToast }: Props) {
+export function useSaveStatus(): SaveStatusData {
   const { activeTeamId, getActiveTeam, saveTeam } = useTeamsStore();
   const { setScreen } = useTeamStore();
 
@@ -26,7 +29,7 @@ export function SaveStatus({ onToast: _onToast }: Props) {
   }
 
   let statusClass = 'save-status save-none';
-  let statusContent = <span className="save-time">Sin equipo activo</span>;
+  let statusContent: ReactNode = <span className="save-time">Sin equipo activo</span>;
 
   if (activeTeam) {
     const d = new Date(activeTeam.updatedAt);
@@ -40,16 +43,5 @@ export function SaveStatus({ onToast: _onToast }: Props) {
     );
   }
 
-  return (
-    <div className="header-file-actions">
-      <div className={statusClass}>{statusContent}</div>
-      <button
-        className="btn btn-ghost btn-sm"
-        title="Ver todos los equipos"
-        onClick={handleSaveAndGoTeams}
-      >
-        ☰ EQUIPOS
-      </button>
-    </div>
-  );
+  return { statusClass, statusContent, handleSaveAndGoTeams };
 }
