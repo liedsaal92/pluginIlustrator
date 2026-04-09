@@ -57,6 +57,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     nombrePieza + " | " + jugador.NOMBRE + ": NOMBRE"
                 );
                 centrarHorizontalmente(itemNombre, grupoCopia);
+                if (nombrePieza === "ESPALDA") {
+                    var nombreEMarginSup = parseFloat(jugador.NOMBRE_E_MARGIN_SUP);
+                    if (!isNaN(nombreEMarginSup) && nombreEMarginSup >= 0) {
+                        posicionarItemDesdeTop(
+                            itemNombre, grupoCopia,
+                            nombreEMarginSup,
+                            jugador.NOMBRE, nombrePieza, "NOMBRE_E"
+                        );
+                    }
+                }
             }
         }
     }
@@ -93,13 +103,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     itemNumero.contents = String(parseInt(jugador.NUMERO));
                     centrarHorizontalmente(itemNumero, grupoCopia);
                 }
-                // Escalar — para MANGA usa NUMERO_M_*, para otras piezas sin item dedicado
+                // Escalar — para MANGA usa NUMERO_M_IZQ_* o NUMERO_M_DER_*
                 if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+                    var sufMangaNum = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
                     escalarConRef(
                         itemNumero,
-                        jugador.NUMERO_M_ANCHO,
-                        jugador.NUMERO_M_ALTO,
-                        jugador.NUMERO_M_REF,
+                        jugador["NUMERO_M_" + sufMangaNum + "_ANCHO"],
+                        jugador["NUMERO_M_" + sufMangaNum + "_ALTO"],
+                        jugador["NUMERO_M_" + sufMangaNum + "_REF"],
                         nombrePieza + " | " + jugador.NOMBRE + ": NUMERO"
                     );
                 }
@@ -210,6 +221,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             jugador.NUMERO_ESPALDA_REF,
             nombrePieza + " | " + jugador.NOMBRE + ": NUMERO_ESPALDA"
         );
+        var numEspaldaMarginSup = parseFloat(jugador.NUMERO_ESPALDA_MARGIN_SUP);
+        if (!isNaN(numEspaldaMarginSup) && numEspaldaMarginSup >= 0) {
+            posicionarItemDesdeTop(
+                itemNumeroEspalda, grupoCopia,
+                numEspaldaMarginSup,
+                jugador.NOMBRE, nombrePieza, "NUMERO_ESPALDA"
+            );
+        }
     }
 
     // ── SPONSOR_TOP_IZQ ─────────────────────────────────────
@@ -250,21 +269,22 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+        var sufManga = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
         var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
         var itemSponsorSecundarioManga = findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO");
 
         // 1. Escalar SPONSOR_SECUNDARIO
         if (itemSponsorSecundarioManga) {
-            if (jugador.LLEVA_SPONSOR_SECUNDARIO_M !== "SI") {
+            if (jugador["LLEVA_SPONSOR_SECUNDARIO_M_" + sufManga] !== "SI") {
                 itemSponsorSecundarioManga.hidden = true;
                 Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (manga) ocultado (LLEVA=NO)");
                 itemSponsorSecundarioManga = null; // evitar que el posicionado lo use
             } else {
                 escalarConRef(
                     itemSponsorSecundarioManga,
-                    jugador.SPONSOR_SECUNDARIO_M_ANCHO,
-                    jugador.SPONSOR_SECUNDARIO_M_ALTO,
-                    jugador.SPONSOR_SECUNDARIO_M_REF,
+                    jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_ANCHO"],
+                    jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_ALTO"],
+                    jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_REF"],
                     nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (manga)"
                 );
             }
@@ -272,62 +292,52 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
         // 2. Escalar ESCUDO
         if (grupoEscudoManga) {
-            if (jugador.LLEVA_ESCUDO_M !== "SI") {
+            if (jugador["LLEVA_ESCUDO_M_" + sufManga] !== "SI") {
                 grupoEscudoManga.hidden = true;
                 Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (manga) ocultado (LLEVA=NO)");
                 grupoEscudoManga = null; // evitar que el posicionado lo use
             } else {
                 escalarConRef(
                     grupoEscudoManga,
-                    jugador.ESCUDO_M_ANCHO,
-                    jugador.ESCUDO_M_ALTO,
-                    jugador.ESCUDO_M_REF,
+                    jugador["ESCUDO_M_" + sufManga + "_ANCHO"],
+                    jugador["ESCUDO_M_" + sufManga + "_ALTO"],
+                    jugador["ESCUDO_M_" + sufManga + "_REF"],
                     nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (manga)"
                 );
             }
         }
 
-        // 3. Posicionar verticalmente y centrar horizontalmente
-        var mangaMarginInf    = parseFloat(jugador.MANGA_MARGIN_INF);
-        var mangaMarginEscudo = parseFloat(jugador.MANGA_MARGIN_ESCUDO);
-        var estaticManga      = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
-        var mangaBounds       = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
-        var mangaBottom       = mangaBounds[3];
-        var mangaLeft         = mangaBounds[0];
-        var mangaRight        = mangaBounds[2];
-        var mangaCentroX      = (mangaLeft + mangaRight) / 2;
+        // 3. Posicionar verticalmente y centrar horizontalmente (independiente por elemento)
+        var estaticManga = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
+        var mangaBounds  = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
+        var mangaBottom  = mangaBounds[3];
+        var mangaLeft    = mangaBounds[0];
+        var mangaRight   = mangaBounds[2];
+        var mangaCentroX = (mangaLeft + mangaRight) / 2;
 
-        if (!isNaN(mangaMarginInf) && mangaMarginInf >= 0) {
-
-            if (itemSponsorSecundarioManga) {
+        if (itemSponsorSecundarioManga) {
+            var ssmMarginInf = parseFloat(jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_MARGIN_INF"]);
+            if (!isNaN(ssmMarginInf) && ssmMarginInf >= 0) {
                 var ssmBounds = itemSponsorSecundarioManga.geometricBounds;
                 var ssmAltura = Math.abs(ssmBounds[1] - ssmBounds[3]);
                 var ssmAncho2 = Math.abs(ssmBounds[2] - ssmBounds[0]);
-
-                itemSponsorSecundarioManga.top  = mangaBottom + cmToPt(mangaMarginInf) + ssmAltura;
+                itemSponsorSecundarioManga.top  = mangaBottom + cmToPt(ssmMarginInf) + ssmAltura;
                 itemSponsorSecundarioManga.left = mangaCentroX - (ssmAncho2 / 2);
-
                 Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                       ": SPONSOR_SECUNDARIO (manga) posicionado (inf:" + mangaMarginInf.toFixed(1) + "cm)");
+                       ": SPONSOR_SECUNDARIO (manga) posicionado (inf:" + ssmMarginInf.toFixed(1) + "cm)");
             }
+        }
 
-            if (grupoEscudoManga) {
-                var escBounds  = grupoEscudoManga.geometricBounds;
-                var escAltura  = Math.abs(escBounds[1] - escBounds[3]);
-                var escAncho2  = Math.abs(escBounds[2] - escBounds[0]);
-                var escNuevoLeft = mangaCentroX - (escAncho2 / 2);
-
-                if (itemSponsorSecundarioManga && !isNaN(mangaMarginEscudo) && mangaMarginEscudo >= 0) {
-                    var ssmTopActual = itemSponsorSecundarioManga.geometricBounds[1];
-                    grupoEscudoManga.top  = ssmTopActual + escAltura + cmToPt(mangaMarginEscudo);
-                    Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                           ": ESCUDO (manga) posicionado sobre sponsor (sep:" + mangaMarginEscudo.toFixed(1) + "cm)");
-                } else {
-                    grupoEscudoManga.top  = mangaBottom + cmToPt(mangaMarginInf) + escAltura;
-                    Log.ok(nombrePieza + " | " + jugador.NOMBRE +
-                           ": ESCUDO (manga) posicionado desde borde (sin sponsor)");
-                }
-                grupoEscudoManga.left = escNuevoLeft;
+        if (grupoEscudoManga) {
+            var escMarginInf = parseFloat(jugador["ESCUDO_M_" + sufManga + "_MARGIN_INF"]);
+            if (!isNaN(escMarginInf) && escMarginInf >= 0) {
+                var escBounds = grupoEscudoManga.geometricBounds;
+                var escAltura = Math.abs(escBounds[1] - escBounds[3]);
+                var escAncho2 = Math.abs(escBounds[2] - escBounds[0]);
+                grupoEscudoManga.top  = mangaBottom + cmToPt(escMarginInf) + escAltura;
+                grupoEscudoManga.left = mangaCentroX - (escAncho2 / 2);
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": ESCUDO (manga) posicionado (inf:" + escMarginInf.toFixed(1) + "cm)");
             }
         }
     }
@@ -518,39 +528,40 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     // ── LÍNEAS DE MANGA ──────────────────────────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
+        var sufMangaL = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
 
         var itemLineaIzq = findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ");
-        if (itemLineaIzq && jugador.LLEVA_MANGA_LINEA_IZQ !== "SI") {
+        if (itemLineaIzq && jugador["LLEVA_MANGA_" + sufMangaL + "_LINEA_IZQ"] !== "SI") {
             itemLineaIzq.hidden = true;
             Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_IZQ ocultada (LLEVA=NO)");
         } else {
-            var lineaIzqAncho = parseFloat(jugador.MANGA_LINEA_IZQ_ANCHO);
-            var lineaIzqAlto  = parseFloat(jugador.MANGA_LINEA_IZQ_ALTO);
-            var lineaIzqRef   = trim((jugador.MANGA_LINEA_IZQ_REF || "") + "").toUpperCase();
+            var lineaIzqAncho = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_ANCHO"]);
+            var lineaIzqAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_ALTO"]);
+            var lineaIzqRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaIzq, "IZQ", lineaIzqAncho, lineaIzqAlto, lineaIzqRef,
                                jugador.NOMBRE, nombrePieza, factorPieza);
         }
 
         var itemLineaDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
-        if (itemLineaDer && jugador.LLEVA_MANGA_LINEA_DER !== "SI") {
+        if (itemLineaDer && jugador["LLEVA_MANGA_" + sufMangaL + "_LINEA_DER"] !== "SI") {
             itemLineaDer.hidden = true;
             Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_DER ocultada (LLEVA=NO)");
         } else {
-            var lineaDerAncho = parseFloat(jugador.MANGA_LINEA_DER_ANCHO);
-            var lineaDerAlto  = parseFloat(jugador.MANGA_LINEA_DER_ALTO);
-            var lineaDerRef   = trim((jugador.MANGA_LINEA_DER_REF || "") + "").toUpperCase();
+            var lineaDerAncho = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_DER_ANCHO"]);
+            var lineaDerAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_DER_ALTO"]);
+            var lineaDerRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_DER_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaDer, "DER", lineaDerAncho, lineaDerAlto, lineaDerRef,
                                jugador.NOMBRE, nombrePieza, factorPieza);
         }
 
         var grupoLineaInf = findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF");
-        if (grupoLineaInf && jugador.LLEVA_MANGA_LINEA_INF !== "SI") {
+        if (grupoLineaInf && jugador["LLEVA_MANGA_" + sufMangaL + "_LINEA_INF"] !== "SI") {
             grupoLineaInf.hidden = true;
             Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_INF ocultada (LLEVA=NO)");
         } else {
-            var lineaInfAncho = parseFloat(jugador.MANGA_LINEA_INF_ANCHO);
-            var lineaInfAlto  = parseFloat(jugador.MANGA_LINEA_INF_ALTO);
-            var lineaInfRef   = trim((jugador.MANGA_LINEA_INF_REF || "") + "").toUpperCase();
+            var lineaInfAncho = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_INF_ANCHO"]);
+            var lineaInfAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_INF_ALTO"]);
+            var lineaInfRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
             procesarLineaMangaInf(grupoLineaInf, lineaInfAncho, lineaInfAlto, lineaInfRef,
                                   jugador.NOMBRE, nombrePieza, factorPieza);
         }
@@ -589,9 +600,13 @@ function llevaElemento(jugador, nombrePieza, elemento) {
         if (elemento === "NUMERO")    return jugador.LLEVA_NUMERO_E    === "SI";
         if (elemento === "COSTILLA")  return jugador.LLEVA_COSTILLA_E  === "SI";
     }
-    if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
-        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E === "SI";
-        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_M === "SI";
+    if (nombrePieza === "MANGA_IZQ") {
+        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E    === "SI";
+        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_M_IZQ === "SI";
+    }
+    if (nombrePieza === "MANGA_DER") {
+        if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E    === "SI";
+        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_M_DER === "SI";
     }
     return false;
 }

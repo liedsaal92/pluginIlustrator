@@ -70,12 +70,15 @@ function leerXlsx(csvFile) {
                     // NUMERO por pieza
                     hdr === "NUMERO_FRENTE_ANCHO" || hdr === "NUMERO_FRENTE_ALTO" ||
                     hdr === "NUMERO_ESPALDA_ANCHO"|| hdr === "NUMERO_ESPALDA_ALTO"||
-                    hdr === "NUMERO_M_ANCHO"      || hdr === "NUMERO_M_ALTO"      ||
+                    hdr === "NUMERO_M_IZQ_ANCHO"  || hdr === "NUMERO_M_IZQ_ALTO"  ||
+                    hdr === "NUMERO_M_DER_ANCHO"  || hdr === "NUMERO_M_DER_ALTO"  ||
                     // ESCUDO
                     hdr === "ESCUDO_F_ANCHO"      || hdr === "ESCUDO_F_ALTO"      ||
                     hdr === "ESCUDO_E_ANCHO"      || hdr === "ESCUDO_E_ALTO"      ||
                     hdr === "ESCUDO_CENTRAL_ANCHO"|| hdr === "ESCUDO_CENTRAL_ALTO"||
-                    hdr === "ESCUDO_M_ANCHO"      || hdr === "ESCUDO_M_ALTO"      ||
+                    hdr === "ESCUDO_M_IZQ_ANCHO"  || hdr === "ESCUDO_M_IZQ_ALTO"  ||
+                    hdr === "ESCUDO_M_DER_ANCHO"  || hdr === "ESCUDO_M_DER_ALTO"  ||
+                    hdr === "ESCUDO_M_IZQ_MARGIN_INF" || hdr === "ESCUDO_M_DER_MARGIN_INF" ||
                     // LOGO MARCA
                     hdr === "LOGO_MARCA_ANCHO"    || hdr === "LOGO_MARCA_ALTO"    ||
                     // SPONSORS TOP
@@ -87,7 +90,10 @@ function leerXlsx(csvFile) {
                     // SPONSORS SECUNDARIO
                     hdr === "SPONSOR_SECUNDARIO_F_ANCHO" || hdr === "SPONSOR_SECUNDARIO_F_ALTO" ||
                     hdr === "SPONSOR_SECUNDARIO_E_ANCHO" || hdr === "SPONSOR_SECUNDARIO_E_ALTO" ||
-                    hdr === "SPONSOR_SECUNDARIO_M_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_ALTO" ||
+                    hdr === "SPONSOR_SECUNDARIO_M_IZQ_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_IZQ_ALTO" ||
+                    hdr === "SPONSOR_SECUNDARIO_M_IZQ_MARGIN_INF" ||
+                    hdr === "SPONSOR_SECUNDARIO_M_DER_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_DER_ALTO" ||
+                    hdr === "SPONSOR_SECUNDARIO_M_DER_MARGIN_INF" ||
                     // COSTILLA
                     hdr === "COSTILLA_F_ANCHO"    || hdr === "COSTILLA_F_ALTO"    ||
                     hdr === "COSTILLA_E_ANCHO"    || hdr === "COSTILLA_E_ALTO"    ||
@@ -101,11 +107,14 @@ function leerXlsx(csvFile) {
                     hdr === "ETIQUETA_SECUNDARIA_E_ANCHO"     || hdr === "ETIQUETA_SECUNDARIA_E_ALTO"     ||
                     hdr === "ETIQUETA_SECUNDARIA_E_MARGIN_INF"|| hdr === "ETIQUETA_SECUNDARIA_E_MARGIN_LAT"||
                     hdr === "ETIQUETA_TOP_ANCHO"  || hdr === "ETIQUETA_TOP_ALTO"  ||
-                    // LÍNEAS DE MANGA
-                    hdr === "MANGA_LINEA_IZQ_ANCHO" || hdr === "MANGA_LINEA_IZQ_ALTO" ||
-                    hdr === "MANGA_LINEA_DER_ANCHO" || hdr === "MANGA_LINEA_DER_ALTO" ||
-                    hdr === "MANGA_LINEA_INF_ANCHO" || hdr === "MANGA_LINEA_INF_ALTO" ||
-                    hdr === "MANGA_MARGIN_INF"    || hdr === "MANGA_MARGIN_ESCUDO") {
+                    // LÍNEAS DE MANGA IZQ
+                    hdr === "MANGA_IZQ_LINEA_IZQ_ANCHO" || hdr === "MANGA_IZQ_LINEA_IZQ_ALTO" ||
+                    hdr === "MANGA_IZQ_LINEA_DER_ANCHO" || hdr === "MANGA_IZQ_LINEA_DER_ALTO" ||
+                    hdr === "MANGA_IZQ_LINEA_INF_ANCHO" || hdr === "MANGA_IZQ_LINEA_INF_ALTO" ||
+                    // LÍNEAS DE MANGA DER
+                    hdr === "MANGA_DER_LINEA_IZQ_ANCHO" || hdr === "MANGA_DER_LINEA_IZQ_ALTO" ||
+                    hdr === "MANGA_DER_LINEA_DER_ANCHO" || hdr === "MANGA_DER_LINEA_DER_ALTO" ||
+                    hdr === "MANGA_DER_LINEA_INF_ANCHO" || hdr === "MANGA_DER_LINEA_INF_ALTO") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -135,10 +144,14 @@ function leerXlsx(csvFile) {
                 "LLEVA_ETIQUETA_PRINCIPAL_E", "LLEVA_ETIQUETA_SECUNDARIA_E",
                 "LLEVA_SPONSOR_PRINCIPAL_E", "LLEVA_SPONSOR_SECUNDARIO_E",
                 "LLEVA_COSTILLA_E",
-                // MANGA
-                "LLEVA_NUMERO_M",
-                "LLEVA_ESCUDO_M", "LLEVA_SPONSOR_SECUNDARIO_M",
-                "LLEVA_MANGA_LINEA_IZQ", "LLEVA_MANGA_LINEA_DER", "LLEVA_MANGA_LINEA_INF"
+                // MANGA IZQ
+                "LLEVA_NUMERO_M_IZQ",
+                "LLEVA_ESCUDO_M_IZQ", "LLEVA_SPONSOR_SECUNDARIO_M_IZQ",
+                "LLEVA_MANGA_IZQ_LINEA_IZQ", "LLEVA_MANGA_IZQ_LINEA_DER", "LLEVA_MANGA_IZQ_LINEA_INF",
+                // MANGA DER
+                "LLEVA_NUMERO_M_DER",
+                "LLEVA_ESCUDO_M_DER", "LLEVA_SPONSOR_SECUNDARIO_M_DER",
+                "LLEVA_MANGA_DER_LINEA_IZQ", "LLEVA_MANGA_DER_LINEA_DER", "LLEVA_MANGA_DER_LINEA_INF"
             ];
             for (var lf = 0; lf < llevaFields.length; lf++) {
                 var campo = llevaFields[lf];

@@ -38,9 +38,9 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_ETIQUETA_SECUNDARIA_F', 'ETIQUETA_SECUNDARIA_F_ANCHO', 'ETIQUETA_SECUNDARIA_F_ALTO', 'ETIQUETA_SECUNDARIA_F_REF',
   'ETIQUETA_SECUNDARIA_F_MARGIN_INF', 'ETIQUETA_SECUNDARIA_F_MARGIN_LAT', 'ETIQUETA_SECUNDARIA_F_LADO',
   // ESPALDA — NOMBRE
-  'LLEVA_NOMBRE_E', 'NOMBRE_E_ANCHO', 'NOMBRE_E_ALTO', 'NOMBRE_E_REF',
+  'LLEVA_NOMBRE_E', 'NOMBRE_E_ANCHO', 'NOMBRE_E_ALTO', 'NOMBRE_E_REF', 'NOMBRE_E_MARGIN_SUP',
   // ESPALDA — NÚMERO
-  'LLEVA_NUMERO_E', 'NUMERO_ESPALDA_ANCHO', 'NUMERO_ESPALDA_ALTO', 'NUMERO_ESPALDA_REF',
+  'LLEVA_NUMERO_E', 'NUMERO_ESPALDA_ANCHO', 'NUMERO_ESPALDA_ALTO', 'NUMERO_ESPALDA_REF', 'NUMERO_ESPALDA_MARGIN_SUP',
   // ESPALDA — ETIQUETA TOP
   'LLEVA_ETIQUETA_TOP', 'ETIQUETA_TOP_ANCHO', 'ETIQUETA_TOP_ALTO', 'ETIQUETA_TOP_REF',
   'ETIQUETA_TOP_MARGIN_SUP',
@@ -55,17 +55,26 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_SPONSOR_SECUNDARIO_E', 'SPONSOR_SECUNDARIO_E_ANCHO', 'SPONSOR_SECUNDARIO_E_ALTO', 'SPONSOR_SECUNDARIO_E_REF',
   // ESPALDA — COSTILLA
   'LLEVA_COSTILLA_E', 'COSTILLA_E_ANCHO', 'COSTILLA_E_ALTO', 'COSTILLA_E_REF',
-  // MANGA — NÚMERO
-  'LLEVA_NUMERO_M', 'NUMERO_M_ANCHO', 'NUMERO_M_ALTO', 'NUMERO_M_REF',
-  // MANGA — ESCUDO / SPONSOR
-  'LLEVA_ESCUDO_M', 'ESCUDO_M_ANCHO', 'ESCUDO_M_ALTO', 'ESCUDO_M_REF',
-  'LLEVA_SPONSOR_SECUNDARIO_M', 'SPONSOR_SECUNDARIO_M_ANCHO', 'SPONSOR_SECUNDARIO_M_ALTO', 'SPONSOR_SECUNDARIO_M_REF',
-  // MANGA — LÍNEAS
-  'LLEVA_MANGA_LINEA_IZQ', 'MANGA_LINEA_IZQ_ANCHO', 'MANGA_LINEA_IZQ_ALTO', 'MANGA_LINEA_IZQ_REF',
-  'LLEVA_MANGA_LINEA_DER', 'MANGA_LINEA_DER_ANCHO', 'MANGA_LINEA_DER_ALTO', 'MANGA_LINEA_DER_REF',
-  'LLEVA_MANGA_LINEA_INF', 'MANGA_LINEA_INF_ANCHO', 'MANGA_LINEA_INF_ALTO', 'MANGA_LINEA_INF_REF',
-  // MANGA — POSICIONAMIENTO
-  'MANGA_MARGIN_INF', 'MANGA_MARGIN_ESCUDO',
+  // MANGA IZQ — NÚMERO
+  'LLEVA_NUMERO_M_IZQ', 'NUMERO_M_IZQ_ANCHO', 'NUMERO_M_IZQ_ALTO', 'NUMERO_M_IZQ_REF',
+  // MANGA IZQ — ESCUDO
+  'LLEVA_ESCUDO_M_IZQ', 'ESCUDO_M_IZQ_ANCHO', 'ESCUDO_M_IZQ_ALTO', 'ESCUDO_M_IZQ_REF', 'ESCUDO_M_IZQ_MARGIN_INF',
+  // MANGA IZQ — SPONSOR SECUNDARIO
+  'LLEVA_SPONSOR_SECUNDARIO_M_IZQ', 'SPONSOR_SECUNDARIO_M_IZQ_ANCHO', 'SPONSOR_SECUNDARIO_M_IZQ_ALTO', 'SPONSOR_SECUNDARIO_M_IZQ_REF', 'SPONSOR_SECUNDARIO_M_IZQ_MARGIN_INF',
+  // MANGA IZQ — LÍNEAS
+  'LLEVA_MANGA_IZQ_LINEA_IZQ', 'MANGA_IZQ_LINEA_IZQ_ANCHO', 'MANGA_IZQ_LINEA_IZQ_ALTO', 'MANGA_IZQ_LINEA_IZQ_REF',
+  'LLEVA_MANGA_IZQ_LINEA_DER', 'MANGA_IZQ_LINEA_DER_ANCHO', 'MANGA_IZQ_LINEA_DER_ALTO', 'MANGA_IZQ_LINEA_DER_REF',
+  'LLEVA_MANGA_IZQ_LINEA_INF', 'MANGA_IZQ_LINEA_INF_ANCHO', 'MANGA_IZQ_LINEA_INF_ALTO', 'MANGA_IZQ_LINEA_INF_REF',
+  // MANGA DER — NÚMERO
+  'LLEVA_NUMERO_M_DER', 'NUMERO_M_DER_ANCHO', 'NUMERO_M_DER_ALTO', 'NUMERO_M_DER_REF',
+  // MANGA DER — ESCUDO
+  'LLEVA_ESCUDO_M_DER', 'ESCUDO_M_DER_ANCHO', 'ESCUDO_M_DER_ALTO', 'ESCUDO_M_DER_REF', 'ESCUDO_M_DER_MARGIN_INF',
+  // MANGA DER — SPONSOR SECUNDARIO
+  'LLEVA_SPONSOR_SECUNDARIO_M_DER', 'SPONSOR_SECUNDARIO_M_DER_ANCHO', 'SPONSOR_SECUNDARIO_M_DER_ALTO', 'SPONSOR_SECUNDARIO_M_DER_REF', 'SPONSOR_SECUNDARIO_M_DER_MARGIN_INF',
+  // MANGA DER — LÍNEAS
+  'LLEVA_MANGA_DER_LINEA_IZQ', 'MANGA_DER_LINEA_IZQ_ANCHO', 'MANGA_DER_LINEA_IZQ_ALTO', 'MANGA_DER_LINEA_IZQ_REF',
+  'LLEVA_MANGA_DER_LINEA_DER', 'MANGA_DER_LINEA_DER_ANCHO', 'MANGA_DER_LINEA_DER_ALTO', 'MANGA_DER_LINEA_DER_REF',
+  'LLEVA_MANGA_DER_LINEA_INF', 'MANGA_DER_LINEA_INF_ANCHO', 'MANGA_DER_LINEA_INF_ALTO', 'MANGA_DER_LINEA_INF_REF',
 ];
 
 const numField = (key: string, label: string): SchemaField => ({
@@ -120,9 +129,9 @@ export const SCHEMA: Schema = {
     color: '#F5C842',
     elements: [
       { id: 'nombre_e', label: 'NOMBRE', icon: '✦', toggleKey: 'LLEVA_NOMBRE_E',
-        fields: [numField('NOMBRE_E_ANCHO', 'Ancho'), numField('NOMBRE_E_ALTO', 'Alto'), refField('NOMBRE_E_REF')] },
+        fields: [numField('NOMBRE_E_ANCHO', 'Ancho'), numField('NOMBRE_E_ALTO', 'Alto'), refField('NOMBRE_E_REF'), numField('NOMBRE_E_MARGIN_SUP', 'Margen sup')] },
       { id: 'numero_e', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_E',
-        fields: [numField('NUMERO_ESPALDA_ANCHO', 'Ancho'), numField('NUMERO_ESPALDA_ALTO', 'Alto'), refField('NUMERO_ESPALDA_REF')] },
+        fields: [numField('NUMERO_ESPALDA_ANCHO', 'Ancho'), numField('NUMERO_ESPALDA_ALTO', 'Alto'), refField('NUMERO_ESPALDA_REF'), numField('NUMERO_ESPALDA_MARGIN_SUP', 'Margen sup')] },
       { id: 'etiqueta_top', label: 'ETIQUETA TOP', icon: '⬒', toggleKey: 'LLEVA_ETIQUETA_TOP',
         fields: [
           numField('ETIQUETA_TOP_ANCHO', 'Ancho'), numField('ETIQUETA_TOP_ALTO', 'Alto'), refField('ETIQUETA_TOP_REF'),
@@ -153,32 +162,40 @@ export const SCHEMA: Schema = {
     label: 'MANGA IZQ',
     color: '#4A9BE8',
     elements: [
-      { id: 'numero_m', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M',
-        fields: [numField('NUMERO_M_ANCHO', 'Ancho'), numField('NUMERO_M_ALTO', 'Alto'), refField('NUMERO_M_REF')] },
-      { id: 'escudo_m', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M',
-        fields: [numField('ESCUDO_M_ANCHO', 'Ancho'), numField('ESCUDO_M_ALTO', 'Alto'), refField('ESCUDO_M_REF')] },
-      { id: 'sponsor_secundario_m', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M',
-        fields: [numField('SPONSOR_SECUNDARIO_M_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_M_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_M_REF')] },
-      { id: 'linea_izq', label: 'LÍNEA LATERAL IZQ', icon: '|', toggleKey: 'LLEVA_MANGA_LINEA_IZQ',
-        fields: [numField('MANGA_LINEA_IZQ_ANCHO', 'Ancho'), numField('MANGA_LINEA_IZQ_ALTO', 'Alto'), refField('MANGA_LINEA_IZQ_REF')] },
-      { id: 'linea_der', label: 'LÍNEA LATERAL DER', icon: '|', toggleKey: 'LLEVA_MANGA_LINEA_DER',
-        fields: [numField('MANGA_LINEA_DER_ANCHO', 'Ancho'), numField('MANGA_LINEA_DER_ALTO', 'Alto'), refField('MANGA_LINEA_DER_REF')] },
-      { id: 'linea_inf', label: 'LÍNEA INFERIOR', icon: '—', toggleKey: 'LLEVA_MANGA_LINEA_INF',
-        fields: [numField('MANGA_LINEA_INF_ANCHO', 'Ancho'), numField('MANGA_LINEA_INF_ALTO', 'Alto'), refField('MANGA_LINEA_INF_REF')] },
-      { id: 'manga_posicion', label: 'POSICIONAMIENTO', icon: '⊹', toggleKey: null,
-        fields: [numField('MANGA_MARGIN_INF', 'Margen inf'), numField('MANGA_MARGIN_ESCUDO', 'Margen escudo')] },
+      { id: 'numero_m_izq', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_IZQ',
+        fields: [numField('NUMERO_M_IZQ_ANCHO', 'Ancho'), numField('NUMERO_M_IZQ_ALTO', 'Alto'), refField('NUMERO_M_IZQ_REF')] },
+      { id: 'escudo_m_izq', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_IZQ',
+        fields: [numField('ESCUDO_M_IZQ_ANCHO', 'Ancho'), numField('ESCUDO_M_IZQ_ALTO', 'Alto'), refField('ESCUDO_M_IZQ_REF'), numField('ESCUDO_M_IZQ_MARGIN_INF', 'Margen inf')] },
+      { id: 'sponsor_secundario_m_izq', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_IZQ',
+        fields: [numField('SPONSOR_SECUNDARIO_M_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_M_IZQ_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_M_IZQ_REF'), numField('SPONSOR_SECUNDARIO_M_IZQ_MARGIN_INF', 'Margen inf')] },
+      { id: 'linea_izq_izq', label: 'LÍNEA LATERAL IZQ', icon: '|', toggleKey: 'LLEVA_MANGA_IZQ_LINEA_IZQ',
+        fields: [numField('MANGA_IZQ_LINEA_IZQ_ANCHO', 'Ancho'), numField('MANGA_IZQ_LINEA_IZQ_ALTO', 'Alto'), refField('MANGA_IZQ_LINEA_IZQ_REF')] },
+      { id: 'linea_izq_der', label: 'LÍNEA LATERAL DER', icon: '|', toggleKey: 'LLEVA_MANGA_IZQ_LINEA_DER',
+        fields: [numField('MANGA_IZQ_LINEA_DER_ANCHO', 'Ancho'), numField('MANGA_IZQ_LINEA_DER_ALTO', 'Alto'), refField('MANGA_IZQ_LINEA_DER_REF')] },
+      { id: 'linea_izq_inf', label: 'LÍNEA INFERIOR', icon: '—', toggleKey: 'LLEVA_MANGA_IZQ_LINEA_INF',
+        fields: [numField('MANGA_IZQ_LINEA_INF_ANCHO', 'Ancho'), numField('MANGA_IZQ_LINEA_INF_ALTO', 'Alto'), refField('MANGA_IZQ_LINEA_INF_REF')] },
     ],
   },
 
   manga_der: {
     label: 'MANGA DER',
     color: '#7B5CF0',
-    elements: [], // se asigna abajo — comparte con manga_izq
+    elements: [
+      { id: 'numero_m_der', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_DER',
+        fields: [numField('NUMERO_M_DER_ANCHO', 'Ancho'), numField('NUMERO_M_DER_ALTO', 'Alto'), refField('NUMERO_M_DER_REF')] },
+      { id: 'escudo_m_der', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_DER',
+        fields: [numField('ESCUDO_M_DER_ANCHO', 'Ancho'), numField('ESCUDO_M_DER_ALTO', 'Alto'), refField('ESCUDO_M_DER_REF'), numField('ESCUDO_M_DER_MARGIN_INF', 'Margen inf')] },
+      { id: 'sponsor_secundario_m_der', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_DER',
+        fields: [numField('SPONSOR_SECUNDARIO_M_DER_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_M_DER_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_M_DER_REF'), numField('SPONSOR_SECUNDARIO_M_DER_MARGIN_INF', 'Margen inf')] },
+      { id: 'linea_der_izq', label: 'LÍNEA LATERAL IZQ', icon: '|', toggleKey: 'LLEVA_MANGA_DER_LINEA_IZQ',
+        fields: [numField('MANGA_DER_LINEA_IZQ_ANCHO', 'Ancho'), numField('MANGA_DER_LINEA_IZQ_ALTO', 'Alto'), refField('MANGA_DER_LINEA_IZQ_REF')] },
+      { id: 'linea_der_der', label: 'LÍNEA LATERAL DER', icon: '|', toggleKey: 'LLEVA_MANGA_DER_LINEA_DER',
+        fields: [numField('MANGA_DER_LINEA_DER_ANCHO', 'Ancho'), numField('MANGA_DER_LINEA_DER_ALTO', 'Alto'), refField('MANGA_DER_LINEA_DER_REF')] },
+      { id: 'linea_der_inf', label: 'LÍNEA INFERIOR', icon: '—', toggleKey: 'LLEVA_MANGA_DER_LINEA_INF',
+        fields: [numField('MANGA_DER_LINEA_INF_ANCHO', 'Ancho'), numField('MANGA_DER_LINEA_INF_ALTO', 'Alto'), refField('MANGA_DER_LINEA_INF_REF')] },
+    ],
   },
 };
-
-// MANGA_DER comparte los mismos elementos que MANGA_IZQ
-SCHEMA.manga_der.elements = SCHEMA.manga_izq.elements;
 
 // Campos globales
 export const GLOBAL_FIELDS: Array<{ key: keyof GlobalConfig; label: string; placeholder: string }> = [
