@@ -8,6 +8,7 @@ import { useTallasStore } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
+import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TeamEntry } from '../../types';
 
 interface Props {
@@ -34,8 +35,14 @@ const EMPTY_ENTRY: TeamEntry = {
 
 export function TeamsScreen({ onToast }: Props) {
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { teams, activeTeamId, switchTeam, deleteTeam, replaceAll, createTeam } = useTeamsStore();
+  const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, replaceAll, createTeam } = useTeamsStore();
   const { setScreen, loadFromEntry } = useTeamStore();
+
+  // Paginación
+  const PAGE_SIZE = 9;
+  const [page, setPage] = useState(1);
+  const totalPages = Math.ceil(teams.length / PAGE_SIZE);
+  const pagedTeams = teams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Estado del modal "nuevo equipo"
   const [showNewModal, setShowNewModal] = useState(false);
@@ -61,7 +68,7 @@ export function TeamsScreen({ onToast }: Props) {
 
   function openNewModal() {
     setNewNombre('');
-    setSourceTeamId('');
+    setSourceTeamId(baseTeamId ?? '');
     setShowNewModal(true);
   }
 
@@ -191,8 +198,9 @@ export function TeamsScreen({ onToast }: Props) {
           <button className="btn btn-primary" onClick={openNewModal}>+ NUEVO EQUIPO</button>
         </div>
       ) : (
+        <>
         <div className="teams-grid">
-          {teams.map(entry => {
+          {pagedTeams.map(entry => {
             const isActive = entry.id === activeTeamId;
             const isEmpty = entry.players.length === 0;
             return (
@@ -233,14 +241,37 @@ export function TeamsScreen({ onToast }: Props) {
                       </button>
                     </>
                   )}
-                  <button className="btn btn-ghost btn-sm btn-danger" onClick={() => handleDelete(entry.id)}>
-                    🗑
+                  <button
+                    className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === entry.id ? 'is-base' : ''}`}
+                    title={baseTeamId === entry.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
+                    onClick={() => setBaseTeam(entry.id)}
+                  >
+                    {baseTeamId === entry.id ? '★' : '☆'}
                   </button>
+                  <ConfirmButton
+                    className="btn btn-ghost btn-sm btn-danger"
+                    title="Eliminar equipo"
+                    onConfirm={() => handleDelete(entry.id)}
+                  />
                 </div>
               </div>
             );
           })}
         </div>
+        {totalPages > 1 && (
+          <div className="teams-pagination">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+              <button
+                key={n}
+                className={`pagination-btn ${page === n ? 'active' : ''}`}
+                onClick={() => setPage(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+        </>
       )}
 
       <div className="teams-footer">

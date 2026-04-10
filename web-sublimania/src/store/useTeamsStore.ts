@@ -26,6 +26,7 @@ function generateId(): string {
 interface TeamsState {
   teams: TeamEntry[];
   activeTeamId: string | null;
+  baseTeamId: string | null;
 
   // Devuelve el equipo activo o null
   getActiveTeam: () => TeamEntry | null;
@@ -42,6 +43,9 @@ interface TeamsState {
   // Elimina un equipo; activa el siguiente disponible
   deleteTeam: (id: string) => void;
 
+  // Marca/desmarca un equipo como base
+  setBaseTeam: (id: string | null) => void;
+
   // Registra tallas exportadas en el historial del equipo activo
   markExported: (id: string, tallas: string[]) => void;
 
@@ -54,6 +58,7 @@ export const useTeamsStore = create<TeamsState>()(
     (set, get) => ({
       teams: [],
       activeTeamId: null,
+      baseTeamId: null,
 
       getActiveTeam: () => {
         const { teams, activeTeamId } = get();
@@ -80,12 +85,17 @@ export const useTeamsStore = create<TeamsState>()(
 
       switchTeam: (id) => set({ activeTeamId: id }),
 
+      setBaseTeam: (id) => set(state => ({
+        baseTeamId: state.baseTeamId === id ? null : id,
+      })),
+
       deleteTeam: (id) => {
         set(state => {
           const teams = state.teams.filter(t => t.id !== id);
           const activeTeamId =
             state.activeTeamId === id ? (teams[0]?.id ?? null) : state.activeTeamId;
-          return { teams, activeTeamId };
+          const baseTeamId = state.baseTeamId === id ? null : state.baseTeamId;
+          return { teams, activeTeamId, baseTeamId };
         });
       },
 

@@ -3,7 +3,7 @@
 // ============================================================
 import { useState, useEffect } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
-import { SCHEMA, TALLAS_ESTANDAR } from '../../utils/schema';
+import { SCHEMA, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
 import type { PiezaKey } from '../../types';
@@ -38,19 +38,12 @@ export function RulesTab({ onToast }: Props) {
   // Resetear selección al cambiar de talla activa
   useEffect(() => { setCopyToSet(new Set()); }, [activeTalla]);
 
-  // Opciones de copia: mismo género que la talla activa, excluyendo la activa
-  const generoActivo = activeTalla
-    ? activeTalla.toUpperCase().endsWith('H') ? 'H'
-    : activeTalla.toUpperCase().endsWith('M') ? 'M'
-    : 'O'
-    : null;
 
-  const copyOptions = todasLasTallas.filter(t => {
-    if (t === activeTalla) return false;
-    if (generoActivo === 'H') return t.toUpperCase().endsWith('H');
-    if (generoActivo === 'M') return t.toUpperCase().endsWith('M');
-    return !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M');
-  });
+  // Opciones de copia: todas las tallas excepto la activa, ordenadas y agrupadas
+  const copyOptions = sortTallas(todasLasTallas.filter(t => t !== activeTalla));
+  const copyH = copyOptions.filter(t => getGeneroTalla(t) === 'H');
+  const copyM = copyOptions.filter(t => getGeneroTalla(t) === 'M');
+  const copyO = copyOptions.filter(t => getGeneroTalla(t) === 'other');
 
   const allSelected = copyOptions.length > 0 && copyOptions.every(t => copyToSet.has(t));
 
@@ -64,6 +57,19 @@ export function RulesTab({ onToast }: Props) {
 
   function toggleAll() {
     setCopyToSet(allSelected ? new Set() : new Set(copyOptions));
+  }
+
+  function CopyItem({ t, genero }: { t: string; genero: 'H' | 'M' | 'O' }) {
+    const count = players.filter(p => p.TALLA === t).length;
+    const g = genero.toLowerCase();
+    return (
+      <label className={`copy-check-item copy-check-item--${g} ${copyToSet.has(t) ? 'checked' : ''}`}>
+        <input type="checkbox" checked={copyToSet.has(t)} onChange={() => toggleCopyTo(t)} />
+        <span className={`copy-talla-dot copy-talla-dot--${g}`} />
+        <span className="copy-talla-code">{t}</span>
+        {count > 0 && <span className="copy-talla-count">{count}j</span>}
+      </label>
+    );
   }
 
   function handleCopy() {
@@ -130,15 +136,31 @@ export function RulesTab({ onToast }: Props) {
                 </button>
               )}
             </div>
-            <div className={`copy-checklist ${generoActivo === 'M' ? 'genero-mujer' : ''}`}>
+            <div className="copy-checklist">
               {copyOptions.length === 0 ? (
-                <span className="copy-no-options">Sin otras tallas del mismo género</span>
-              ) : copyOptions.map(t => (
-                <label key={t} className={`copy-check-item ${copyToSet.has(t) ? 'checked' : ''}`}>
-                  <input type="checkbox" checked={copyToSet.has(t)} onChange={() => toggleCopyTo(t)} />
-                  <span>{t}</span>
-                </label>
-              ))}
+                <span className="copy-no-options">Sin otras tallas disponibles</span>
+              ) : (
+                <>
+                  {copyH.length > 0 && (
+                    <div className="copy-group">
+                      <div className="copy-group-header copy-group-header--h">♂ HOMBRES</div>
+                      {copyH.map(t => <CopyItem key={t} t={t} genero="H" />)}
+                    </div>
+                  )}
+                  {copyM.length > 0 && (
+                    <div className="copy-group">
+                      <div className="copy-group-header copy-group-header--m">♀ MUJERES</div>
+                      {copyM.map(t => <CopyItem key={t} t={t} genero="M" />)}
+                    </div>
+                  )}
+                  {copyO.length > 0 && (
+                    <div className="copy-group">
+                      <div className="copy-group-header">OTROS</div>
+                      {copyO.map(t => <CopyItem key={t} t={t} genero="O" />)}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
             <button
               className="btn btn-ghost btn-sm btn-full"
@@ -148,6 +170,7 @@ export function RulesTab({ onToast }: Props) {
               {copyToSet.size > 0 ? `COPIAR A ${copyToSet.size} TALLA(S)` : 'COPIAR REGLAS'}
             </button>
           </div>
+
         </div>
       </div>
 

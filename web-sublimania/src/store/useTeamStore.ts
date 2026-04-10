@@ -33,6 +33,7 @@ interface TeamState {
   applyTallaToAll: (talla: string) => void;
   copyTallaRules: (from: string, to: string) => void;
   copyTallaRulesToAll: (from: string) => void;
+  importAllTallaRules: (rules: Record<string, Rules>) => void;
   setGlobalConfig: (key: string, value: string) => void;
 
   // Acciones — navegación
@@ -166,6 +167,8 @@ export const useTeamStore = create<TeamState>()(
         rules[to] = { ...(rules[from] ?? {}) };
         set({ tallaRules: rules });
       },
+
+      importAllTallaRules: (rules) => set({ tallaRules: rules }),
 
       copyTallaRulesToAll: (from) => {
         const { tallas, tallaRules } = get();

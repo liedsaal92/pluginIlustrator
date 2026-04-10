@@ -7,6 +7,7 @@ import { useTallasStore } from '../../store/useTallasStore';
 import { SCHEMA, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
+import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { PiezaKey } from '../../types';
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -79,13 +80,12 @@ export function PlayerCard({ idx }: Props) {
           >
             ✎
           </button>
-          <button
+          <ConfirmButton
             className="btn-del-player"
             title="Eliminar jugador"
-            onClick={e => { e.stopPropagation(); removePlayer(idx); }}
-          >
-            ×
-          </button>
+            onConfirm={() => removePlayer(idx)}
+            stopPropagation
+          />
           {!editing && <span className="player-toggle">{expanded ? '▲' : '▼'}</span>}
         </div>
       </div>

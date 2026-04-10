@@ -3,7 +3,7 @@
 // ============================================================
 import type { Schema, SchemaField, GlobalConfig, Rules } from '../types';
 
-const REF_OPTIONS = ['PROPORCIONAL', 'ANCHO', 'ALTO'];
+const REF_OPTIONS = ['PROPORCIONAL', 'ANCHO', 'ALTO', 'AMBOS'];
 const LADO_OPTIONS = ['IZQ', 'DER'];
 
 // Columnas fijas del Excel (no configurables por reglas)

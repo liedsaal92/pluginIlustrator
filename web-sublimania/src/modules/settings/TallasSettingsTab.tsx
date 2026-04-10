@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
 const FIELDS: { key: keyof TallaDims; label: string }[] = [
@@ -162,13 +163,11 @@ export function TallasSettingsTab() {
                                 </td>
                               ))}
                               <td className="col-del">
-                                <button
+                                <ConfirmButton
                                   className="btn-del-talla"
                                   title="Eliminar talla"
-                                  onClick={() => removeTalla(clienteId, talla)}
-                                >
-                                  ×
-                                </button>
+                                  onConfirm={() => removeTalla(clienteId, talla)}
+                                />
                               </td>
                             </tr>
                           ))}

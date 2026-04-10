@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { ConfirmButton } from '../../components/ui/ConfirmButton';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -134,13 +135,11 @@ export function ClientesTab({ onToast }: Props) {
                       >
                         ✎
                       </button>
-                      <button
+                      <ConfirmButton
                         className="btn-del-talla btn-del-danger"
                         title="Eliminar"
-                        onClick={() => handleDelete(c.id, c.nombre)}
-                      >
-                        ×
-                      </button>
+                        onConfirm={() => handleDelete(c.id, c.nombre)}
+                      />
                     </td>
                   </>
                 )}

@@ -4,6 +4,7 @@
 // ============================================================
 import { useState } from 'react';
 import { useTallasStore } from '../../store/useTallasStore';
+import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -98,13 +99,11 @@ export function TallasTab() {
                   </td>
                 ))}
                 <td className="col-del">
-                  <button
+                  <ConfirmButton
                     className="btn-del-talla"
                     title="Eliminar talla"
-                    onClick={() => removeTalla(talla)}
-                  >
-                    ×
-                  </button>
+                    onConfirm={() => removeTalla(talla)}
+                  />
                 </td>
               </tr>
             ))}

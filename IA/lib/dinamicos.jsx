@@ -989,6 +989,26 @@ function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, gru
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": COSTILLA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
 
+        } else if (ref === "AMBOS" && !isNaN(targetAncho) && targetAncho > 0 && !isNaN(targetAlto) && targetAlto > 0) {
+            var anchoActCmA = ptToCm(Math.abs(rightAntes - leftAntes));
+            var altoActCmA  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            if (anchoActCmA <= 0 || altoActCmA <= 0) return;
+            var factorAnchoA = (targetAncho / anchoActCmA) * 100;
+            var factorAltoA  = (targetAlto  / altoActCmA)  * 100;
+            var bottomAntes  = boundsAntes[3];
+
+            grupoCostilla.resize(factorAnchoA, factorAltoA, true, true, true, true, 100, Transformation.TOPLEFT);
+
+            var boundsDespuesA = grupoCostilla.geometricBounds;
+            var nuevoAnchoA    = Math.abs(boundsDespuesA[2] - boundsDespuesA[0]);
+            var nuevoAltoA     = Math.abs(boundsDespuesA[1] - boundsDespuesA[3]);
+
+            grupoCostilla.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAnchoA;
+            grupoCostilla.top  = bottomAntes + nuevoAltoA;
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": COSTILLA_" + lado + " → ambos " + targetAncho.toFixed(1) + "x" + targetAlto.toFixed(1) + "cm (ancla inf)");
+
         } else {
             Log.info(nombrePieza + " | " + nombreJugador +
                      ": COSTILLA_" + lado + " sin valores válidos en CSV — no escalada");
