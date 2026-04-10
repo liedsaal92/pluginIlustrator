@@ -57,6 +57,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     nombrePieza + " | " + jugador.NOMBRE + ": NOMBRE"
                 );
                 centrarHorizontalmente(itemNombre, grupoCopia);
+                if (nombrePieza === "FRENTE") {
+                    var nombreFMarginSup = parseFloat(jugador.NOMBRE_F_MARGIN_SUP);
+                    if (!isNaN(nombreFMarginSup) && nombreFMarginSup >= 0) {
+                        posicionarItemDesdeTop(
+                            itemNombre, grupoCopia,
+                            nombreFMarginSup,
+                            jugador.NOMBRE, nombrePieza, "NOMBRE_F"
+                        );
+                    }
+                }
                 if (nombrePieza === "ESPALDA") {
                     var nombreEMarginSup = parseFloat(jugador.NOMBRE_E_MARGIN_SUP);
                     if (!isNaN(nombreEMarginSup) && nombreEMarginSup >= 0) {
@@ -197,6 +207,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             jugador.NUMERO_FRENTE_REF,
             nombrePieza + " | " + jugador.NOMBRE + ": NUMERO_FRENTE"
         );
+        var numFrenteMarginSup = parseFloat(jugador.NUMERO_FRENTE_MARGIN_SUP);
+        if (!isNaN(numFrenteMarginSup) && numFrenteMarginSup >= 0) {
+            posicionarItemDesdeTop(
+                itemNumeroFrente, grupoCopia,
+                numFrenteMarginSup,
+                jugador.NOMBRE, nombrePieza, "NUMERO_FRENTE"
+            );
+        }
     }
 
     // ── NUMERO_ESPALDA ───────────────────────────────────────
@@ -246,6 +264,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.SPONSOR_TOP_IZQ_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ"
             );
+            var spTopIzqMarginSup = parseFloat(jugador.SPONSOR_TOP_IZQ_MARGIN_SUP);
+            if (!isNaN(spTopIzqMarginSup) && spTopIzqMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopIzq, grupoCopia,
+                    spTopIzqMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ"
+                );
+            }
         }
     }
 
@@ -264,6 +290,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.SPONSOR_TOP_DER_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER"
             );
+            var spTopDerMarginSup = parseFloat(jugador.SPONSOR_TOP_DER_MARGIN_SUP);
+            if (!isNaN(spTopDerMarginSup) && spTopDerMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopDer, grupoCopia,
+                    spTopDerMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER"
+                );
+            }
         }
     }
 
@@ -369,6 +403,16 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     );
                 }
             }
+            if (nombrePieza === "ESPALDA") {
+                var spEMarginSup = parseFloat(jugador.SPONSOR_PRINCIPAL_E_MARGIN_SUP);
+                if (!isNaN(spEMarginSup) && spEMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSponsorPrincipal, grupoCopia,
+                        spEMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_PRINCIPAL_E"
+                    );
+                }
+            }
         }
     }
 
@@ -391,6 +435,26 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador["SPONSOR_SECUNDARIO" + ssSufijo + "_REF"],
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO"
             );
+            if (nombrePieza === "ESPALDA") {
+                var ssEMarginSup = parseFloat(jugador.SPONSOR_SECUNDARIO_E_MARGIN_SUP);
+                if (!isNaN(ssEMarginSup) && ssEMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSponsorSecundario, grupoCopia,
+                        ssEMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_SECUNDARIO_E"
+                    );
+                }
+            }
+            if (nombrePieza === "FRENTE") {
+                var ssFMarginSup = parseFloat(jugador.SPONSOR_SECUNDARIO_F_MARGIN_SUP);
+                if (!isNaN(ssFMarginSup) && ssFMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSponsorSecundario, grupoCopia,
+                        ssFMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_SECUNDARIO_F"
+                    );
+                }
+            }
         }
     }
 

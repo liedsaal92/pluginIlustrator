@@ -66,9 +66,11 @@ function leerXlsx(csvFile) {
                     hdr === "MANGA_ALTO"          || hdr === "MANGA_ANCHO"        ||
                     // NOMBRE
                     hdr === "NOMBRE_F_ANCHO"      || hdr === "NOMBRE_F_ALTO"      ||
+                    hdr === "NOMBRE_F_MARGIN_SUP" ||
                     hdr === "NOMBRE_E_ANCHO"      || hdr === "NOMBRE_E_ALTO"      ||
                     // NUMERO por pieza
                     hdr === "NUMERO_FRENTE_ANCHO" || hdr === "NUMERO_FRENTE_ALTO" ||
+                    hdr === "NUMERO_FRENTE_MARGIN_SUP" ||
                     hdr === "NUMERO_ESPALDA_ANCHO"|| hdr === "NUMERO_ESPALDA_ALTO"||
                     hdr === "NUMERO_M_IZQ_ANCHO"  || hdr === "NUMERO_M_IZQ_ALTO"  ||
                     hdr === "NUMERO_M_DER_ANCHO"  || hdr === "NUMERO_M_DER_ALTO"  ||
@@ -83,13 +85,18 @@ function leerXlsx(csvFile) {
                     hdr === "LOGO_MARCA_ANCHO"    || hdr === "LOGO_MARCA_ALTO"    ||
                     // SPONSORS TOP
                     hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_IZQ_ALTO" ||
+                    hdr === "SPONSOR_TOP_IZQ_MARGIN_SUP" ||
                     hdr === "SPONSOR_TOP_DER_ANCHO" || hdr === "SPONSOR_TOP_DER_ALTO" ||
+                    hdr === "SPONSOR_TOP_DER_MARGIN_SUP" ||
                     // SPONSORS PRINCIPAL
                     hdr === "SPONSOR_PRINCIPAL_F_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_F_ALTO"  ||
                     hdr === "SPONSOR_PRINCIPAL_E_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_E_ALTO"  ||
+                    hdr === "SPONSOR_PRINCIPAL_E_MARGIN_SUP" ||
                     // SPONSORS SECUNDARIO
                     hdr === "SPONSOR_SECUNDARIO_F_ANCHO" || hdr === "SPONSOR_SECUNDARIO_F_ALTO" ||
+                    hdr === "SPONSOR_SECUNDARIO_F_MARGIN_SUP" ||
                     hdr === "SPONSOR_SECUNDARIO_E_ANCHO" || hdr === "SPONSOR_SECUNDARIO_E_ALTO" ||
+                    hdr === "SPONSOR_SECUNDARIO_E_MARGIN_SUP" ||
                     hdr === "SPONSOR_SECUNDARIO_M_IZQ_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_IZQ_ALTO" ||
                     hdr === "SPONSOR_SECUNDARIO_M_IZQ_MARGIN_INF" ||
                     hdr === "SPONSOR_SECUNDARIO_M_DER_ANCHO" || hdr === "SPONSOR_SECUNDARIO_M_DER_ALTO" ||
