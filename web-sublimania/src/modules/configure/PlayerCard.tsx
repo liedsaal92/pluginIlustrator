@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTallasStore } from '../../store/useTallasStore';
-import { SCHEMA } from '../../utils/schema';
+import { SCHEMA, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
 import type { PiezaKey } from '../../types';
@@ -25,9 +25,12 @@ interface Props {
 export function PlayerCard({ idx }: Props) {
   const { players, overrides, getPlayerRules, hasOverride, setOverride, clearOverride, removePlayer, updatePlayer, expandedPlayer, setExpandedPlayer } = useTeamStore();
   const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
-  const tallaOptions = [...new Set(
+  const tallaOptions = sortTallas([...new Set(
     Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
-  )].sort((a, b) => a.localeCompare(b));
+  )]);
+  const hTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'H');
+  const mTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'M');
+  const otraTallas = tallaOptions.filter(t => getGeneroTalla(t) === 'other');
 
   const expanded = expandedPlayer === idx;
   const [editing, setEditing] = useState(false);
@@ -105,7 +108,9 @@ export function PlayerCard({ idx }: Props) {
             <div className="player-edit-field player-edit-field--sm">
               <label>TALLA</label>
               <select className="input-player" name="TALLA" defaultValue={player.TALLA}>
-                {tallaOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                {hTallas.length > 0 && <optgroup label="♂ HOMBRES" style={{ color: '#4A9BE8' }}>{hTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+                {mTallas.length > 0 && <optgroup label="♀ MUJERES" style={{ color: '#F050A0' }}>{mTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+                {otraTallas.length > 0 && <optgroup label="OTROS">{otraTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
               </select>
             </div>
           </div>

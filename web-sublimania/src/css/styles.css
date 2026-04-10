@@ -350,6 +350,13 @@ body {
   box-shadow: var(--shadow);
   background: var(--white);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+.tallas-list {
+  overflow-y: auto;
+  flex: 1;
 }
 .sidebar-label {
   font-family: var(--mono);
@@ -882,6 +889,7 @@ body {
 }
 
 .input-player:focus { outline: none; border-color: #333; }
+.input-player option, .input-player optgroup { font-weight: 700; }
 
 .add-player-actions,
 .player-edit-actions {
@@ -924,6 +932,19 @@ body {
 }
 .player-card:last-child { border-bottom: var(--border); }
 .player-card.has-override { border-left: 4px solid var(--orange); }
+
+.players-gender-header {
+  padding: 6px 12px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-top: 10px;
+  color: var(--white);
+}
+.players-gender-header:first-child { margin-top: 0; }
+.players-gender-header--h     { background: var(--black); }
+.players-gender-header--m     { background: #F050A0; }
+.players-gender-header--other { background: #555; }
 
 .player-card-header {
   display: flex;

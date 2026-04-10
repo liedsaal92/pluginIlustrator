@@ -81,8 +81,10 @@ function leerXlsx(csvFile) {
                     hdr === "ESCUDO_M_IZQ_ANCHO"  || hdr === "ESCUDO_M_IZQ_ALTO"  ||
                     hdr === "ESCUDO_M_DER_ANCHO"  || hdr === "ESCUDO_M_DER_ALTO"  ||
                     hdr === "ESCUDO_M_IZQ_MARGIN_INF" || hdr === "ESCUDO_M_DER_MARGIN_INF" ||
+                    hdr === "ESCUDO_F_MARGIN_LAT" ||
                     // LOGO MARCA
                     hdr === "LOGO_MARCA_ANCHO"    || hdr === "LOGO_MARCA_ALTO"    ||
+                    hdr === "LOGO_MARCA_MARGIN_LAT" ||
                     // SPONSORS TOP
                     hdr === "SPONSOR_TOP_IZQ_ANCHO" || hdr === "SPONSOR_TOP_IZQ_ALTO" ||
                     hdr === "SPONSOR_TOP_IZQ_MARGIN_SUP" ||

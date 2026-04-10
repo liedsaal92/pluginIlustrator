@@ -3,7 +3,7 @@
 // ============================================================
 import { useTeamStore } from '../../store/useTeamStore';
 import { saveActiveTeam } from '../../store/useTeamsStore';
-import { GLOBAL_FIELDS } from '../../utils/schema';
+import { GLOBAL_FIELDS, getGeneroTalla, getNumeroTalla } from '../../utils/schema';
 import { useSaveStatus } from '../../components/ui/SaveStatus';
 import { RulesTab } from './RulesTab';
 import { PlayerCard } from './PlayerCard';
@@ -87,7 +87,27 @@ export function ConfigureScreen({ onToast }: Props) {
         {configTab === 'players' && (
           <div className="players-layout">
             <AddPlayerForm />
-            {players.map((_, idx) => <PlayerCard key={idx} idx={idx} />)}
+            {(() => {
+              const sorted = [...players.keys()].sort((a, b) => {
+                const ga = getGeneroTalla(players[a].TALLA);
+                const gb = getGeneroTalla(players[b].TALLA);
+                const order = { H: 0, M: 1, other: 2 } as const;
+                if (ga !== gb) return order[ga] - order[gb];
+                return getNumeroTalla(players[a].TALLA) - getNumeroTalla(players[b].TALLA);
+              });
+              let lastGenero: string | null = null;
+              return sorted.map(idx => {
+                const genero = getGeneroTalla(players[idx].TALLA);
+                const header = genero !== lastGenero
+                  ? (() => { lastGenero = genero; return (
+                    <div key={`hdr-${genero}`} className={`players-gender-header players-gender-header--${genero.toLowerCase()}`}>
+                      {genero === 'H' ? '♂ HOMBRES' : genero === 'M' ? '♀ MUJERES' : '— OTROS'}
+                    </div>
+                  ); })()
+                  : null;
+                return [header, <PlayerCard key={idx} idx={idx} />];
+              });
+            })()}
           </div>
         )}
       </div>

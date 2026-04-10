@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { sortTallas, getGeneroTalla } from '../../utils/schema';
 import type { Player } from '../../types';
 
 const EMPTY: Player = { NOMBRE: '', NOMBRE_CAMISETA: '', NUMERO: '', TALLA: '' };
@@ -15,9 +16,12 @@ export function AddPlayerForm() {
   const [form, setForm] = useState<Player>({ ...EMPTY });
   const [open, setOpen] = useState(false);
 
-  const tallaOptions = [...new Set(
+  const tallaOptions = sortTallas([...new Set(
     Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
-  )].sort((a, b) => a.localeCompare(b));
+  )]);
+  const hTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'H');
+  const mTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'M');
+  const otraTallas = tallaOptions.filter(t => getGeneroTalla(t) === 'other');
 
   function set(field: keyof Player, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -83,7 +87,9 @@ export function AddPlayerForm() {
             onChange={e => set('TALLA', e.target.value)}
           >
             <option value="">— elegir —</option>
-            {tallaOptions.map(t => <option key={t} value={t}>{t}</option>)}
+            {hTallas.length > 0 && <optgroup label="♂ HOMBRES" style={{ color: '#4A9BE8' }}>{hTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+            {mTallas.length > 0 && <optgroup label="♀ MUJERES" style={{ color: '#F050A0' }}>{mTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+            {otraTallas.length > 0 && <optgroup label="OTROS">{otraTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
           </select>
         </div>
       </div>

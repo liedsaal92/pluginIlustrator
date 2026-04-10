@@ -155,6 +155,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                         jugador.NOMBRE, nombrePieza, "ESCUDO_F"
                     );
                 }
+                var escudoMarginLat = parseFloat(jugador.ESCUDO_F_MARGIN_LAT);
+                if (!isNaN(escudoMarginLat) && escudoMarginLat >= 0) {
+                    posicionarItemDesdeLatMasCercano(
+                        grupoEscudo, grupoCopia,
+                        escudoMarginLat,
+                        jugador.NOMBRE, nombrePieza, "ESCUDO_F"
+                    );
+                }
             }
         }
     }
@@ -507,6 +515,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
                 );
             }
+            var logoMarginLat = parseFloat(jugador.LOGO_MARCA_MARGIN_LAT);
+            if (!isNaN(logoMarginLat) && logoMarginLat >= 0) {
+                posicionarItemDesdeLatMasCercano(
+                    itemLogoMarca, grupoCopia,
+                    logoMarginLat,
+                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
+                );
+            }
         }
     }
 
@@ -706,6 +722,37 @@ function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, no
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": " + labelItem + " error al posicionar (" + e.message + ") — omitido");
+    }
+}
+
+function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJugador, nombrePieza, labelItem) {
+    try {
+        var estatico   = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        var refBounds  = estatico ? estatico.geometricBounds : grupoPieza.geometricBounds;
+        var piezaLeft  = refBounds[0];
+        var piezaRight = refBounds[2];
+
+        var itemBounds  = item.geometricBounds;
+        var itemAncho   = Math.abs(itemBounds[2] - itemBounds[0]);
+        var itemCenterX = (itemBounds[0] + itemBounds[2]) / 2;
+        var estCenterX  = (piezaLeft + piezaRight) / 2;
+
+        var marginLatPt = cmToPt(marginLatCm);
+
+        if (itemCenterX < estCenterX) {
+            // Elemento a la izquierda → borde izquierdo como referencia
+            item.left = piezaLeft + marginLatPt;
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": " + labelItem + " posicionado (lat-izq:" + marginLatCm.toFixed(1) + "cm)");
+        } else {
+            // Elemento a la derecha → borde derecho como referencia
+            item.left = piezaRight - marginLatPt - itemAncho;
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": " + labelItem + " posicionado (lat-der:" + marginLatCm.toFixed(1) + "cm)");
+        }
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": " + labelItem + " error al posicionar lat (" + e.message + ") — omitido");
     }
 }
 

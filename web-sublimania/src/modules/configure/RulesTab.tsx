@@ -92,24 +92,26 @@ export function RulesTab({ onToast }: Props) {
       <div className="tallas-sidebar">
         <div className="sidebar-label">TALLAS</div>
 
-        {hombres.length > 0 && (
-          <>
-            <div className="sidebar-genero-label">HOMBRES</div>
-            {hombres.map(t => <TallaBtn key={t} t={t} genero="H" />)}
-          </>
-        )}
-        {mujeres.length > 0 && (
-          <>
-            <div className="sidebar-genero-label genero-mujer-label">MUJERES</div>
-            {mujeres.map(t => <TallaBtn key={t} t={t} genero="M" />)}
-          </>
-        )}
-        {otros.length > 0 && (
-          <>
-            <div className="sidebar-genero-label">OTROS</div>
-            {otros.map(t => <TallaBtn key={t} t={t} genero="O" />)}
-          </>
-        )}
+        <div className="tallas-list">
+          {hombres.length > 0 && (
+            <>
+              <div className="sidebar-genero-label">HOMBRES</div>
+              {hombres.map(t => <TallaBtn key={t} t={t} genero="H" />)}
+            </>
+          )}
+          {mujeres.length > 0 && (
+            <>
+              <div className="sidebar-genero-label genero-mujer-label">MUJERES</div>
+              {mujeres.map(t => <TallaBtn key={t} t={t} genero="M" />)}
+            </>
+          )}
+          {otros.length > 0 && (
+            <>
+              <div className="sidebar-genero-label">OTROS</div>
+              {otros.map(t => <TallaBtn key={t} t={t} genero="O" />)}
+            </>
+          )}
+        </div>
 
         <div className="sidebar-actions">
           <button

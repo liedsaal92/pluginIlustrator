@@ -18,11 +18,11 @@ export const CSV_COLUMN_ORDER: string[] = [
   // FRENTE — NÚMERO
   'LLEVA_NUMERO_F', 'NUMERO_FRENTE_ANCHO', 'NUMERO_FRENTE_ALTO', 'NUMERO_FRENTE_REF', 'NUMERO_FRENTE_MARGIN_SUP',
   // FRENTE — ESCUDO
-  'LLEVA_ESCUDO_F', 'ESCUDO_F_ANCHO', 'ESCUDO_F_ALTO', 'ESCUDO_F_REF', 'ESCUDO_F_MARGIN_SUP',
+  'LLEVA_ESCUDO_F', 'ESCUDO_F_ANCHO', 'ESCUDO_F_ALTO', 'ESCUDO_F_REF', 'ESCUDO_F_MARGIN_SUP', 'ESCUDO_F_MARGIN_LAT',
   // FRENTE — ESCUDO CENTRAL
   'LLEVA_ESCUDO_CENTRAL', 'ESCUDO_CENTRAL_ANCHO', 'ESCUDO_CENTRAL_ALTO', 'ESCUDO_CENTRAL_REF', 'ESCUDO_CENTRAL_MARGIN_SUP',
   // FRENTE — LOGO MARCA
-  'LLEVA_LOGO_MARCA', 'LOGO_MARCA_ANCHO', 'LOGO_MARCA_ALTO', 'LOGO_MARCA_REF', 'LOGO_MARCA_MARGIN_SUP',
+  'LLEVA_LOGO_MARCA', 'LOGO_MARCA_ANCHO', 'LOGO_MARCA_ALTO', 'LOGO_MARCA_REF', 'LOGO_MARCA_MARGIN_SUP', 'LOGO_MARCA_MARGIN_LAT',
   // FRENTE — SPONSORS TOP
   'LLEVA_SPONSOR_TOP_IZQ', 'SPONSOR_TOP_IZQ_ANCHO', 'SPONSOR_TOP_IZQ_ALTO', 'SPONSOR_TOP_IZQ_REF', 'SPONSOR_TOP_IZQ_MARGIN_SUP',
   'LLEVA_SPONSOR_TOP_DER', 'SPONSOR_TOP_DER_ANCHO', 'SPONSOR_TOP_DER_ALTO', 'SPONSOR_TOP_DER_REF', 'SPONSOR_TOP_DER_MARGIN_SUP',
@@ -94,11 +94,11 @@ export const SCHEMA: Schema = {
       { id: 'numero_f', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_F',
         fields: [numField('NUMERO_FRENTE_ANCHO', 'Ancho'), numField('NUMERO_FRENTE_ALTO', 'Alto'), refField('NUMERO_FRENTE_REF'), numField('NUMERO_FRENTE_MARGIN_SUP', 'Margen sup')] },
       { id: 'escudo_f', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_F',
-        fields: [numField('ESCUDO_F_ANCHO', 'Ancho'), numField('ESCUDO_F_ALTO', 'Alto'), refField('ESCUDO_F_REF'), numField('ESCUDO_F_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('ESCUDO_F_ANCHO', 'Ancho'), numField('ESCUDO_F_ALTO', 'Alto'), refField('ESCUDO_F_REF'), numField('ESCUDO_F_MARGIN_SUP', 'Margen sup'), numField('ESCUDO_F_MARGIN_LAT', 'Margen lat')] },
       { id: 'escudo_central', label: 'ESCUDO CENTRAL', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_CENTRAL',
         fields: [numField('ESCUDO_CENTRAL_ANCHO', 'Ancho'), numField('ESCUDO_CENTRAL_ALTO', 'Alto'), refField('ESCUDO_CENTRAL_REF'), numField('ESCUDO_CENTRAL_MARGIN_SUP', 'Margen sup')] },
       { id: 'logo_marca', label: 'LOGO MARCA', icon: '◈', toggleKey: 'LLEVA_LOGO_MARCA',
-        fields: [numField('LOGO_MARCA_ANCHO', 'Ancho'), numField('LOGO_MARCA_ALTO', 'Alto'), refField('LOGO_MARCA_REF'), numField('LOGO_MARCA_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('LOGO_MARCA_ANCHO', 'Ancho'), numField('LOGO_MARCA_ALTO', 'Alto'), refField('LOGO_MARCA_REF'), numField('LOGO_MARCA_MARGIN_SUP', 'Margen sup'), numField('LOGO_MARCA_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_top_izq', label: 'SPONSOR TOP IZQ', icon: '◧', toggleKey: 'LLEVA_SPONSOR_TOP_IZQ',
         fields: [numField('SPONSOR_TOP_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_REF'), numField('SPONSOR_TOP_IZQ_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_top_der', label: 'SPONSOR TOP DER', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER',
@@ -216,6 +216,31 @@ export function buildEmptyRules(): Rules {
 
 export function getDefaultGlobal(): GlobalConfig {
   return { EQUIPO: '', NOTAS: '' };
+}
+
+// ── Helpers de talla ─────────────────────────────────────────
+export type Genero = 'H' | 'M' | 'other';
+
+export function getGeneroTalla(talla: string): Genero {
+  const last = talla.slice(-1).toUpperCase();
+  if (last === 'H') return 'H';
+  if (last === 'M') return 'M';
+  return 'other';
+}
+
+export function getNumeroTalla(talla: string): number {
+  return parseInt(talla, 10) || 0;
+}
+
+const GENERO_ORDER: Record<Genero, number> = { H: 0, M: 1, other: 2 };
+
+export function sortTallas(tallas: string[]): string[] {
+  return [...tallas].sort((a, b) => {
+    const ga = getGeneroTalla(a);
+    const gb = getGeneroTalla(b);
+    if (ga !== gb) return GENERO_ORDER[ga] - GENERO_ORDER[gb];
+    return getNumeroTalla(a) - getNumeroTalla(b);
+  });
 }
 
 // Tallas estándar — siempre visibles en la pantalla de exportación
