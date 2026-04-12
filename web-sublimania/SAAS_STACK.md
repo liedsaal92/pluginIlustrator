@@ -16,7 +16,7 @@
 | Persistencia de datos | ⚠️ Solo localStorage (se pierde si limpian caché) |
 | Acceso desde otro dispositivo/browser | ❌ No existe |
 | Cuentas de usuario / login | ❌ No existe |
-| Landing page / cara pública | ❌ No existe |
+| Landing page / cara pública | ✅ Construida (pendiente deploy + dominio) |
 | Pagos / suscripciones | ❌ No existe |
 | Emails transaccionales | ❌ No existe |
 
@@ -123,15 +123,16 @@ users              (id, email, name, plan, stripe_customer_id, created_at)
 
 ## Roadmap de Construcción
 
-### Fase 0 — Landing Page ✅ Estructura creada
+### Fase 0 — Landing Page ⚠️ Construida — pendiente deploy
 > Objetivo: tener presencia pública antes de lanzar. Que alguien pueda llegar y entender qué es esto.
 
 - [x] Crear proyecto Astro en `landing/`
 - [x] Secciones: Hero, Problema/Solución, Features, Pricing, Early Access, Footer
 - [x] Páginas legales: `/terminos`, `/privacidad`
+- [x] Diseño y estilos completos
 - [ ] Instalar dependencias (`npm install` en `landing/`)
-- [ ] Dominio propio (`subliflow.com`)
-- [ ] Deploy en Vercel → dominio principal (`subliflow.com`)
+- [ ] Dominio propio (`subliflow.com` o `sublimania.com`)
+- [ ] Deploy en Vercel → dominio principal
 - [ ] App React queda en `app.subliflow.com`
 - [ ] Conectar formulario de Early Access a un servicio real (Resend / Supabase)
 
@@ -234,29 +235,17 @@ export function useCreateTeam() {
 
 ---
 
-## Próximo Paso: Landing Page
+## Próximo Paso: Auth + Cloud Persistence (Fase 1)
 
-### Estructura mínima
+La landing está construida. El siguiente bloque de trabajo es **Fase 1: Auth + Supabase**, porque sin cuentas de usuario no hay forma de cobrar ni de guardar datos por persona.
 
-```
-/                   Hero — qué es, para quién, CTA principal
-/                   Problema — el dolor que resuelve
-/                   Solución — cómo funciona (screenshots / demo)
-/                   Features — 3-4 puntos clave
-/pricing            Planes y precios
-/                   Footer — contacto, legal, redes
-/terminos           Términos de uso (obligatorio para cobrar)
-/privacidad         Política de privacidad (obligatorio para cobrar)
-```
+### Orden recomendado
 
-### Tecnología: Astro
+1. **Terminar y deployar la landing** — subir a Vercel, conectar dominio, enchufar Early Access a Resend o Supabase para capturar emails reales.
+2. **Crear proyecto Supabase** — definir schema SQL, habilitar Auth.
+3. **Login / Registro en la app** — pantalla de auth antes de acceder a la herramienta.
+4. **Migrar stores de localStorage → Supabase** — los datos persisten en la nube, el usuario puede entrar desde cualquier dispositivo.
+5. **Emails transaccionales con Resend** — bienvenida, verificación, reset.
+6. **Fase 2: Stripe** — solo tiene sentido integrarlo cuando ya hay usuarios reales y Auth funcionando.
 
-- Genera HTML estático → carga instantánea → mejor SEO
-- Soporta componentes React si se necesita interactividad
-- Deploy en Vercel igual que la app
-- Perfecto para landing pages y sitios de marketing
-
-### Por qué Astro y no React para la landing
-
-React carga JavaScript para renderizar HTML → Google lo ve más lento.
-Astro genera HTML puro en build time → Google lo indexa mejor → más tráfico orgánico.
+> La regla es: primero usuarios → después cobrarles. No al revés.

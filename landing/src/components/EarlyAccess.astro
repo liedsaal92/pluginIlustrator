@@ -1,114 +1,249 @@
 ---
 ---
 
-<section class="early-access" id="early-access">
-  <div class="container">
-    <div class="ea-card">
-      <div class="ea-glow"></div>
-      <div class="ea-content">
-        <div class="badge">Acceso anticipado</div>
-        <h2>Sé de los primeros en usar SubliFlow</h2>
-        <p>
-          Estamos abriendo acceso anticipado para talleres de sublimación.
-          Regístrate y te avisamos cuando tu cuenta esté lista — sin costo durante el beta.
-        </p>
-        <form class="ea-form" id="waitlist-form">
+<section class="cta-section" id="waitlist">
+
+  <!-- Giant text block -->
+  <div class="cta-headline-block">
+    <div class="cta-label">
+      <span class="cta-tag">Acceso anticipado abierto</span>
+      <div class="cta-label-line"></div>
+    </div>
+    <h2 class="cta-headline">
+      ¿Listo para producir<br/>
+      <span class="cta-hl-yellow">3× más rápido?</span>
+    </h2>
+  </div>
+
+  <!-- Form + social proof row -->
+  <div class="cta-bottom">
+
+    <div class="cta-form-block">
+      <p class="cta-sub">
+        Sin tarjeta de crédito. Sin compromisos.<br/>
+        Beta gratuito hasta que estemos listos para lanzar.
+      </p>
+
+      <form class="cta-form" id="waitlist-form">
+        <div class="cta-form-row">
           <input
             type="email"
-            placeholder="tu@email.com"
-            class="ea-input"
+            placeholder="hola@mitaller.com"
+            class="cta-input"
             required
+            aria-label="Tu correo electrónico"
           />
-          <button type="submit" class="btn btn-primary">
-            Quiero acceso
+          <button type="submit" class="btn btn-yellow btn-lg cta-submit">
+            Quiero acceso →
           </button>
-        </form>
-        <p class="ea-note">Sin tarjeta de crédito. Sin compromisos.</p>
+        </div>
+        <p class="cta-privacy">
+          Sin spam. Solo te avisamos cuando tu acceso esté listo.
+        </p>
+      </form>
+    </div>
+
+    <div class="cta-proof-block">
+      <div class="proof-row">
+        <div class="proof-big">+120</div>
+        <div class="proof-label">talleres en<br/>lista de espera</div>
+      </div>
+      <div class="proof-divider"></div>
+      <div class="proof-row">
+        <div class="proof-big green">Beta</div>
+        <div class="proof-label">gratuito<br/>sin límite de tiempo</div>
       </div>
     </div>
+
   </div>
+
 </section>
 
 <style>
-  .early-access {
-    padding: 80px 0;
+  .cta-section {
+    background: #0D0D0D;
+    border-bottom: 3px solid #0D0D0D;
   }
 
-  .ea-card {
-    position: relative;
-    background: var(--color-surface);
-    border: 1px solid rgba(108, 99, 255, 0.3);
-    border-radius: 20px;
-    padding: 72px 48px;
-    text-align: center;
-    overflow: hidden;
+  /* ─── Headline block ──────────────────── */
+  .cta-headline-block {
+    border-bottom: 3px solid #222;
+    padding: 72px 56px 64px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
-  .ea-glow {
-    position: absolute;
-    top: -100px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(ellipse, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .ea-content {
-    position: relative;
-    z-index: 1;
+  .cta-label {
     display: flex;
-    flex-direction: column;
     align-items: center;
     gap: 20px;
+    margin-bottom: 32px;
   }
 
-  h2 {
-    max-width: 500px;
+  .cta-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: 3px solid #FFE600;
+    background: transparent;
+    color: #FFE600;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
-  .ea-content p {
-    font-size: 17px;
-    color: var(--color-text-muted);
-    max-width: 480px;
-    line-height: 1.7;
-  }
-
-  .ea-form {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    max-width: 460px;
-  }
-
-  .ea-input {
+  .cta-label-line {
     flex: 1;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
-    color: var(--color-text);
+    height: 2px;
+    background: #222;
+  }
+
+  .cta-headline {
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: #fff;
+  }
+
+  .cta-hl-yellow {
+    color: #FFE600;
+    display: inline-block;
+  }
+
+  /* ─── Bottom row ──────────────────────── */
+  .cta-bottom {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 64px 56px;
+    align-items: center;
+  }
+
+  /* ─── Form ────────────────────────────── */
+  .cta-form-block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 560px;
+  }
+
+  .cta-sub {
+    font-size: 17px;
+    color: #777;
+    line-height: 1.6;
+  }
+
+  .cta-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cta-form-row {
+    display: flex;
+    gap: 0;
+  }
+
+  .cta-input {
+    flex: 1;
+    background: #fff;
+    border: 3px solid #FFE600;
+    border-right: none;
+    padding: 0 20px;
     font-size: 15px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    color: #0D0D0D;
     outline: none;
-    transition: border-color 0.2s;
+    height: 60px;
+    border-radius: 0;
   }
 
-  .ea-input::placeholder {
-    color: var(--color-text-subtle);
+  .cta-input::placeholder { color: #aaa; }
+  .cta-input:focus { background: #FFFCF0; }
+
+  .cta-submit {
+    border-left: none;
+    height: 60px;
+    padding: 0 32px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 5px 5px 0 #FFE600;
   }
 
-  .ea-input:focus {
-    border-color: var(--color-primary);
+  .cta-privacy {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
-  .ea-note {
-    font-size: 13px !important;
-    color: var(--color-text-subtle) !important;
+  /* ─── Proof ───────────────────────────── */
+  .cta-proof-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 3px solid #333;
+    min-width: 220px;
+  }
+
+  .proof-row {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .proof-divider {
+    height: 3px;
+    background: #333;
+  }
+
+  .proof-big {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+    color: #FFE600;
+    letter-spacing: -1px;
+  }
+
+  .proof-big.green { color: #00CC88; }
+
+  .proof-label {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .cta-bottom {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    .cta-proof-block {
+      flex-direction: row;
+      min-width: unset;
+    }
+    .proof-divider { width: 3px; height: auto; }
+    .proof-row { flex: 1; }
+    .cta-headline-block { padding: 56px 32px 48px; }
+    .cta-bottom { padding: 48px 32px; }
   }
 
   @media (max-width: 600px) {
-    .ea-card { padding: 48px 24px; }
-    .ea-form { flex-direction: column; }
+    .cta-form-row { flex-direction: column; }
+    .cta-input { border-right: 3px solid #FFE600; border-bottom: none; }
+    .cta-input:last-child { border-bottom: 3px solid #FFE600; }
+    .cta-submit { height: 56px; border-left: 3px solid #FFE600; }
+    .cta-proof-block { flex-direction: column; }
+    .proof-divider { height: 3px; width: 100%; }
   }
 </style>

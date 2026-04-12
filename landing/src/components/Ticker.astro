@@ -1,0 +1,75 @@
+---
+---
+
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <span class="ticker-item">⚡ 3 HORAS → 5 MINUTOS</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">AUTOMATIZA TU PRODUCCIÓN</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">CERO ERRORES MANUALES</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">INTEGRACIÓN CON ILLUSTRATOR</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">EXCEL → CSV EN SEGUNDOS</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">4 PIEZAS POR UNIFORME</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">⚡ 3 HORAS → 5 MINUTOS</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">AUTOMATIZA TU PRODUCCIÓN</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">CERO ERRORES MANUALES</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">INTEGRACIÓN CON ILLUSTRATOR</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">EXCEL → CSV EN SEGUNDOS</span>
+    <span class="ticker-sep">★</span>
+    <span class="ticker-item">4 PIEZAS POR UNIFORME</span>
+    <span class="ticker-sep">★</span>
+  </div>
+</div>
+
+<style>
+  .ticker-wrap {
+    background: #FFE600;
+    border-top: 3px solid #0D0D0D;
+    border-bottom: 3px solid #0D0D0D;
+    overflow: hidden;
+    padding: 14px 0;
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 0;
+    width: max-content;
+    animation: ticker 28s linear infinite;
+  }
+
+  .ticker-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #0D0D0D;
+    white-space: nowrap;
+    padding: 0 28px;
+  }
+
+  .ticker-sep {
+    font-size: 16px;
+    color: #0D0D0D;
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .ticker-wrap:hover .ticker-track {
+    animation-play-state: paused;
+  }
+</style>

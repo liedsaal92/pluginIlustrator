@@ -2,26 +2,31 @@
 ---
 
 <footer class="footer">
-  <div class="container footer-inner">
+
+  <!-- Top: brand + nav columns -->
+  <div class="footer-main">
+
     <div class="footer-brand">
       <a href="/" class="footer-logo">
-        <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
-          <rect width="28" height="28" rx="8" fill="#6c63ff"/>
-          <path d="M7 14 L14 7 L21 14 L14 21 Z" fill="white" opacity="0.9"/>
-          <circle cx="14" cy="14" r="3" fill="white"/>
-        </svg>
-        SubliFlow
+        <div class="footer-logo-mark">SF</div>
+        <span>SubliFlow</span>
       </a>
-      <p>Automatiza la producción de uniformes deportivos. De horas a minutos.</p>
+      <p class="footer-tagline">
+        Automatiza la producción de uniformes deportivos.<br/>
+        De horas a minutos.
+      </p>
+      <div class="footer-social">
+        <a href="mailto:hola@subliflow.com" class="social-link">hola@subliflow.com</a>
+      </div>
     </div>
 
-    <div class="footer-links">
+    <div class="footer-nav-cols">
       <div class="footer-col">
         <span class="footer-col-title">Producto</span>
-        <a href="#como-funciona">Cómo funciona</a>
+        <a href="#proceso">Cómo funciona</a>
         <a href="#features">Features</a>
         <a href="#pricing">Precios</a>
-        <a href="#early-access">Acceso anticipado</a>
+        <a href="#waitlist">Acceso anticipado</a>
       </div>
       <div class="footer-col">
         <span class="footer-col-title">Legal</span>
@@ -31,96 +36,160 @@
       <div class="footer-col">
         <span class="footer-col-title">Contacto</span>
         <a href="mailto:hola@subliflow.com">hola@subliflow.com</a>
+        <a href="#">Sublimania Studio</a>
       </div>
     </div>
+
   </div>
 
-  <div class="container footer-bottom">
-    <span>© 2026 SubliFlow. Todos los derechos reservados.</span>
-    <span class="footer-credit">Hecho con ❤ por <a href="#">Sublimania Studio</a></span>
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 SubliFlow. Todos los derechos reservados.</span>
+    <span class="footer-made">Hecho con ❤ en Argentina</span>
+    <a href="#" class="footer-top-link">↑ Volver arriba</a>
   </div>
+
 </footer>
 
 <style>
   .footer {
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-    padding: 64px 0 32px;
+    background: #0D0D0D;
+    color: #fff;
+    border-top: 3px solid #0D0D0D;
   }
 
-  .footer-inner {
+  /* ─── Main ────────────────────────────── */
+  .footer-main {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 64px;
-    margin-bottom: 48px;
+    grid-template-columns: 340px 1fr;
+    border-bottom: 3px solid #222;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
   .footer-brand {
-    max-width: 280px;
+    padding: 64px 48px;
+    border-right: 3px solid #222;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 
   .footer-logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 17px;
-    font-weight: 700;
-    margin-bottom: 14px;
+    gap: 12px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    text-decoration: none;
   }
 
-  .footer-brand p {
+  .footer-logo-mark {
+    width: 40px;
+    height: 40px;
+    background: #FFE600;
+    border: 2px solid #FFE600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0D0D0D;
+    flex-shrink: 0;
+  }
+
+  .footer-tagline {
     font-size: 14px;
-    color: var(--color-text-muted);
-    line-height: 1.6;
+    color: #666;
+    line-height: 1.7;
   }
 
-  .footer-links {
+  .footer-social { margin-top: 4px; }
+
+  .social-link {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #FFE600;
+    text-decoration: underline;
+    transition: color 0.15s;
+  }
+
+  .social-link:hover { color: #fff; }
+
+  /* ─── Nav cols ────────────────────────── */
+  .footer-nav-cols {
+    padding: 64px 56px;
     display: flex;
     gap: 64px;
+    justify-content: flex-start;
   }
 
   .footer-col {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-width: 120px;
   }
 
   .footer-col-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-text);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.12em;
+    color: #FFE600;
     margin-bottom: 4px;
   }
 
   .footer-col a {
     font-size: 14px;
-    color: var(--color-text-muted);
-    transition: color 0.2s;
+    color: #555;
+    transition: color 0.15s;
   }
 
-  .footer-col a:hover {
-    color: var(--color-text);
-  }
+  .footer-col a:hover { color: #fff; }
 
+  /* ─── Bottom bar ──────────────────────── */
   .footer-bottom {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding-top: 24px;
-    border-top: 1px solid var(--color-border);
-    font-size: 13px;
-    color: var(--color-text-subtle);
+    justify-content: space-between;
+    padding: 20px 56px;
+    border-top: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
   }
 
-  .footer-credit a {
-    color: var(--color-text-muted);
+  .footer-copy,
+  .footer-made {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #333;
   }
 
-  @media (max-width: 768px) {
-    .footer-inner { grid-template-columns: 1fr; gap: 40px; }
-    .footer-links { flex-wrap: wrap; gap: 32px; }
-    .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-top-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #555;
+    transition: color 0.15s;
+    text-decoration: none;
+  }
+
+  .footer-top-link:hover { color: #FFE600; }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .footer-main { grid-template-columns: 1fr; }
+    .footer-brand { border-right: none; border-bottom: 3px solid #222; padding: 48px 32px; }
+    .footer-nav-cols { padding: 48px 32px; flex-wrap: wrap; gap: 40px; }
+    .footer-bottom { padding: 20px 32px; flex-wrap: wrap; gap: 8px; }
+  }
+
+  @media (max-width: 500px) {
+    .footer-bottom { justify-content: center; text-align: center; }
   }
 </style>
