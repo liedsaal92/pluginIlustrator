@@ -58,9 +58,8 @@ function escalarLogoDesdecentro(grupoLogo, targetAltoCmd) {
 // contiene texto. Tres intentos en orden:
 //   A) createOutlines() sobre TextFrame movido al nivel de capa
 //   B) executeMenuCommand("outline") — comprueba selection Y pageItems[0]
-//   C) Estimación: fontSize × CAP_HEIGHT_FACTOR (fallback sin outlines)
+//   C) Estimación dinámica: font.capHeight → font.ascent×0.88 → CONFIG.capHeightFactor
 // Retorna null si el item no contiene texto o si todo intento falla.
-var CAP_HEIGHT_FACTOR = 0.72; // cap height típica de fuentes bold display (fracción del em)
 
 function getTextVisualBounds(item) {
     var tf = null;
@@ -154,21 +153,45 @@ function getTextVisualBounds(item) {
     return getTextVisualBoundsFromFont(tf);
 }
 
-// Fallback: estima la altura visual de un TextFrame a partir de fontSize × CAP_HEIGHT_FACTOR.
-// Válido para texto en MAYÚSCULAS con fuentes bold display (jerseys).
+// Fallback: estima la altura visual (cap height) de un TextFrame.
+// Jerarquía de cálculo:
+//   1. font.capHeight  — propiedad directa si la fuente la expone (fracción del em)
+//   2. font.ascent × 0.88 — cap height ≈ 88 % del ascender para fuentes Latin
+//   3. CONFIG.capHeightFactor — valor configurado en config.jsx (default 0.72)
 // El ancho se toma de geometricBounds (es preciso horizontalmente).
 function getTextVisualBoundsFromFont(tf) {
     try {
-        var fsSizePt = tf.textRange.characterAttributes.size;
-        Log.info("getTextVisualBoundsFromFont: fontSize=" +
-                 ptToCm(fsSizePt).toFixed(3) + "cm factor=" + CAP_HEIGHT_FACTOR);
+        var charAttrs = tf.textRange.characterAttributes;
+        var fsSizePt  = charAttrs.size; // tamaño del em en puntos
         if (!fsSizePt || fsSizePt <= 0) return null;
-        var gb        = tf.geometricBounds;           // [L, T, R, B]
-        var visAltoPt = fsSizePt * CAP_HEIGHT_FACTOR; // altura visual estimada
-        // Construir bounds con el ancho real y la altura visual estimada
+
+        var capFactor = (CONFIG && CONFIG.capHeightFactor) ? CONFIG.capHeightFactor : 0.72;
+        var capSource = "CONFIG.capHeightFactor";
+
+        try {
+            var font = charAttrs.textFont;
+            var ch   = font.capHeight;
+            var asc  = font.ascent;
+            Log.info("getTextVisualBoundsFromFont: font=" + font.name +
+                     " capHeight=" + ch + " ascent=" + asc);
+            // capHeight y ascent se esperan como fracción del em (0 < valor < 2)
+            if (ch && ch > 0.1 && ch < 1.5) {
+                capFactor = ch;
+                capSource = "font.capHeight";
+            } else if (asc && asc > 0.1 && asc < 1.5) {
+                capFactor = asc * 0.88; // cap height ≈ 88 % del ascender
+                capSource = "font.ascent×0.88";
+            }
+        } catch (eFontMetrics) {
+            Log.info("getTextVisualBoundsFromFont: métricas de fuente no disponibles");
+        }
+
+        var gb        = tf.geometricBounds;      // [L, T, R, B]
+        var visAltoPt = fsSizePt * capFactor;
         var fakeBounds = [gb[0], gb[1], gb[2], gb[1] - visAltoPt];
         Log.info("getTextVisualBoundsFromFont OK: h=" +
-                 ptToCm(visAltoPt).toFixed(2) + "cm");
+                 ptToCm(visAltoPt).toFixed(2) + "cm (factor=" +
+                 capFactor.toFixed(3) + " src=" + capSource + ")");
         return fakeBounds;
     } catch (eFont) {
         Log.error("getTextVisualBoundsFromFont fallo: " + eFont.message);

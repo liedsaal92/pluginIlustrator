@@ -29,7 +29,17 @@ var CONFIG = {
     itemEscudo: "ESCUDO",
 
     // Hoja del xlsx que contiene los jugadores
-    hojaCSV: "DATOS_CSV"
+    hojaCSV: "DATOS_CSV",
+
+    // Factor para estimar la altura visual (cap height) del NOMBRE cuando
+    // createOutlines() no está disponible en este entorno de Illustrator.
+    // Representa la fracción del em (tamaño de fuente) que ocupa la letra
+    // mayúscula visible. Varía según la tipografía del template:
+    //   - Fuentes bold display deportivas: ~0.70 – 0.75
+    //   - Fuentes con mucho espacio de métricas: ~0.65
+    // Si el font expone capHeight directamente (vía textFont.capHeight),
+    // este valor se ignora y se usa el de la fuente automáticamente.
+    capHeightFactor: 0.689
 };
 
 var CM_TO_PT = 28.3464567;
