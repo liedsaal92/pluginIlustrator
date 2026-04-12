@@ -1,6 +1,41 @@
 ---
 ---
 
+<script>
+  const form = document.getElementById('waitlist-form') as HTMLFormElement;
+  const input = form?.querySelector('input[type="email"]') as HTMLInputElement;
+  const btn = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = input.value.trim();
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        form.innerHTML = '<p class="cta-success">¡Listo! Te avisamos cuando tu acceso esté listo.</p>';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Quiero acceso →';
+        alert('Hubo un error. Intenta de nuevo.');
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Quiero acceso →';
+      alert('Hubo un error. Intenta de nuevo.');
+    }
+  });
+</script>
+
 <section class="cta-section" id="waitlist">
 
   <!-- Giant text block -->
@@ -182,6 +217,13 @@
     color: #555;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .cta-success {
+    font-size: 18px;
+    color: #00CC88;
+    font-weight: 600;
+    padding: 20px 0;
   }
 
   /* ─── Proof ───────────────────────────── */
