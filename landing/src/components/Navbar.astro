@@ -1,0 +1,93 @@
+---
+---
+
+<nav class="navbar">
+  <div class="container navbar-inner">
+    <a href="/" class="navbar-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="8" fill="#6c63ff"/>
+        <path d="M7 14 L14 7 L21 14 L14 21 Z" fill="white" opacity="0.9"/>
+        <circle cx="14" cy="14" r="3" fill="white"/>
+      </svg>
+      <span>SubliFlow</span>
+    </a>
+
+    <ul class="navbar-links">
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Precios</a></li>
+    </ul>
+
+    <div class="navbar-actions">
+      <a href="#" class="btn btn-outline btn-sm">Iniciar sesión</a>
+      <a href="#early-access" class="btn btn-primary btn-sm">Prueba gratis</a>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 16px 0;
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .navbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .navbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+    flex-shrink: 0;
+  }
+
+  .navbar-links {
+    display: flex;
+    list-style: none;
+    gap: 32px;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+  }
+
+  .navbar-links a {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    transition: color 0.2s;
+  }
+
+  .navbar-links a:hover {
+    color: var(--color-text);
+  }
+
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .btn-sm {
+    padding: 9px 18px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .navbar-links {
+      display: none;
+    }
+  }
+</style>

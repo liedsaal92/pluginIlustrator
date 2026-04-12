@@ -1,0 +1,324 @@
+---
+---
+
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="container hero-inner">
+    <div class="badge">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+        <path d="M7 0L8.73 5.27L14 7L8.73 8.73L7 14L5.27 8.73L0 7L5.27 5.27L7 0Z"/>
+      </svg>
+      Ahorra hasta 3 horas por equipo
+    </div>
+
+    <h1>
+      Genera tus archivos de<br />
+      <span class="gradient-text">sublimación en minutos</span>,<br />
+      no en horas
+    </h1>
+
+    <p class="hero-subtitle">
+      Define las reglas de diseño una sola vez y SubliFlow genera automáticamente
+      los archivos listos para imprimir con el nombre, número y talla correctos
+      para cada jugador.
+    </p>
+
+    <div class="hero-cta">
+      <a href="#early-access" class="btn btn-primary btn-lg">
+        Empieza gratis
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <a href="#como-funciona" class="btn btn-outline btn-lg">Ver cómo funciona</a>
+    </div>
+
+    <div class="hero-stat">
+      <div class="stat-item">
+        <span class="stat-number">3 hrs</span>
+        <span class="stat-label">proceso manual</span>
+      </div>
+      <div class="stat-arrow">→</div>
+      <div class="stat-item highlight">
+        <span class="stat-number">5 min</span>
+        <span class="stat-label">con SubliFlow</span>
+      </div>
+    </div>
+
+    <div class="hero-mockup">
+      <div class="mockup-bar">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+        <span class="mockup-title">SubliFlow — Equipo Tigres FC</span>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-sidebar">
+          <div class="mockup-team active">⚽ Tigres FC</div>
+          <div class="mockup-team">🏀 Bulls U12</div>
+          <div class="mockup-team">⚽ Leones SC</div>
+          <div class="mockup-team muted">+ Nuevo equipo</div>
+        </div>
+        <div class="mockup-main">
+          <div class="mockup-row header">
+            <span>Jugador</span><span>Talla</span><span>Número</span><span>Estado</span>
+          </div>
+          <div class="mockup-row">
+            <span>Carlos Mendoza</span><span>XL</span><span>10</span>
+            <span class="status-ok">✓ Listo</span>
+          </div>
+          <div class="mockup-row">
+            <span>Luis García</span><span>M</span><span>7</span>
+            <span class="status-ok">✓ Listo</span>
+          </div>
+          <div class="mockup-row">
+            <span>Pedro Rojas</span><span>L</span><span>3</span>
+            <span class="status-ok">✓ Listo</span>
+          </div>
+          <div class="mockup-row">
+            <span>José Vargas</span><span>S</span><span>15</span>
+            <span class="status-ok">✓ Listo</span>
+          </div>
+          <div class="mockup-export">
+            <button class="export-btn">⬇ Exportar CSV para Illustrator</button>
+            <span class="export-note">18 jugadores · 4 tallas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    padding: 160px 0 80px;
+    overflow: hidden;
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(108, 99, 255, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+  }
+
+  h1 {
+    font-size: clamp(36px, 5.5vw, 64px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    max-width: 780px;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #6c63ff 0%, #00d4aa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 18px;
+    color: var(--color-text-muted);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-lg {
+    padding: 16px 32px;
+    font-size: 16px;
+  }
+
+  .hero-stat {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 40px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-top: 8px;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-number {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--color-text-muted);
+  }
+
+  .stat-item.highlight .stat-number {
+    color: var(--color-accent);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-arrow {
+    font-size: 24px;
+    color: var(--color-primary);
+  }
+
+  /* Mockup */
+  .hero-mockup {
+    width: 100%;
+    max-width: 820px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(108,99,255,0.1);
+    margin-top: 16px;
+  }
+
+  .mockup-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--color-surface-2);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .dot.red { background: #ff5f57; }
+  .dot.yellow { background: #ffbd2e; }
+  .dot.green { background: #28ca41; }
+
+  .mockup-title {
+    margin-left: 8px;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  .mockup-body {
+    display: flex;
+  }
+
+  .mockup-sidebar {
+    width: 180px;
+    border-right: 1px solid var(--color-border);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .mockup-team {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--color-text-muted);
+    text-align: left;
+  }
+
+  .mockup-team.active {
+    background: var(--color-primary-glow);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .mockup-team.muted {
+    color: var(--color-text-subtle);
+  }
+
+  .mockup-main {
+    flex: 1;
+    padding: 12px;
+  }
+
+  .mockup-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 100px;
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    gap: 8px;
+  }
+
+  .mockup-row.header {
+    color: var(--color-text-subtle);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .mockup-row:not(.header) {
+    color: var(--color-text);
+  }
+
+  .mockup-row:not(.header):hover {
+    background: var(--color-surface-2);
+  }
+
+  .status-ok {
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  .mockup-export {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--color-surface-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+  }
+
+  .export-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .export-note {
+    font-size: 12px;
+    color: var(--color-text-subtle);
+  }
+
+  @media (max-width: 600px) {
+    .mockup-sidebar { display: none; }
+    .hero-stat { padding: 16px 24px; }
+  }
+</style>

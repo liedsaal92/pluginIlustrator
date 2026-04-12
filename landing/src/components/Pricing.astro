@@ -1,0 +1,209 @@
+---
+---
+
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-label">Precios</div>
+    <h2>Empieza gratis, crece cuando estés listo</h2>
+    <p class="section-subtitle">
+      Sin tarjeta de crédito para empezar. Cancela cuando quieras.
+    </p>
+
+    <div class="pricing-grid">
+
+      <div class="plan-card">
+        <div class="plan-header">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">
+            <span class="price-amount">$0</span>
+            <span class="price-period">/ mes</span>
+          </div>
+          <p class="plan-desc">Para probar y validar que SubliFlow funciona para ti.</p>
+        </div>
+        <ul class="plan-features">
+          <li><span class="feat-check">✓</span> Hasta 3 equipos</li>
+          <li><span class="feat-check">✓</span> Hasta 20 jugadores por equipo</li>
+          <li><span class="feat-check">✓</span> 1 cliente / costurera</li>
+          <li><span class="feat-check">✓</span> Exportaciones ilimitadas</li>
+          <li><span class="feat-check">✓</span> Acceso desde cualquier dispositivo</li>
+          <li class="feat-disabled"><span>—</span> Backups en la nube</li>
+          <li class="feat-disabled"><span>—</span> Soporte prioritario</li>
+        </ul>
+        <a href="#early-access" class="btn btn-outline plan-btn">Empieza gratis</a>
+      </div>
+
+      <div class="plan-card featured">
+        <div class="plan-badge">Más popular</div>
+        <div class="plan-header">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">
+            <span class="price-amount">$19</span>
+            <span class="price-period">/ mes</span>
+          </div>
+          <p class="plan-desc">Para talleres que producen equipos constantemente.</p>
+        </div>
+        <ul class="plan-features">
+          <li><span class="feat-check accent">✓</span> Equipos ilimitados</li>
+          <li><span class="feat-check accent">✓</span> Jugadores ilimitados</li>
+          <li><span class="feat-check accent">✓</span> Clientes / costureras ilimitadas</li>
+          <li><span class="feat-check accent">✓</span> Exportaciones ilimitadas</li>
+          <li><span class="feat-check accent">✓</span> Acceso desde cualquier dispositivo</li>
+          <li><span class="feat-check accent">✓</span> Backups en la nube</li>
+          <li><span class="feat-check accent">✓</span> Soporte prioritario</li>
+        </ul>
+        <a href="#early-access" class="btn btn-primary plan-btn">Empieza Pro gratis 14 días</a>
+      </div>
+
+    </div>
+
+    <p class="pricing-note">
+      ¿Necesitas algo diferente? <a href="mailto:hola@subliflow.com">Contáctanos</a> para planes de equipo o volumen.
+    </p>
+  </div>
+</section>
+
+<style>
+  .pricing {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    margin-bottom: 12px;
+  }
+
+  .section-subtitle {
+    font-size: 17px;
+    color: var(--color-text-muted);
+    margin-bottom: 56px;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .plan-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 36px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .plan-card.featured {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary), 0 20px 40px rgba(108, 99, 255, 0.1);
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .plan-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .price-amount {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .price-period {
+    font-size: 15px;
+    color: var(--color-text-muted);
+  }
+
+  .plan-desc {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .plan-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .feat-check {
+    color: var(--color-accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .feat-check.accent {
+    color: var(--color-primary);
+  }
+
+  .feat-disabled {
+    color: var(--color-text-subtle);
+  }
+
+  .plan-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pricing-note {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  .pricing-note a {
+    color: var(--color-primary);
+  }
+
+  @media (max-width: 640px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+  }
+</style>

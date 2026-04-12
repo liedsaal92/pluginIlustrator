@@ -1,0 +1,126 @@
+---
+---
+
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-label">Features</div>
+    <h2>Todo lo que necesitas para<br/>producir más en menos tiempo</h2>
+
+    <div class="features-grid">
+
+      <div class="feature-card featured">
+        <div class="feature-icon">⚡</div>
+        <h3>Reglas por talla automáticas</h3>
+        <p>Configura una vez las dimensiones y posiciones para cada talla. SubliFlow aplica las reglas correctas automáticamente a cada jugador según su talla.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">👤</div>
+        <h3>Overrides por jugador</h3>
+        <p>¿Un jugador necesita algo diferente? Aplica excepciones individuales sin alterar las reglas generales del equipo.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Importación desde Excel</h3>
+        <p>Sube el roster del equipo en .xlsx. SubliFlow lee nombre, número y talla de cada jugador automáticamente.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📁</div>
+        <h3>Múltiples equipos</h3>
+        <p>Gestiona todos tus pedidos en un solo lugar. Crea, duplica y organiza equipos con su propio historial de exportaciones.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🏠</div>
+        <h3>Equipo base / plantilla</h3>
+        <p>Marca un equipo como base y úsalo como punto de partida para nuevos pedidos. Copia las reglas en segundos al próximo equipo.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <h3>Múltiples costureras / clientes</h3>
+        <p>Cada cliente puede tener sus propias tablas de tallas personalizadas. El CSV exportado se adapta automáticamente.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📐</div>
+        <h3>4 piezas configurables</h3>
+        <p>Frente, espalda, manga izquierda y manga derecha. Cada una con sus propios elementos: nombre, número, escudo, sponsors, etiquetas y más.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>Integración con Illustrator</h3>
+        <p>El CSV exportado alimenta directamente el plugin de Adobe Illustrator que genera todos los archivos de impresión del equipo.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    margin-bottom: 56px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(108, 99, 255, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .feature-card.featured {
+    border-color: rgba(108, 99, 255, 0.3);
+    background: linear-gradient(135deg, var(--color-surface) 0%, rgba(108, 99, 255, 0.05) 100%);
+    grid-column: span 1;
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+  }
+
+  .feature-card h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 900px) {
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 600px) {
+    .features-grid { grid-template-columns: 1fr; }
+  }
+</style>

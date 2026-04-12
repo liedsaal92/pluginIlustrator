@@ -1,0 +1,255 @@
+---
+---
+
+<section class="problem" id="como-funciona">
+  <div class="container">
+    <div class="section-label">El problema</div>
+    <h2>Preparar un equipo de 20 jugadores<br/>no debería tomar toda la mañana</h2>
+    <p class="section-subtitle">
+      Si produces uniformes deportivos, conoces el proceso. Abres Illustrator, duplicas el archivo,
+      cambias el nombre, el número, ajustas el tamaño para esa talla... y repites 20 veces.
+    </p>
+
+    <div class="pain-grid">
+      <div class="pain-card">
+        <div class="pain-icon">⏱</div>
+        <h3>2 a 3 horas por equipo</h3>
+        <p>Cada jugador requiere ajustes manuales en Illustrator. Un equipo de 20 jugadores con 3 tallas distintas = decenas de archivos a armar uno por uno.</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">❌</div>
+        <h3>Errores costosos</h3>
+        <p>Un número equivocado, un nombre mal escrito, una talla incorrecta. El error no aparece hasta que ya imprimiste. Rehacer un lote cuesta tiempo y material.</p>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon">🔁</div>
+        <h3>Trabajo repetitivo sin valor</h3>
+        <p>Este proceso no requiere creatividad — requiere atención mecánica. Tiempo que podrías usar en diseño, ventas, o simplemente producir más pedidos.</p>
+      </div>
+    </div>
+
+    <div class="solution-bridge">
+      <div class="bridge-line"></div>
+      <div class="bridge-label">La solución</div>
+      <div class="bridge-line"></div>
+    </div>
+
+    <div class="solution-card">
+      <div class="solution-content">
+        <h3>Define las reglas una vez.<br/>SubliFlow hace el resto.</h3>
+        <p>
+          Configuras qué va en cada pieza del uniforme (frente, espalda, mangas) y cómo cambia según la talla.
+          Subes la lista de jugadores desde Excel. SubliFlow genera en segundos el archivo listo para que
+          Illustrator produzca todos los uniformes automáticamente.
+        </p>
+        <ul class="solution-list">
+          <li>
+            <span class="check">✓</span>
+            Nombres, números y tallas correctos para cada jugador
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Dimensiones ajustadas automáticamente según la talla
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Un archivo CSV → Illustrator genera todo el equipo
+          </li>
+          <li>
+            <span class="check">✓</span>
+            Reutiliza la configuración para el próximo equipo
+          </li>
+        </ul>
+      </div>
+      <div class="solution-visual">
+        <div class="flow-step">
+          <div class="flow-icon">📋</div>
+          <span>Subir lista de jugadores (Excel)</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flow-icon">⚙️</div>
+          <span>Configurar reglas por talla</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step accent">
+          <div class="flow-icon">⬇️</div>
+          <span>Exportar CSV</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <div class="flow-icon">🖨️</div>
+          <span>Illustrator genera todos los uniformes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .problem {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .section-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  .section-subtitle {
+    font-size: 18px;
+    color: var(--color-text-muted);
+    max-width: 600px;
+    margin-bottom: 56px;
+    line-height: 1.7;
+  }
+
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 64px;
+  }
+
+  .pain-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .pain-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+
+  .pain-card h3 {
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+
+  .pain-card p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  .solution-bridge {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+
+  .bridge-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  .bridge-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .solution-card {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 48px;
+    background: var(--color-bg);
+    border: 1px solid rgba(108, 99, 255, 0.2);
+    border-radius: var(--radius);
+    padding: 48px;
+    align-items: center;
+  }
+
+  .solution-content h3 {
+    font-size: 26px;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+
+  .solution-content p {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .solution-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .solution-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--color-text);
+  }
+
+  .check {
+    color: var(--color-accent);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .solution-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .flow-step.accent {
+    border-color: var(--color-primary);
+    background: var(--color-primary-glow);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .flow-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .flow-arrow {
+    color: var(--color-text-subtle);
+    font-size: 18px;
+  }
+
+  @media (max-width: 900px) {
+    .pain-grid { grid-template-columns: 1fr; }
+    .solution-card { grid-template-columns: 1fr; }
+    .solution-visual { display: none; }
+  }
+</style>
