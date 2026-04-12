@@ -1,0 +1,102 @@
+---
+---
+
+<header class="nb-header">
+  <div class="nb-header-inner">
+
+    <a href="/" class="nb-logo">
+      <div class="nb-logo-mark">SF</div>
+      <span class="nb-logo-text">SubliFlow</span>
+    </a>
+
+    <nav class="nb-nav">
+      <a href="#proceso">Cómo funciona</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Precios</a>
+    </nav>
+
+    <a href="#waitlist" class="btn btn-yellow btn-sm">
+      Acceso anticipado →
+    </a>
+
+  </div>
+</header>
+
+<style>
+  .nb-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: #FFFCF0;
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  .nb-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .nb-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .nb-logo-mark {
+    width: 40px;
+    height: 40px;
+    background: #0D0D0D;
+    color: #FFE600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    border: 3px solid #0D0D0D;
+    flex-shrink: 0;
+  }
+
+  .nb-logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0D0D0D;
+    letter-spacing: -0.5px;
+  }
+
+  .nb-nav {
+    display: flex;
+    flex: 1;
+    gap: 0;
+  }
+
+  .nb-nav a {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0D0D0D;
+    border-right: 2px solid transparent;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .nb-nav a:hover {
+    background: #0D0D0D;
+    color: #FFE600;
+  }
+
+  .nb-header-inner > .btn {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  @media (max-width: 700px) {
+    .nb-nav { display: none; }
+  }
+</style>

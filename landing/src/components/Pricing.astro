@@ -1,0 +1,337 @@
+---
+---
+
+<section class="pricing-section" id="pricing">
+
+  <!-- Header row -->
+  <div class="pricing-header">
+    <div class="ph-left">
+      <span class="pricing-tag">Precios</span>
+      <h2 class="pricing-title">Simple.<br/>Sin sorpresas.</h2>
+    </div>
+    <div class="ph-right">
+      <p>Sin tarjeta de crédito para empezar.<br/>Cancela cuando quieras.</p>
+    </div>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans-row">
+
+    <!-- Free -->
+    <div class="plan free-plan">
+      <div class="plan-top">
+        <div class="plan-label">
+          <span class="plan-name">Free</span>
+          <span class="plan-badge badge-outline">Para empezar</span>
+        </div>
+        <div class="plan-price">
+          <span class="price">$0</span>
+          <span class="period">/ mes</span>
+        </div>
+        <p class="plan-desc">Para probar y validar que SubliFlow funciona en tu taller.</p>
+      </div>
+
+      <ul class="plan-list">
+        <li class="pl-yes"><span class="pl-icon">✓</span>Hasta 3 equipos</li>
+        <li class="pl-yes"><span class="pl-icon">✓</span>Hasta 20 jugadores por equipo</li>
+        <li class="pl-yes"><span class="pl-icon">✓</span>1 cliente / costurera</li>
+        <li class="pl-yes"><span class="pl-icon">✓</span>Exportaciones ilimitadas</li>
+        <li class="pl-yes"><span class="pl-icon">✓</span>Acceso desde cualquier dispositivo</li>
+        <li class="pl-no"><span class="pl-icon pl-x">—</span>Backups en la nube</li>
+        <li class="pl-no"><span class="pl-icon pl-x">—</span>Soporte prioritario</li>
+      </ul>
+
+      <a href="#waitlist" class="btn btn-ghost plan-btn">Empieza gratis →</a>
+    </div>
+
+    <!-- Divider -->
+    <div class="plan-divider"></div>
+
+    <!-- Pro -->
+    <div class="plan pro-plan">
+      <div class="plan-top">
+        <div class="plan-label">
+          <span class="plan-name">Pro</span>
+          <span class="plan-badge badge-yellow">★ Más popular</span>
+        </div>
+        <div class="plan-price">
+          <span class="price">$19</span>
+          <span class="period">/ mes</span>
+        </div>
+        <p class="plan-desc">Para talleres que producen equipos constantemente y necesitan escalar.</p>
+      </div>
+
+      <ul class="plan-list">
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Equipos ilimitados</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Jugadores ilimitados</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Clientes / costureras ilimitadas</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Exportaciones ilimitadas</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Acceso desde cualquier dispositivo</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Backups en la nube</li>
+        <li class="pl-yes"><span class="pl-icon pl-y">✓</span>Soporte prioritario</li>
+      </ul>
+
+      <a href="#waitlist" class="btn btn-yellow plan-btn">Empieza Pro gratis 14 días →</a>
+    </div>
+
+    <!-- Side note -->
+    <div class="plan-sidenote">
+      <div class="sidenote-inner">
+        <div class="sidenote-icon">💬</div>
+        <p class="sidenote-title">¿Volumen o equipo grande?</p>
+        <p class="sidenote-text">Si tienes un equipo de producción o manejas decenas de pedidos al mes, hablemos de un plan a medida.</p>
+        <a href="mailto:hola@subliflow.com" class="btn btn-black btn-sm">Contactar →</a>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+  .pricing-section {
+    background: #FFFCF0;
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  /* ─── Header ──────────────────────────── */
+  .pricing-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 3px solid #0D0D0D;
+    align-items: center;
+  }
+
+  .ph-left {
+    padding: 64px 56px;
+    border-right: 3px solid #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #0D0D0D;
+  }
+
+  .pricing-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: 3px solid #FFE600;
+    background: transparent;
+    color: #FFE600;
+    width: fit-content;
+  }
+
+  .pricing-title {
+    font-size: clamp(40px, 5vw, 72px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: #fff;
+  }
+
+  .ph-right {
+    padding: 64px 56px;
+  }
+
+  .ph-right p {
+    font-size: 18px;
+    color: #666;
+    line-height: 1.7;
+  }
+
+  /* ─── Plans ───────────────────────────── */
+  .plans-row {
+    display: grid;
+    grid-template-columns: 1fr 3px 1fr 280px;
+    align-items: stretch;
+  }
+
+  .plan {
+    padding: 48px 48px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .pro-plan {
+    background: #0D0D0D;
+    color: #fff;
+  }
+
+  .plan-divider {
+    background: #0D0D0D;
+    width: 3px;
+  }
+
+  /* ─── Plan top ────────────────────────── */
+  .plan-top {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .plan-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .plan-name {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+  }
+
+  .pro-plan .plan-name { color: #666; }
+
+  .plan-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border: 2px solid #0D0D0D;
+  }
+
+  .badge-outline { background: transparent; color: #999; border-color: #ddd; }
+  .badge-yellow  { background: #FFE600; color: #0D0D0D; border-color: #FFE600; }
+
+  .plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .price {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  .period {
+    font-size: 18px;
+    color: #888;
+  }
+
+  .pro-plan .period { color: #555; }
+
+  .plan-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .pro-plan .plan-desc { color: #999; }
+
+  /* ─── List ────────────────────────────── */
+  .plan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .plan-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .pl-no { color: #bbb; }
+  .pro-plan .pl-no { color: #555; }
+
+  .pl-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    border: 2px solid #0D0D0D;
+    background: #00CC88;
+    flex-shrink: 0;
+  }
+
+  .pl-icon.pl-x {
+    background: #eee;
+    border-color: #ddd;
+    color: #bbb;
+  }
+
+  .pl-icon.pl-y {
+    background: #FFE600;
+    border-color: #FFE600;
+    color: #0D0D0D;
+  }
+
+  .plan-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ─── Side note ───────────────────────── */
+  .plan-sidenote {
+    border-left: 3px solid #0D0D0D;
+    background: #FFE600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+  }
+
+  .sidenote-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidenote-icon { font-size: 36px; }
+
+  .sidenote-title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .sidenote-text {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 1100px) {
+    .plans-row {
+      grid-template-columns: 1fr 3px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .plan-sidenote {
+      grid-column: 1 / -1;
+      border-left: none;
+      border-top: 3px solid #0D0D0D;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .pricing-header { grid-template-columns: 1fr; }
+    .ph-left { border-right: none; border-bottom: 3px solid #0D0D0D; }
+    .plans-row {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .plan-divider { width: 100%; height: 3px; }
+    .plan { padding: 40px 28px; }
+  }
+</style>

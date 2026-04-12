@@ -1,0 +1,318 @@
+---
+---
+
+<section class="hero">
+
+  <!-- Top bar: label + decorative line -->
+  <div class="hero-topbar">
+    <span class="tag tag-black">★ Generador de uniformes deportivos</span>
+    <div class="hero-topbar-line"></div>
+    <span class="hero-topbar-note">Beta abierto — Sin tarjeta de crédito</span>
+  </div>
+
+  <!-- Main headline block -->
+  <div class="hero-headline-block">
+    <h1 class="hero-h1">
+      <span class="line-cream">GENERA</span>
+      <span class="line-yellow">UNIFORMES</span>
+      <span class="line-cream">EN MINUTOS.</span>
+    </h1>
+
+    <div class="hero-right-col">
+      <div class="hero-stat-box">
+        <div class="stat-before">
+          <span class="stat-big">3 hrs</span>
+          <span class="stat-label">proceso manual</span>
+        </div>
+        <div class="stat-arrow">→</div>
+        <div class="stat-after">
+          <span class="stat-big yellow">5 min</span>
+          <span class="stat-label">con SubliFlow</span>
+        </div>
+      </div>
+
+      <p class="hero-desc">
+        Define las reglas de talla una sola vez.
+        Sube el roster en Excel. SubliFlow genera
+        el CSV listo para que Illustrator produzca
+        <strong>todos los uniformes automáticamente.</strong>
+      </p>
+
+      <div class="hero-actions">
+        <a href="#waitlist" class="btn btn-yellow btn-lg">
+          Empieza gratis →
+        </a>
+        <a href="#proceso" class="btn btn-ghost">
+          Ver cómo funciona
+        </a>
+      </div>
+
+      <div class="hero-proof">
+        <div class="proof-avatars">
+          <div class="avatar">JR</div>
+          <div class="avatar">MP</div>
+          <div class="avatar">LC</div>
+          <div class="avatar">+</div>
+        </div>
+        <span class="proof-text">+120 talleres ya en lista de espera</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom deco strip -->
+  <div class="hero-deco-strip">
+    <div class="deco-block deco-yellow">Adobe Illustrator</div>
+    <div class="deco-block deco-black">Excel / .xlsx</div>
+    <div class="deco-block deco-green">CSV automático</div>
+    <div class="deco-block deco-white">4 piezas por uniforme</div>
+    <div class="deco-block deco-red">0 errores manuales</div>
+  </div>
+
+</section>
+
+<style>
+  .hero {
+    padding-top: 64px; /* navbar height */
+    border-bottom: 3px solid #0D0D0D;
+    background: #0D0D0D;
+  }
+
+  /* ─── Top bar ─────────────────────────── */
+  .hero-topbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 32px;
+    border-bottom: 3px solid #333;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .tag-black {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: 3px solid #FFE600;
+    background: transparent;
+    color: #FFE600;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .hero-topbar-line {
+    flex: 1;
+    height: 2px;
+    background: #333;
+  }
+
+  .hero-topbar-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ─── Headline block ──────────────────── */
+  .hero-headline-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px;
+    gap: 0;
+    min-height: 520px;
+  }
+
+  .hero-h1 {
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(64px, 8vw, 112px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    padding: 56px 48px 56px 0;
+    border-right: 3px solid #333;
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .line-cream { color: #FFFCF0; }
+  .line-yellow {
+    color: #0D0D0D;
+    background: #FFE600;
+    padding: 4px 16px;
+    margin: 8px 0;
+    display: block;
+    width: fit-content;
+  }
+
+  /* ─── Right col ───────────────────────── */
+  .hero-right-col {
+    padding: 56px 0 56px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .hero-stat-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 28px;
+    border: 3px solid #333;
+    background: #111;
+    width: fit-content;
+  }
+
+  .stat-before, .stat-after {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-big {
+    font-size: 40px;
+    font-weight: 800;
+    color: #555;
+    line-height: 1;
+    text-decoration: line-through;
+  }
+
+  .stat-big.yellow {
+    color: #FFE600;
+    text-decoration: none;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+  }
+
+  .stat-arrow {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFE600;
+  }
+
+  .hero-desc {
+    font-size: 17px;
+    color: #aaa;
+    line-height: 1.7;
+    max-width: 440px;
+  }
+
+  .hero-desc strong { color: #fff; }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .hero-actions .btn-ghost {
+    color: #ccc;
+    border-color: #444;
+    box-shadow: 5px 5px 0 #333;
+  }
+  .hero-actions .btn-ghost:hover {
+    background: #FFE600;
+    color: #0D0D0D;
+    border-color: #FFE600;
+  }
+
+  /* ─── Proof ───────────────────────────── */
+  .hero-proof {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .proof-avatars {
+    display: flex;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    background: #333;
+    border: 2px solid #FFE600;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: #FFE600;
+    margin-left: -8px;
+  }
+
+  .avatar:first-child { margin-left: 0; }
+
+  .proof-text {
+    font-size: 13px;
+    color: #666;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ─── Deco strip ──────────────────────── */
+  .hero-deco-strip {
+    display: flex;
+    border-top: 3px solid #333;
+  }
+
+  .deco-block {
+    flex: 1;
+    padding: 16px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    border-right: 3px solid #333;
+  }
+
+  .deco-block:last-child { border-right: none; }
+
+  .deco-yellow { background: #FFE600; color: #0D0D0D; }
+  .deco-black  { background: #1a1a1a; color: #fff; }
+  .deco-green  { background: #00CC88; color: #0D0D0D; }
+  .deco-white  { background: #2a2a2a; color: #ccc; }
+  .deco-red    { background: #FF3B3B; color: #fff; }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .hero-headline-block {
+      grid-template-columns: 1fr;
+    }
+    .hero-h1 {
+      border-right: none;
+      border-bottom: 3px solid #333;
+      padding: 48px 0 32px;
+      font-size: clamp(56px, 12vw, 96px);
+    }
+    .hero-right-col {
+      padding: 40px 0;
+    }
+    .hero-deco-strip { flex-wrap: wrap; }
+    .deco-block { flex: 1 0 33%; border-bottom: 3px solid #333; }
+  }
+
+  @media (max-width: 600px) {
+    .hero-topbar { padding: 12px 20px; }
+    .hero-topbar-note { display: none; }
+    .hero-headline-block { padding: 0 20px; }
+    .hero-h1 { letter-spacing: -2px; }
+    .hero-deco-strip { display: none; }
+  }
+</style>

@@ -1,0 +1,274 @@
+---
+---
+
+<section class="process-section" id="proceso">
+
+  <!-- Header -->
+  <div class="process-header">
+    <span class="proc-tag">Cómo funciona</span>
+    <h2 class="proc-title">4 pasos. Una sola vez.</h2>
+    <p class="proc-subtitle">Configuras las reglas una vez y las reutilizas para todos tus equipos futuros.</p>
+  </div>
+
+  <!-- Steps grid -->
+  <div class="steps-grid">
+
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon">📋</div>
+      <h3 class="step-title">Sube el roster</h3>
+      <p class="step-desc">Arrastra el archivo <strong>.xlsx</strong> del equipo. SubliFlow lee automáticamente nombre, número y talla de cada jugador.</p>
+      <div class="step-detail">
+        <span class="detail-chip">Excel / .xlsx</span>
+        <span class="detail-chip">Auto-parse</span>
+      </div>
+    </div>
+
+    <div class="step-connector">→</div>
+
+    <div class="step-card step-featured">
+      <div class="step-num">02</div>
+      <div class="step-icon">⚙️</div>
+      <h3 class="step-title">Configura las reglas</h3>
+      <p class="step-desc">Define qué elementos van en cada pieza del uniforme y cómo cambian las dimensiones por talla: S, M, L, XL, XXL…</p>
+      <div class="step-detail">
+        <span class="detail-chip">Frente · Espalda</span>
+        <span class="detail-chip">Manga Izq · Der</span>
+      </div>
+    </div>
+
+    <div class="step-connector">→</div>
+
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon">⬇️</div>
+      <h3 class="step-title">Exporta el CSV</h3>
+      <p class="step-desc">Un clic. SubliFlow genera el archivo CSV con todos los jugadores, tallas y dimensiones exactas calculadas automáticamente.</p>
+      <div class="step-detail">
+        <span class="detail-chip">Un solo archivo</span>
+        <span class="detail-chip">0 errores</span>
+      </div>
+    </div>
+
+    <div class="step-connector">→</div>
+
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-icon">🖨️</div>
+      <h3 class="step-title">Illustrator lo hace todo</h3>
+      <p class="step-desc">El plugin de Illustrator lee el CSV y genera automáticamente cada pieza de cada jugador, lista para imprimir.</p>
+      <div class="step-detail">
+        <span class="detail-chip">Plugin incluido</span>
+        <span class="detail-chip">Listo para ploter</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="process-bottom">
+    <div class="process-bottom-text">
+      <span class="bottom-icon">♻️</span>
+      <strong>La configuración se reutiliza.</strong> El próximo equipo con la misma costurera o tallas similares lo configuras en segundos, no en horas.
+    </div>
+    <a href="#waitlist" class="btn btn-black">Probar ahora →</a>
+  </div>
+
+</section>
+
+<style>
+  .process-section {
+    background: #FFFCF0;
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  /* ─── Header ──────────────────────────── */
+  .process-header {
+    padding: 72px 32px 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 32px;
+    margin-bottom: 56px;
+  }
+
+  .proc-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 6px 14px;
+    border: 3px solid #0D0D0D;
+    background: #00CC88;
+    color: #0D0D0D;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  .proc-title {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+
+  .proc-subtitle {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.6;
+    max-width: 280px;
+    align-self: center;
+  }
+
+  /* ─── Steps ───────────────────────────── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    gap: 0;
+    border-top: 3px solid #0D0D0D;
+    border-bottom: 3px solid #0D0D0D;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .step-card {
+    padding: 40px 32px;
+    border-right: 3px solid #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: #0D0D0D;
+  }
+
+  .step-card.step-featured {
+    background: #FFE600;
+  }
+
+  .step-card.step-featured::before {
+    background: #0D0D0D;
+    height: 5px;
+  }
+
+  .step-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    padding: 0 8px;
+    background: #0D0D0D;
+    color: #FFE600;
+    border-right: 3px solid #0D0D0D;
+    min-width: 52px;
+  }
+
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #aaa;
+    letter-spacing: 0.05em;
+  }
+
+  .step-featured .step-num { color: #555; }
+
+  .step-icon {
+    font-size: 40px;
+  }
+
+  .step-title {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .step-desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.7;
+    flex: 1;
+  }
+
+  .step-featured .step-desc { color: #333; }
+
+  .step-detail {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .detail-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border: 2px solid #0D0D0D;
+    background: transparent;
+    color: #0D0D0D;
+  }
+
+  .step-featured .detail-chip {
+    background: #0D0D0D;
+    color: #FFE600;
+    border-color: #0D0D0D;
+  }
+
+  /* ─── Bottom bar ──────────────────────── */
+  .process-bottom {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 32px 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
+  .process-bottom-text {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 16px;
+    color: #444;
+    line-height: 1.6;
+    max-width: 640px;
+  }
+
+  .bottom-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+
+  .process-bottom-text strong { color: #0D0D0D; }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 1100px) {
+    .process-header { grid-template-columns: auto 1fr; }
+    .proc-subtitle { display: none; }
+    .steps-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto auto; }
+    .step-connector { display: none; }
+    .step-card { border-bottom: 3px solid #0D0D0D; }
+  }
+
+  @media (max-width: 600px) {
+    .steps-grid { grid-template-columns: 1fr; }
+    .process-bottom { flex-direction: column; align-items: flex-start; }
+    .process-header { grid-template-columns: 1fr; padding: 48px 20px 0; }
+  }
+</style>

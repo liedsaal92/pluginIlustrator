@@ -1,0 +1,268 @@
+---
+---
+
+<section class="features-section" id="features">
+
+  <div class="feat-header">
+    <div class="feat-header-left">
+      <span class="feat-tag">Features</span>
+      <h2 class="feat-title">Todo lo que<br/>necesitas para<br/>producir más.</h2>
+    </div>
+    <div class="feat-header-right">
+      <p>SubliFlow centraliza todo el flujo de producción de uniformes deportivos en una sola herramienta, conectada directamente con Adobe Illustrator.</p>
+      <a href="#waitlist" class="btn btn-yellow">Ver todos los features →</a>
+    </div>
+  </div>
+
+  <!-- Asymmetric feature grid -->
+  <div class="feat-grid">
+
+    <!-- Big card: spans 2 cols -->
+    <div class="feat-card feat-big feat-dark">
+      <div class="feat-card-label">Core</div>
+      <span class="feat-emoji">⚡</span>
+      <h3>Reglas por talla, <br/>automáticas</h3>
+      <p>Define una vez qué dimensiones, posiciones y elementos lleva cada pieza del uniforme según la talla. SubliFlow lo aplica automáticamente a cada jugador — sin que tengas que pensar en ello.</p>
+      <div class="feat-card-bottom">
+        <span class="feat-chip white">S / M / L / XL / XXL</span>
+        <span class="feat-chip white">Posición automática</span>
+        <span class="feat-chip white">Dimensiones exactas</span>
+      </div>
+    </div>
+
+    <!-- Small card -->
+    <div class="feat-card feat-yellow">
+      <div class="feat-card-label">Flexible</div>
+      <span class="feat-emoji">👤</span>
+      <h3>Overrides<br/>por jugador</h3>
+      <p>¿Un jugador necesita algo diferente? Excepciones individuales sin romper las reglas generales.</p>
+    </div>
+
+    <!-- Small card -->
+    <div class="feat-card feat-light">
+      <div class="feat-card-label">Import</div>
+      <span class="feat-emoji">📊</span>
+      <h3>Importa desde<br/>Excel</h3>
+      <p>Sube el roster en .xlsx. Nombre, número y talla de cada jugador se leen solos.</p>
+    </div>
+
+    <!-- Small card -->
+    <div class="feat-card feat-red">
+      <div class="feat-card-label">Ilustrator</div>
+      <span class="feat-emoji">🔌</span>
+      <h3>Plugin para<br/>Illustrator</h3>
+      <p>El CSV exportado alimenta el plugin que genera todos los archivos listos para el ploter.</p>
+    </div>
+
+    <!-- Medium card -->
+    <div class="feat-card feat-light">
+      <div class="feat-card-label">Organización</div>
+      <span class="feat-emoji">📁</span>
+      <h3>Múltiples equipos y clientes</h3>
+      <p>Gestiona todos tus pedidos en un solo lugar. Cada cliente con sus propias tablas de tallas y reglas de diseño independientes.</p>
+      <div class="feat-card-bottom">
+        <span class="feat-chip dark">Equipos ilimitados</span>
+        <span class="feat-chip dark">Multi-cliente</span>
+      </div>
+    </div>
+
+    <!-- Medium card -->
+    <div class="feat-card feat-dark">
+      <div class="feat-card-label">Eficiencia</div>
+      <span class="feat-emoji">🏠</span>
+      <h3>Equipo base reutilizable</h3>
+      <p>Marca un equipo como plantilla. El próximo pedido con tallas similares lo configurás en segundos, no en horas.</p>
+      <div class="feat-card-bottom">
+        <span class="feat-chip white">Copiar configuración</span>
+        <span class="feat-chip white">Historial de equipos</span>
+      </div>
+    </div>
+
+    <!-- Small card -->
+    <div class="feat-card feat-green">
+      <div class="feat-card-label">Piezas</div>
+      <span class="feat-emoji">📐</span>
+      <h3>4 piezas<br/>configurables</h3>
+      <p>Frente, espalda, manga izq. y manga der. Cada una con sus propios elementos configurables.</p>
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+  .features-section {
+    background: #FFFCF0;
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  /* ─── Header ──────────────────────────── */
+  .feat-header {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    border-bottom: 3px solid #0D0D0D;
+    align-items: stretch;
+  }
+
+  .feat-header-left {
+    padding: 64px 48px;
+    border-right: 3px solid #0D0D0D;
+    background: #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .feat-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: 3px solid #FFE600;
+    background: transparent;
+    color: #FFE600;
+    width: fit-content;
+  }
+
+  .feat-title {
+    font-size: clamp(32px, 3.5vw, 52px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    color: #fff;
+  }
+
+  .feat-header-right {
+    padding: 64px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  .feat-header-right p {
+    font-size: 18px;
+    color: #555;
+    line-height: 1.7;
+    max-width: 520px;
+  }
+
+  /* ─── Grid ────────────────────────────── */
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: auto;
+    border-left: 3px solid #0D0D0D;
+  }
+
+  .feat-card {
+    padding: 36px 32px;
+    border-right: 3px solid #0D0D0D;
+    border-bottom: 3px solid #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  /* Big card spans 2 cols */
+  .feat-big {
+    grid-column: span 2;
+  }
+
+  .feat-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+  }
+
+  .feat-emoji {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .feat-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .feat-card p {
+    font-size: 14px;
+    line-height: 1.7;
+    opacity: 0.7;
+    flex: 1;
+  }
+
+  .feat-card-bottom {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .feat-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border: 2px solid currentColor;
+  }
+
+  .feat-chip.white { color: rgba(255,255,255,0.6); }
+  .feat-chip.dark  { color: rgba(13,13,13,0.5); }
+
+  /* ─── Color themes ────────────────────── */
+  .feat-dark {
+    background: #0D0D0D;
+    color: #fff;
+  }
+  .feat-dark .feat-card-label { color: #aaa; opacity: 1; }
+  .feat-dark p { opacity: 0.6; }
+
+  .feat-yellow {
+    background: #FFE600;
+    color: #0D0D0D;
+  }
+
+  .feat-light {
+    background: #fff;
+    color: #0D0D0D;
+  }
+
+  .feat-red {
+    background: #FF3B3B;
+    color: #fff;
+  }
+  .feat-red .feat-card-label { color: rgba(255,255,255,0.6); opacity: 1; }
+  .feat-red p { opacity: 0.8; }
+
+  .feat-green {
+    background: #00CC88;
+    color: #0D0D0D;
+  }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .feat-header { grid-template-columns: 1fr; }
+    .feat-header-left { border-right: none; border-bottom: 3px solid #0D0D0D; }
+    .feat-grid { grid-template-columns: 1fr 1fr; }
+    .feat-big { grid-column: span 2; }
+  }
+
+  @media (max-width: 600px) {
+    .feat-grid { grid-template-columns: 1fr; }
+    .feat-big { grid-column: span 1; }
+    .feat-header-left { padding: 40px 24px; }
+    .feat-header-right { padding: 40px 24px; }
+  }
+</style>

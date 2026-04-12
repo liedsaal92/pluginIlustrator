@@ -1,0 +1,207 @@
+---
+---
+
+<!-- Full-width alternating rows — each pain point is its own color band -->
+<section class="pain-section" id="problema">
+
+  <!-- Section header -->
+  <div class="pain-header">
+    <div class="pain-header-left">
+      <span class="pain-tag">El problema</span>
+    </div>
+    <div class="pain-header-right">
+      <h2 class="pain-title">
+        Preparar un equipo de 20 jugadores<br/>
+        no debería tomar toda la mañana.
+      </h2>
+    </div>
+  </div>
+
+  <!-- Pain row 01 — cream bg -->
+  <div class="pain-row row-cream">
+    <div class="pain-row-num">01</div>
+    <div class="pain-row-content">
+      <div class="pain-row-icon">⏱</div>
+      <div class="pain-row-text">
+        <h3>2 a 3 horas<br/>por equipo</h3>
+        <p>Abres Illustrator, duplicas el archivo, cambias el nombre, el número, ajustas la talla… y repites esto por cada jugador. 20 jugadores = 60+ pasos manuales.</p>
+      </div>
+    </div>
+    <div class="pain-row-deco">
+      <div class="deco-circle">⏱</div>
+    </div>
+  </div>
+
+  <!-- Pain row 02 — black bg -->
+  <div class="pain-row row-black">
+    <div class="pain-row-num">02</div>
+    <div class="pain-row-content">
+      <div class="pain-row-icon">❌</div>
+      <div class="pain-row-text">
+        <h3>Errores que<br/>cuestan caro</h3>
+        <p>Un número equivocado, una talla incorrecta. El error aparece cuando ya imprimiste. Rehacer un lote entero no es solo tiempo — es tela, tinta y plata.</p>
+      </div>
+    </div>
+    <div class="pain-row-deco">
+      <div class="deco-circle">❌</div>
+    </div>
+  </div>
+
+  <!-- Pain row 03 — yellow bg -->
+  <div class="pain-row row-yellow">
+    <div class="pain-row-num">03</div>
+    <div class="pain-row-content">
+      <div class="pain-row-icon">🔁</div>
+      <div class="pain-row-text">
+        <h3>Trabajo mecánico<br/>sin valor creativo</h3>
+        <p>Copiar, pegar, renombrar, ajustar. No necesita creatividad, solo atención. Es tiempo que podrías dedicar a diseño, a ventas, o simplemente a producir el doble.</p>
+      </div>
+    </div>
+    <div class="pain-row-deco">
+      <div class="deco-circle">🔁</div>
+    </div>
+  </div>
+
+</section>
+
+<style>
+  .pain-section {
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  /* ─── Header ──────────────────────────── */
+  .pain-header {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    border-bottom: 3px solid #0D0D0D;
+    background: #FFFCF0;
+  }
+
+  .pain-header-left {
+    padding: 48px 40px;
+    border-right: 3px solid #0D0D0D;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .pain-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 6px 14px;
+    border: 3px solid #0D0D0D;
+    background: #FF3B3B;
+    color: #fff;
+  }
+
+  .pain-header-right {
+    padding: 48px 56px;
+  }
+
+  .pain-title {
+    font-size: clamp(26px, 3.5vw, 44px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+
+  /* ─── Pain rows ───────────────────────── */
+  .pain-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 200px;
+    min-height: 220px;
+    border-bottom: 3px solid #0D0D0D;
+    align-items: stretch;
+  }
+
+  .pain-row:last-child { border-bottom: none; }
+
+  .pain-row-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    font-weight: 800;
+    font-family: 'DM Mono', monospace;
+    border-right: 3px solid currentColor;
+    opacity: 0.15;
+    line-height: 1;
+  }
+
+  .pain-row-content {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 40px 56px;
+    border-right: 3px solid currentColor;
+  }
+
+  .pain-row-icon {
+    font-size: 56px;
+    flex-shrink: 0;
+  }
+
+  .pain-row-text h3 {
+    font-size: clamp(22px, 2.5vw, 32px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  .pain-row-text p {
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 480px;
+    opacity: 0.75;
+  }
+
+  .pain-row-deco {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .deco-circle {
+    font-size: 64px;
+    opacity: 0.12;
+    transform: rotate(-15deg);
+  }
+
+  /* ─── Color themes ────────────────────── */
+  .row-cream {
+    background: #FFFCF0;
+    color: #0D0D0D;
+    border-color: #0D0D0D;
+  }
+  .row-cream .pain-row-num { opacity: 0.06; }
+
+  .row-black {
+    background: #0D0D0D;
+    color: #FFFCF0;
+    border-color: #333;
+  }
+  .row-black .pain-row-num  { border-right-color: #333; color: #fff; }
+  .row-black .pain-row-content { border-right-color: #333; }
+  .row-black .pain-row-text p { opacity: 0.6; }
+
+  .row-yellow {
+    background: #FFE600;
+    color: #0D0D0D;
+    border-color: #0D0D0D;
+  }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .pain-header { grid-template-columns: 1fr; }
+    .pain-header-left { border-right: none; border-bottom: 3px solid #0D0D0D; padding: 32px 32px; }
+    .pain-header-right { padding: 32px 32px; }
+    .pain-row { grid-template-columns: 80px 1fr; }
+    .pain-row-deco { display: none; }
+    .pain-row-num { font-size: 48px; }
+    .pain-row-content { padding: 32px 24px; gap: 20px; }
+    .pain-row-icon { font-size: 36px; }
+  }
+</style>

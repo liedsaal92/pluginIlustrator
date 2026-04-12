@@ -1,0 +1,113 @@
+---
+---
+
+<section class="stats-section">
+  <div class="stats-inner">
+
+    <div class="stat-block stat-b1">
+      <span class="stat-num">3 hrs</span>
+      <div class="stat-divider"></div>
+      <span class="stat-label">ahorradas<br/>por equipo</span>
+      <div class="stat-deco">⏱</div>
+    </div>
+
+    <div class="stat-block stat-b2">
+      <span class="stat-num">20+</span>
+      <div class="stat-divider"></div>
+      <span class="stat-label">jugadores<br/>en segundos</span>
+      <div class="stat-deco">⚡</div>
+    </div>
+
+    <div class="stat-block stat-b3">
+      <span class="stat-num">0</span>
+      <div class="stat-divider"></div>
+      <span class="stat-label">errores<br/>manuales</span>
+      <div class="stat-deco">✓</div>
+    </div>
+
+    <div class="stat-block stat-b4">
+      <span class="stat-num">4</span>
+      <div class="stat-divider"></div>
+      <span class="stat-label">piezas por<br/>uniforme</span>
+      <div class="stat-deco">📐</div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .stats-section {
+    border-bottom: 3px solid #0D0D0D;
+    overflow: hidden;
+  }
+
+  .stats-inner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stat-block {
+    padding: 56px 40px;
+    border-right: 3px solid #0D0D0D;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-block:last-child { border-right: none; }
+
+  .stat-num {
+    font-size: clamp(52px, 6vw, 80px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    display: block;
+  }
+
+  .stat-divider {
+    width: 48px;
+    height: 4px;
+    background: currentColor;
+    opacity: 0.3;
+  }
+
+  .stat-label {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    opacity: 0.8;
+  }
+
+  .stat-deco {
+    position: absolute;
+    bottom: 16px;
+    right: 24px;
+    font-size: 72px;
+    opacity: 0.08;
+    line-height: 1;
+    transform: rotate(-10deg);
+  }
+
+  /* ─── Color themes ────────────────────── */
+  .stat-b1 { background: #FFE600; color: #0D0D0D; }
+  .stat-b2 { background: #0D0D0D; color: #FFE600; }
+  .stat-b3 { background: #00CC88; color: #0D0D0D; }
+  .stat-b4 { background: #FF3B3B; color: #fff; }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .stats-inner { grid-template-columns: 1fr 1fr; }
+    .stat-block { border-bottom: 3px solid #0D0D0D; }
+    .stat-block:nth-child(2n) { border-right: none; }
+    .stat-block:nth-last-child(-n+2) { border-bottom: none; }
+  }
+
+  @media (max-width: 500px) {
+    .stats-inner { grid-template-columns: 1fr; }
+    .stat-block { border-right: none; }
+    .stat-block:last-child { border-bottom: none; }
+    .stat-block { padding: 40px 32px; }
+  }
+</style>
