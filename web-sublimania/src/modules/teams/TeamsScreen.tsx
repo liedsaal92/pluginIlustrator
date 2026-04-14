@@ -1,12 +1,9 @@
 // ============================================================
 //  modules/teams/TeamsScreen.tsx — Lista y gestión de equipos
 // ============================================================
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTeamStore } from '../../store/useTeamStore';
-import { useTallasStore } from '../../store/useTallasStore';
-import { useClientesStore } from '../../store/useClientesStore';
-import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TeamEntry } from '../../types';
@@ -34,8 +31,7 @@ const EMPTY_ENTRY: TeamEntry = {
 };
 
 export function TeamsScreen({ onToast }: Props) {
-  const importInputRef = useRef<HTMLInputElement>(null);
-  const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, replaceAll, createTeam } = useTeamsStore();
+  const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam } = useTeamsStore();
   const { setScreen, loadFromEntry } = useTeamStore();
 
   // Paginación
@@ -127,39 +123,6 @@ export function TeamsScreen({ onToast }: Props) {
     onToast('Equipo eliminado', 'ok');
   }
 
-  function handleExportBackup() {
-    saveActiveTeam();
-    const { teams: allTeams } = useTeamsStore.getState();
-    const { clientes } = useClientesStore.getState();
-    const { tallasPorCliente } = useTallasStore.getState();
-    exportBackup(clientes, tallasPorCliente, allTeams);
-    onToast('Configuración exportada', 'ok');
-  }
-
-  async function handleImportBackupFile(file: File) {
-    try {
-      const backup = await importBackup(file);
-      const { clientes: curClientes } = useClientesStore.getState();
-      const { tallasPorCliente: curTallas } = useTallasStore.getState();
-      const result = mergeBackup(backup, curClientes, curTallas, useTeamsStore.getState().teams);
-
-      useClientesStore.setState({ clientes: result.clientes });
-      useTallasStore.setState({ tallasPorCliente: result.tallasPorCliente });
-      replaceAll(result.teams);
-
-      const parts: string[] = [];
-      if (result.teamsAdded) parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
-      if (result.teamsUpdated) parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
-      if (result.clientesAdded) parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
-      if (result.clientesUpdated) parts.push(`${result.clientesUpdated} cliente(s) actualizado(s)`);
-      if (result.tallasUpdated) parts.push(`${result.tallasUpdated} cliente(s) con tallas actualizadas`);
-
-      onToast(parts.length ? `Combinado: ${parts.join(', ')}` : 'Sin cambios nuevos', 'ok');
-    } catch (e) {
-      onToast((e as Error).message ?? 'Error al importar', 'error');
-    }
-  }
-
   // Suprimir advertencia de buildEmptyRules no usado — lo usa UploadScreen
   void buildEmptyRules;
 
@@ -168,22 +131,6 @@ export function TeamsScreen({ onToast }: Props) {
       <div className="teams-header">
         <h1 className="teams-title">EQUIPOS</h1>
         <div className="teams-actions">
-          <button className="btn btn-ghost btn-sm" onClick={() => importInputRef.current?.click()} title="Importar y combinar configuración">
-            ⬇ IMPORTAR
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={e => {
-              if (e.target.files?.[0]) handleImportBackupFile(e.target.files[0]);
-              e.target.value = '';
-            }}
-          />
-          <button className="btn btn-ghost btn-sm" onClick={handleExportBackup} title="Exportar configuración completa">
-            ⬆ EXPORTAR
-          </button>
           <button className="btn btn-primary" onClick={openNewModal}>
             + NUEVO EQUIPO
           </button>

@@ -46,7 +46,7 @@ export default function App() {
 
   return (
     <>
-      <Header />
+      <Header onToast={showToast} />
       <main id="app">
         {screen === 'teams'     && <TeamsScreen     onToast={showToast} />}
         {screen === 'upload'    && <UploadScreen    onToast={showToast} />}

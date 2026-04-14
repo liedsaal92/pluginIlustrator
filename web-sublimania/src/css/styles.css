@@ -76,6 +76,22 @@ body {
   margin-top: 2px;
 }
 
+.header-backup-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.header-backup-actions .btn-ghost {
+  color: var(--white);
+  border-color: rgba(255,255,255,0.35);
+  background: transparent;
+}
+.header-backup-actions .btn-ghost:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.7);
+  color: var(--white);
+}
+
 .header-deco {
   display: flex;
   align-items: center;

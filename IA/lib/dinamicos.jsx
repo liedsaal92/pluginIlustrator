@@ -168,7 +168,9 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     }
 
     // ── ESCUDO_CENTRAL ──────────────────────────────────────
-    var grupoEscudoCentral = findGroupByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
+    // Nota: en el template ESCUDO_CENTRAL puede ser PathItem o GroupItem,
+    // por eso se usa findItemByNameRecursivo (igual que LOGO_MARCA).
+    var grupoEscudoCentral = findItemByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
 
     if (grupoEscudoCentral) {
         if (jugador.LLEVA_ESCUDO_CENTRAL !== "SI") {
@@ -712,9 +714,13 @@ function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, no
         var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
 
         var marginSupPt = cmToPt(marginSupCm);
+        var targetTop   = piezaTop - marginSupPt;
 
-        // item.top es el borde superior del objeto en coordenadas Illustrator
-        item.top = piezaTop - marginSupPt;
+        // Usar translate() en lugar de item.top = value para que funcione
+        // correctamente también en grupos con clip mask (clipped = true),
+        // donde el setter .top puede fallar silenciosamente o lanzar error.
+        var deltaY = targetTop - item.geometricBounds[1];
+        item.translate(0, deltaY);
 
         Log.ok(nombrePieza + " | " + nombreJugador +
                ": " + labelItem + " posicionado (sup:" + marginSupCm.toFixed(1) + "cm)");
