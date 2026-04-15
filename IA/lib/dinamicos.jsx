@@ -192,6 +192,8 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     jugador.NOMBRE, nombrePieza, "ESCUDO_CENTRAL"
                 );
             }
+            // Centrar horizontalmente (no había llamada — era la causa del desvío)
+            centrarHorizontalmente(grupoEscudoCentral, grupoCopia);
         }
     }
 
@@ -1030,23 +1032,96 @@ function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, gru
 //  CENTRADO HORIZONTAL DE TEXTO
 // ============================================================
 
-function centrarHorizontalmente(textFrame, grupoPieza) {
+// Centra horizontalmente `item` dentro de `grupoPieza`.
+// Usa ESTATICO.geometricBounds como referencia de pieza cuando existe (igual que
+// posicionarItemDesdeLatMasCercano), para evitar que elementos de DINAMICO que
+// desborden la silueta inflen el bounding box y desplacen el centro calculado.
+// Funciona tanto con TextFrames como con GroupItem/PathItem.
+function centrarHorizontalmente(item, grupoPieza) {
     try {
-        var piezaBounds  = grupoPieza.geometricBounds;
-        var piezaLeft    = piezaBounds[0];
-        var piezaRight   = piezaBounds[2];
-        var piezaCentroX = (piezaLeft + piezaRight) / 2;
+        var _estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        if (!_estatico) {
+            _estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
+        }
+        var _refBounds = _estatico ? _estatico.geometricBounds
+                                   : grupoPieza.geometricBounds;
+        var piezaCentroX = (_refBounds[0] + _refBounds[2]) / 2;
 
-        try {
-            var parrafo = textFrame.textRange.paragraphAttributes;
-            parrafo.justification = Justification.CENTER;
-        } catch(e) { /* ignorar si no es accesible */ }
+        // ── DIAGNÓSTICO: tipo y justificación ANTES del cambio ──
+        var isText    = (item.typename === "TextFrame");
+        var kindStr   = "n/a";
+        var justAntes = "n/a";
+        if (isText) {
+            try {
+                kindStr = (item.kind === TextType.POINTTEXT) ? "POINT"
+                        : (item.kind === TextType.AREATEXT)  ? "AREA"
+                        : "PATH";
+            } catch(ek) { kindStr = "err"; }
+            try {
+                var jVal = item.textRange.paragraphAttributes.justification;
+                justAntes = (jVal === Justification.LEFT)   ? "LEFT"
+                          : (jVal === Justification.CENTER) ? "CENTER"
+                          : (jVal === Justification.RIGHT)  ? "RIGHT"
+                          : String(jVal);
+            } catch(ej) { justAntes = "err"; }
+        }
+        var bAntesCambio = item.geometricBounds;
+        Log._linea("-----",
+            "centrarH tipo=" + kindStr + " justAntes=" + justAntes +
+            " geomAntesJust=[" + ptToCm(bAntesCambio[0]).toFixed(3) + "," + ptToCm(bAntesCambio[2]).toFixed(3) + "]");
 
-        var tfBounds = textFrame.visibleBounds;
-        var tfAncho  = Math.abs(tfBounds[2] - tfBounds[0]);
-        textFrame.left = piezaCentroX - (tfAncho / 2);
+        // ── Establecer justificación CENTER ──
+        if (isText) {
+            try {
+                item.textRange.paragraphAttributes.justification = Justification.CENTER;
+            } catch(e) {}
+        }
+
+        // ── DIAGNÓSTICO: bounds DESPUÉS del cambio de justificación ──
+        var bDespuesJust = item.geometricBounds;
+        Log._linea("-----",
+            "centrarH geomDespuesJust=[" + ptToCm(bDespuesJust[0]).toFixed(3) + "," + ptToCm(bDespuesJust[2]).toFixed(3) + "]" +
+            " shiftX=" + ptToCm(bDespuesJust[0] - bAntesCambio[0]).toFixed(3));
+
+        // ── Calcular deltaX y traducir ──
+        var itemBounds = bDespuesJust;
+        var itemAncho  = Math.abs(itemBounds[2] - itemBounds[0]);
+        var targetLeft = piezaCentroX - (itemAncho / 2);
+        var deltaX     = targetLeft - itemBounds[0];
+
+        Log._linea("-----",
+            "centrarH ref=[" + ptToCm(_refBounds[0]).toFixed(3) + "," + ptToCm(_refBounds[2]).toFixed(3) + "]" +
+            (_estatico ? "(ESTATICO)" : "(grupoPieza)") +
+            " centroX=" + ptToCm(piezaCentroX).toFixed(3) +
+            " ancho=" + ptToCm(itemAncho).toFixed(3) +
+            " deltaX=" + ptToCm(deltaX).toFixed(3));
+
+        item.translate(deltaX, 0);
+
+        // ── DIAGNÓSTICO: bounds y error DESPUÉS del translate ──
+        var bPost = item.geometricBounds;
+        var centroPost = (bPost[0] + bPost[2]) / 2;
+        var errorX     = centroPost - piezaCentroX;
+        var movReal    = bPost[0] - itemBounds[0];
+        Log._linea("-----",
+            "centrarH POST=[" + ptToCm(bPost[0]).toFixed(3) + "," + ptToCm(bPost[2]).toFixed(3) + "]" +
+            " movReal=" + ptToCm(movReal).toFixed(3) +
+            " esperado=" + ptToCm(deltaX).toFixed(3) +
+            " errorX=" + ptToCm(errorX).toFixed(3));
+
+        // ── Segunda pasada si el error supera 0.1cm ──
+        if (Math.abs(errorX) > cmToPt(0.1)) {
+            var correccion = -errorX;
+            item.translate(correccion, 0);
+            var bFinal = item.geometricBounds;
+            var errorFinal = ((bFinal[0] + bFinal[2]) / 2) - piezaCentroX;
+            Log._linea("-----",
+                "centrarH CORRECCION=" + ptToCm(correccion).toFixed(3) +
+                " FINAL=[" + ptToCm(bFinal[0]).toFixed(3) + "," + ptToCm(bFinal[2]).toFixed(3) + "]" +
+                " errorFinal=" + ptToCm(errorFinal).toFixed(3));
+        }
 
     } catch(e) {
-        // Si falla el centrado, el texto queda en su posición original
+        Log._linea("-----", "centrarH ERROR: " + e.message);
     }
 }
