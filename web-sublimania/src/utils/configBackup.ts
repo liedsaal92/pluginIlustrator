@@ -129,6 +129,8 @@ function mergeTeamEntries(local: TeamEntry, incoming: TeamEntry): TeamEntry {
 
   return {
     ...local,
+    // El nombre del backup gana — permite corregir nombres corruptos/erróneos locales
+    nombre:         incoming.nombre || local.nombre,
     updatedAt:      new Date().toISOString(),
     tallas:         mergedTallas,
     tallaRules:     mergedTallaRules,
@@ -167,10 +169,12 @@ export function mergeBackup(
   // en dos máquinas con distintos ids pero el mismo nombre).
   // Regla: local siempre gana en conflicto; incoming solo agrega lo que falta.
   let teamsAdded = 0, teamsUpdated = 0, teamsMerged = 0;
-  const teamsById    = new Map<string, TeamEntry>(currentTeams.map(t => [t.id, t]));
+  const existingIds   = new Set<string>(currentTeams.map(t => t.id));
+  const teamsById     = new Map<string, TeamEntry>(currentTeams.map(t => [t.id, t]));
   const teamsByNombre = new Map<string, TeamEntry>(
     currentTeams.map(t => [t.nombre.trim().toLowerCase(), t]),
   );
+  const addedTeams: TeamEntry[] = [];
 
   backup.teams.forEach(incoming => {
     const byId     = teamsById.get(incoming.id);
@@ -182,6 +186,7 @@ export function mergeBackup(
     if (!existing) {
       teamsById.set(incoming.id, incoming);
       teamsByNombre.set(incoming.nombre.trim().toLowerCase(), incoming);
+      addedTeams.push(incoming);
       teamsAdded++;
       return;
     }
@@ -203,10 +208,14 @@ export function mergeBackup(
     else teamsMerged++;
   });
 
+  // Equipos nuevos van al principio — siempre visibles en página 1
+  const existingMerged = Array.from(teamsById.values()).filter(t => existingIds.has(t.id));
+  const mergedTeams    = [...addedTeams, ...existingMerged];
+
   return {
     clientes:         mergedClientes,
     tallasPorCliente: mergedTallas,
-    teams:            Array.from(teamsById.values()),
+    teams:            mergedTeams,
     clientesAdded,
     clientesUpdated,
     tallasUpdated,
