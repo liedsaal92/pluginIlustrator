@@ -652,7 +652,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                                jugador.NOMBRE, nombrePieza, factorPieza);
         }
 
-        var grupoLineaInf = findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF");
+        var grupoLineaInf = findItemByNameRecursivo(dinamico, "MANGA_LINEA_INF");
         if (grupoLineaInf && jugador["LLEVA_MANGA_" + sufMangaL + "_LINEA_INF"] !== "SI") {
             grupoLineaInf.hidden = true;
             Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_INF ocultada (LLEVA=NO)");
@@ -922,8 +922,12 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
         var bottomAntes = boundsAntes[3];
 
         if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
-            var altoActualReal = CONFIG.lineaMangaBase.inf_alto * factorPieza.y;
-            var factorAlto     = (targetAlto / altoActualReal) * 100;
+            var altoActualCm = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            if (altoActualCm <= 0) return;
+            var factorAlto = (targetAlto / altoActualCm) * 100;
+
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_INF altoActual=" + altoActualCm.toFixed(4) + "cm target=" + targetAlto.toFixed(1) + "cm factor=" + factorAlto.toFixed(2) + "%");
 
             grupoLinea.resize(100, factorAlto, true, true, true, true, 100, Transformation.BOTTOMLEFT);
 
@@ -933,7 +937,7 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
             grupoLinea.top  = bottomAntes + nuevoAlto;
 
             Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_INF → alto " + targetAlto.toFixed(1) + "cm");
+                   ": MANGA_LINEA_INF → alto " + ptToCm(nuevoAlto).toFixed(4) + "cm (target " + targetAlto.toFixed(1) + "cm)");
 
         } else if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
             var anchoActualCm = ptToCm(Math.abs(boundsAntes[2] - boundsAntes[0]));

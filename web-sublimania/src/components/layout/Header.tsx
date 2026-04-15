@@ -39,6 +39,7 @@ export function Header({ onToast }: Props) {
       const parts: string[] = [];
       if (result.teamsAdded) parts.push(`${result.teamsAdded} equipo(s) nuevo(s)`);
       if (result.teamsUpdated) parts.push(`${result.teamsUpdated} equipo(s) actualizado(s)`);
+      if (result.teamsMerged) parts.push(`${result.teamsMerged} equipo(s) combinado(s) por nombre`);
       if (result.clientesAdded) parts.push(`${result.clientesAdded} cliente(s) nuevo(s)`);
       if (result.clientesUpdated) parts.push(`${result.clientesUpdated} cliente(s) actualizado(s)`);
       if (result.tallasUpdated) parts.push(`${result.tallasUpdated} cliente(s) con tallas actualizadas`);
