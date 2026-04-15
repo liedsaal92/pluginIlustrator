@@ -386,6 +386,20 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                        ": ESCUDO (manga) posicionado (inf:" + escMarginInf.toFixed(1) + "cm)");
             }
         }
+
+        // 4. Posicionar NUMERO (manga) desde el borde inferior
+        if (itemNumero && jugador.TIENE_NUMERO !== "NO" && llevaNumeroEnEstaPieza) {
+            var numMangaMarginInf = parseFloat(jugador["NUMERO_M_" + sufManga + "_MARGIN_INF"]);
+            if (!isNaN(numMangaMarginInf) && numMangaMarginInf >= 0) {
+                var numMBounds = itemNumero.geometricBounds;
+                var numMAltura = Math.abs(numMBounds[1] - numMBounds[3]);
+                var numMAncho  = Math.abs(numMBounds[2] - numMBounds[0]);
+                itemNumero.top  = mangaBottom + cmToPt(numMangaMarginInf) + numMAltura;
+                itemNumero.left = mangaCentroX - (numMAncho / 2);
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": NUMERO (manga) posicionado (inf:" + numMangaMarginInf.toFixed(1) + "cm)");
+            }
+        }
     }
 
     // ── SPONSOR_PRINCIPAL ────────────────────────────────────

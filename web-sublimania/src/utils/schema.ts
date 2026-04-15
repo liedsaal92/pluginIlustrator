@@ -56,7 +56,7 @@ export const CSV_COLUMN_ORDER: string[] = [
   // ESPALDA — COSTILLA
   'LLEVA_COSTILLA_E', 'COSTILLA_E_ANCHO', 'COSTILLA_E_ALTO', 'COSTILLA_E_REF',
   // MANGA IZQ — NÚMERO
-  'LLEVA_NUMERO_M_IZQ', 'NUMERO_M_IZQ_ANCHO', 'NUMERO_M_IZQ_ALTO', 'NUMERO_M_IZQ_REF',
+  'LLEVA_NUMERO_M_IZQ', 'NUMERO_M_IZQ_ANCHO', 'NUMERO_M_IZQ_ALTO', 'NUMERO_M_IZQ_REF', 'NUMERO_M_IZQ_MARGIN_INF',
   // MANGA IZQ — ESCUDO
   'LLEVA_ESCUDO_M_IZQ', 'ESCUDO_M_IZQ_ANCHO', 'ESCUDO_M_IZQ_ALTO', 'ESCUDO_M_IZQ_REF', 'ESCUDO_M_IZQ_MARGIN_INF',
   // MANGA IZQ — SPONSOR SECUNDARIO
@@ -66,7 +66,7 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_MANGA_IZQ_LINEA_DER', 'MANGA_IZQ_LINEA_DER_ANCHO', 'MANGA_IZQ_LINEA_DER_ALTO', 'MANGA_IZQ_LINEA_DER_REF',
   'LLEVA_MANGA_IZQ_LINEA_INF', 'MANGA_IZQ_LINEA_INF_ANCHO', 'MANGA_IZQ_LINEA_INF_ALTO', 'MANGA_IZQ_LINEA_INF_REF',
   // MANGA DER — NÚMERO
-  'LLEVA_NUMERO_M_DER', 'NUMERO_M_DER_ANCHO', 'NUMERO_M_DER_ALTO', 'NUMERO_M_DER_REF',
+  'LLEVA_NUMERO_M_DER', 'NUMERO_M_DER_ANCHO', 'NUMERO_M_DER_ALTO', 'NUMERO_M_DER_REF', 'NUMERO_M_DER_MARGIN_INF',
   // MANGA DER — ESCUDO
   'LLEVA_ESCUDO_M_DER', 'ESCUDO_M_DER_ANCHO', 'ESCUDO_M_DER_ALTO', 'ESCUDO_M_DER_REF', 'ESCUDO_M_DER_MARGIN_INF',
   // MANGA DER — SPONSOR SECUNDARIO
@@ -163,7 +163,7 @@ export const SCHEMA: Schema = {
     color: '#4A9BE8',
     elements: [
       { id: 'numero_m_izq', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_IZQ',
-        fields: [numField('NUMERO_M_IZQ_ANCHO', 'Ancho'), numField('NUMERO_M_IZQ_ALTO', 'Alto'), refField('NUMERO_M_IZQ_REF')] },
+        fields: [numField('NUMERO_M_IZQ_ANCHO', 'Ancho'), numField('NUMERO_M_IZQ_ALTO', 'Alto'), refField('NUMERO_M_IZQ_REF'), numField('NUMERO_M_IZQ_MARGIN_INF', 'Margen inf')] },
       { id: 'escudo_m_izq', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_IZQ',
         fields: [numField('ESCUDO_M_IZQ_ANCHO', 'Ancho'), numField('ESCUDO_M_IZQ_ALTO', 'Alto'), refField('ESCUDO_M_IZQ_REF'), numField('ESCUDO_M_IZQ_MARGIN_INF', 'Margen inf')] },
       { id: 'sponsor_secundario_m_izq', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_IZQ',
@@ -182,7 +182,7 @@ export const SCHEMA: Schema = {
     color: '#7B5CF0',
     elements: [
       { id: 'numero_m_der', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_DER',
-        fields: [numField('NUMERO_M_DER_ANCHO', 'Ancho'), numField('NUMERO_M_DER_ALTO', 'Alto'), refField('NUMERO_M_DER_REF')] },
+        fields: [numField('NUMERO_M_DER_ANCHO', 'Ancho'), numField('NUMERO_M_DER_ALTO', 'Alto'), refField('NUMERO_M_DER_REF'), numField('NUMERO_M_DER_MARGIN_INF', 'Margen inf')] },
       { id: 'escudo_m_der', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_DER',
         fields: [numField('ESCUDO_M_DER_ANCHO', 'Ancho'), numField('ESCUDO_M_DER_ALTO', 'Alto'), refField('ESCUDO_M_DER_REF'), numField('ESCUDO_M_DER_MARGIN_INF', 'Margen inf')] },
       { id: 'sponsor_secundario_m_der', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_DER',
