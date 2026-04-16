@@ -298,8 +298,9 @@ body {
   display: inline-flex;
   align-items: center;
 }
-.stat-players { background: var(--blue); color: var(--white); }
-.stat-tallas  { background: var(--yellow); color: var(--black); }
+.stat-players      { background: var(--blue); color: var(--white); }
+.stat-tallas       { background: var(--yellow); color: var(--black); }
+.stat-talla-active { background: var(--green); color: var(--black); }
 
 .config-global {
   display: flex;

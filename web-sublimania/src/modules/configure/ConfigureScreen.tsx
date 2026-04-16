@@ -17,6 +17,7 @@ export function ConfigureScreen({ onToast }: Props) {
   const {
     players, tallas,
     configTab, globalConfig,
+    activeTalla,
     setScreen, setConfigTab, setGlobalConfig,
   } = useTeamStore();
 
@@ -30,6 +31,9 @@ export function ConfigureScreen({ onToast }: Props) {
           <div className="config-stats">
             <span className="stat-badge stat-players">{players.length} JUGADORES</span>
             <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
+            {configTab === 'rules' && activeTalla && (
+              <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
+            )}
           </div>
         </div>
 
