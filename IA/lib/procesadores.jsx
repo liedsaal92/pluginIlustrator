@@ -132,14 +132,14 @@ function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, gru
 // REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga
 // REF=AMBOS → fija ancho Y alto exactos al valor del CSV
 // REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
+// Después del resize el borde inferior de la línea se ancla al borde inferior de ESTATICO.
+function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza) {
     if (!item) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_" + lado + " no encontrada — omitida");
         return;
     }
 
-    // DIAGNÓSTICO: mostrar valores leídos del CSV antes de decidir qué hacer
     Log.info(nombrePieza + " | " + nombreJugador +
              ": MANGA_LINEA_" + lado + " CSV → ANCHO=" + targetAncho +
              " ALTO=" + targetAlto + " REF=" + ref);
@@ -154,7 +154,6 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
         var boundsAntes = item.geometricBounds;
         var leftAntes   = boundsAntes[0];
         var rightAntes  = boundsAntes[2];
-        var topAntes    = boundsAntes[1];
 
         if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
             var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
@@ -170,7 +169,6 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             var boundsDespues = item.geometricBounds;
             var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
             item.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAncho;
-            item.top  = topAntes;
 
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": MANGA_LINEA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
@@ -186,7 +184,6 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
 
             item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
             item.left = boundsAntes[0];
-            item.top  = topAntes;
 
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": MANGA_LINEA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
@@ -209,7 +206,6 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             var boundsDespuesA = item.geometricBounds;
             var nuevoAnchoA    = Math.abs(boundsDespuesA[2] - boundsDespuesA[0]);
             item.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAnchoA;
-            item.top  = topAntes;
 
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": MANGA_LINEA_" + lado + " → ambos " + targetAncho.toFixed(1) +
@@ -220,6 +216,29 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                      ": MANGA_LINEA_" + lado + " REF='" + ref +
                      "' no reconocido o valores inválidos (ANCHO=" + targetAncho +
                      " ALTO=" + targetAlto + ") — no escalada");
+        }
+
+        // ── Anclar borde inferior al borde inferior de ESTATICO ───────────
+        if (grupoPieza) {
+            var _estRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+            if (!_estRef) {
+                _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
+            }
+            var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
+            var _estBot    = _estBounds[3];
+
+            var _itmB    = item.geometricBounds;
+            var _itmH    = Math.abs(_itmB[1] - _itmB[3]);
+            var _targetT = _estBot + _itmH;
+            var _deltaY  = _targetT - _itmB[1];
+
+            item.translate(0, _deltaY);
+
+            var _itmBPost = item.geometricBounds;
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                ": MANGA_LINEA_" + lado + " anclada a borde inf ESTATICO" +
+                " → top=" + ptToCm(_itmBPost[1]).toFixed(3) +
+                "cm bot=" + ptToCm(_itmBPost[3]).toFixed(3) + "cm");
         }
 
     } catch(e) {

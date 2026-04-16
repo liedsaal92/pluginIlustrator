@@ -637,7 +637,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaIzqAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_ALTO"]);
             var lineaIzqRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaIzq, "IZQ", lineaIzqAncho, lineaIzqAlto, lineaIzqRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
         var itemLineaDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
@@ -649,7 +649,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaDerAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_DER_ALTO"]);
             var lineaDerRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_DER_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaDer, "DER", lineaDerAncho, lineaDerAlto, lineaDerRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
         var grupoLineaInf = findItemByNameRecursivo(dinamico, "MANGA_LINEA_INF");
