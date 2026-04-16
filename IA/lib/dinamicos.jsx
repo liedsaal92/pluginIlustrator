@@ -840,6 +840,7 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
 // Líneas laterales (IZQ y DER)
 // REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga (comportamiento original)
 // REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga
+// REF=AMBOS → fija ancho Y alto exactos al valor del CSV
 // REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
 function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
     if (!item) {
@@ -847,6 +848,11 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                  ": MANGA_LINEA_" + lado + " no encontrada — omitida");
         return;
     }
+
+    // DIAGNÓSTICO: mostrar valores leídos del CSV antes de decidir qué hacer
+    Log.info(nombrePieza + " | " + nombreJugador +
+             ": MANGA_LINEA_" + lado + " CSV → ANCHO=" + targetAncho +
+             " ALTO=" + targetAlto + " REF=" + ref);
 
     if (ref === "PROPORCIONAL") {
         Log.ok(nombrePieza + " | " + nombreJugador +
@@ -859,12 +865,15 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
         var leftAntes   = boundsAntes[0];
         var rightAntes  = boundsAntes[2];
         var topAntes    = boundsAntes[1];
-        var botAntes    = boundsAntes[3];
 
         if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
             var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
             if (anchoRealCm <= 0) return;
             var factorAncho = (targetAncho / anchoRealCm) * 100;
+
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_" + lado + " anchoActual=" + anchoRealCm.toFixed(4) +
+                     "cm target=" + targetAncho.toFixed(1) + "cm factor=" + factorAncho.toFixed(2) + "%");
 
             item.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
 
@@ -881,6 +890,10 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             if (altoRealCm <= 0) return;
             var factorAlto = (targetAlto / altoRealCm) * 100;
 
+            Log.info(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_" + lado + " altoActual=" + altoRealCm.toFixed(4) +
+                     "cm target=" + targetAlto.toFixed(1) + "cm factor=" + factorAlto.toFixed(2) + "%");
+
             item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
             item.left = boundsAntes[0];
             item.top  = topAntes;
@@ -888,13 +901,39 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": MANGA_LINEA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
 
-        } else {
+        } else if (ref === "AMBOS" && !isNaN(targetAncho) && targetAncho > 0 && !isNaN(targetAlto) && targetAlto > 0) {
+            var anchoRealCmA = ptToCm(Math.abs(rightAntes - leftAntes));
+            var altoRealCmA  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            if (anchoRealCmA <= 0 || altoRealCmA <= 0) return;
+            var factorAnchoA = (targetAncho / anchoRealCmA) * 100;
+            var factorAltoA  = (targetAlto  / altoRealCmA)  * 100;
+
             Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_" + lado + " sin valores válidos en CSV — no escalada");
+                     ": MANGA_LINEA_" + lado + " anchoActual=" + anchoRealCmA.toFixed(4) +
+                     "cm altoActual=" + altoRealCmA.toFixed(4) +
+                     "cm factorAncho=" + factorAnchoA.toFixed(2) +
+                     "% factorAlto=" + factorAltoA.toFixed(2) + "%");
+
+            item.resize(factorAnchoA, factorAltoA, true, true, true, true, 100, Transformation.TOPLEFT);
+
+            var boundsDespuesA = item.geometricBounds;
+            var nuevoAnchoA    = Math.abs(boundsDespuesA[2] - boundsDespuesA[0]);
+            item.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAnchoA;
+            item.top  = topAntes;
+
+            Log.ok(nombrePieza + " | " + nombreJugador +
+                   ": MANGA_LINEA_" + lado + " → ambos " + targetAncho.toFixed(1) +
+                   "x" + targetAlto.toFixed(1) + "cm");
+
+        } else {
+            Log.error(nombrePieza + " | " + nombreJugador +
+                     ": MANGA_LINEA_" + lado + " REF='" + ref +
+                     "' no reconocido o valores inválidos (ANCHO=" + targetAncho +
+                     " ALTO=" + targetAlto + ") — no escalada");
         }
 
     } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
+        Log.error(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_" + lado + " error (" + e.message + ") — omitida");
     }
 }
