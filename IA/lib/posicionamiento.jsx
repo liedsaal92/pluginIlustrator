@@ -8,6 +8,7 @@
 function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, nombrePieza, labelItem) {
     try {
         var estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds = estatico ? estatico.geometricBounds
                                  : grupoPieza.geometricBounds;
         var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
@@ -33,6 +34,7 @@ function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, no
 function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJugador, nombrePieza, labelItem) {
     try {
         var estatico   = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds  = estatico ? estatico.geometricBounds : grupoPieza.geometricBounds;
         var piezaLeft  = refBounds[0];
         var piezaRight = refBounds[2];
@@ -64,6 +66,7 @@ function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJ
 function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza, labelEtiqueta) {
     try {
         var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds   = estatico ? estatico.geometricBounds
                                    : grupoPieza.geometricBounds;
         var piezaLeft   = refBounds[0];

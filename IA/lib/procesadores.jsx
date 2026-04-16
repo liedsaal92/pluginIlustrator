@@ -218,7 +218,7 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                      " ALTO=" + targetAlto + ") — no escalada");
         }
 
-        // ── Anclar borde inferior al borde inferior de ESTATICO ───────────
+        // ── Anclar borde inferior e horizontal al ESTATICO ────────────────
         if (grupoPieza) {
             var _estRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
             if (!_estRef) {
@@ -226,18 +226,30 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             }
             var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
             var _estBot    = _estBounds[3];
+            var _estLeft   = _estBounds[0];
+            var _estRight  = _estBounds[2];
 
+            // Snap vertical: borde inferior de la línea = borde inferior de ESTATICO
             var _itmB    = item.geometricBounds;
             var _itmH    = Math.abs(_itmB[1] - _itmB[3]);
+            var _itmW    = Math.abs(_itmB[2] - _itmB[0]);
             var _targetT = _estBot + _itmH;
             var _deltaY  = _targetT - _itmB[1];
-
             item.translate(0, _deltaY);
+
+            // Snap horizontal: borde lateral de la línea = borde lateral de ESTATICO
+            var _itmBV = item.geometricBounds;
+            if (lado === "IZQ") {
+                item.translate(_estLeft - _itmBV[0], 0);
+            } else {
+                item.translate((_estRight - _itmW) - _itmBV[0], 0);
+            }
 
             var _itmBPost = item.geometricBounds;
             Log.ok(nombrePieza + " | " + nombreJugador +
-                ": MANGA_LINEA_" + lado + " anclada a borde inf ESTATICO" +
-                " → top=" + ptToCm(_itmBPost[1]).toFixed(3) +
+                ": MANGA_LINEA_" + lado + " anclada a ESTATICO" +
+                " → left=" + ptToCm(_itmBPost[0]).toFixed(3) +
+                "cm top=" + ptToCm(_itmBPost[1]).toFixed(3) +
                 "cm bot=" + ptToCm(_itmBPost[3]).toFixed(3) + "cm");
         }
 
