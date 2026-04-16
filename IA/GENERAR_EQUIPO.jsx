@@ -17,6 +17,8 @@
 #include "lib/csv_reader.jsx";
 #include "lib/template_validator.jsx";
 #include "lib/escala.jsx";
+#include "lib/posicionamiento.jsx";
+#include "lib/procesadores.jsx";
 #include "lib/dinamicos.jsx";
 
 // ─── ENTRADA PRINCIPAL ──────────────────────────────────────
@@ -105,22 +107,35 @@ function main() {
     var gruposDisponibles = validacion.grupos;
     Log._linea("-----", "Piezas    : " + gruposDisponibles.nombres.join(", "));
 
-    // 6. Crear capa GENERADO dentro del mismo documento
-    //    Si ya existe de una ejecución anterior, la eliminamos y recreamos
-    var capaGenerado;
-    try {
-        capaGenerado = doc.layers.getByName("GENERADO");
-        // Eliminar todos los items de la capa anterior
-        while (capaGenerado.pageItems.length > 0) {
-            capaGenerado.pageItems[0].remove();
+    // 6. Crear capa GENERADO_<tallas> nueva — nunca sobreescribir ejecuciones anteriores
+    var _tallasVistas = {};
+    var _tallasOrden  = [];
+    for (var _ti = 0; _ti < jugadores.length; _ti++) {
+        var _talla = trim(jugadores[_ti].TALLA + "");
+        if (_talla !== "" && !_tallasVistas[_talla]) {
+            _tallasVistas[_talla] = true;
+            _tallasOrden.push(_talla);
         }
-        capaGenerado.locked = false;
-        Log._linea("-----", "Capa GENERADO existente limpiada");
-    } catch(e) {
-        capaGenerado = doc.layers.add();
-        capaGenerado.name = "GENERADO";
-        Log._linea("-----", "Capa GENERADO creada");
     }
+    var _nombreBase = "GENERADO" +
+                      (_tallasOrden.length > 0 ? "_" + _tallasOrden.join("_") : "");
+
+    // Si ya existe una capa con ese nombre, agregar sufijo _2, _3, ...
+    var _nombreCapa = _nombreBase;
+    var _intento    = 2;
+    while (_intento <= 99) {
+        try {
+            doc.layers.getByName(_nombreCapa);
+            _nombreCapa = _nombreBase + "_" + _intento;
+            _intento++;
+        } catch(e) {
+            break;
+        }
+    }
+
+    var capaGenerado = doc.layers.add();
+    capaGenerado.name = _nombreCapa;
+    Log._linea("-----", "Capa '" + _nombreCapa + "' creada");
 
     // Mover GENERADO al frente (encima de TEMPLATE)
     capaGenerado.zOrder(ZOrderMethod.BRINGTOFRONT);
@@ -138,34 +153,7 @@ function main() {
     //    Si FRENTE tiene clip mask, sus bounds revelan a qué talla fue diseñado el .ai.
     //    Ese mismo jugador/talla se usa para deducir las dimensiones base de MANGA_IZQ/DER
     //    cuando esos grupos no tienen clip mask propio.
-    var _tallaTemplate = null;
-    var _frenteGrupo   = gruposDisponibles.grupos["FRENTE"];
-    if (_frenteGrupo) {
-        var _fcb   = buscarClipBounds(_frenteGrupo);
-        var _fAncho = _fcb
-            ? ptToCm(Math.abs(_fcb[3] - _fcb[1]))
-            : ptToCm(Math.abs(_frenteGrupo.width));
-        var _fAlto  = _fcb
-            ? ptToCm(Math.abs(_fcb[0] - _fcb[2]))
-            : ptToCm(Math.abs(_frenteGrupo.height));
-
-        var _mejorDiff = 999;
-        for (var _ti = 0; _ti < jugadores.length; _ti++) {
-            var _tj   = jugadores[_ti];
-            var _ta   = parseFloat(_tj.ANCHO);
-            var _th   = parseFloat(_tj.ALTO);
-            if (isNaN(_ta) || isNaN(_th)) continue;
-            var _diff = Math.abs(_ta - _fAncho) + Math.abs(_th - _fAlto);
-            if (_diff < _mejorDiff) { _mejorDiff = _diff; _tallaTemplate = _tj; }
-        }
-        if (_tallaTemplate && _mejorDiff < 2) {
-            Log.ok("Template detectado: talla " + _tallaTemplate.TALLA +
-                   " (" + _fAncho.toFixed(1) + " x " + _fAlto.toFixed(1) + " cm)");
-        } else {
-            _tallaTemplate = null;
-            Log.info("No se pudo detectar talla del template desde FRENTE");
-        }
-    }
+    var _tallaTemplate = detectarTallaTemplate(jugadores, gruposDisponibles);
 
     // 9. Procesar piezas
     var docAncho   = doc.width;

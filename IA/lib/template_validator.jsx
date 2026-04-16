@@ -133,3 +133,38 @@ function verificarDuplicados(grupoPieza, nombrePieza) {
 
     return { ok: true };
 }
+
+// Detecta la talla del template comparando las dimensiones de FRENTE
+// con los datos del CSV. Devuelve el objeto jugador que mejor coincide
+// (diferencia < 2cm) o null si no se puede determinar.
+function detectarTallaTemplate(jugadores, gruposDisponibles) {
+    var tallaTemplate = null;
+    var frenteGrupo   = gruposDisponibles.grupos["FRENTE"];
+    if (!frenteGrupo) return null;
+
+    var fcb    = buscarClipBounds(frenteGrupo);
+    var fAncho = fcb
+        ? ptToCm(Math.abs(fcb[3] - fcb[1]))
+        : ptToCm(Math.abs(frenteGrupo.width));
+    var fAlto  = fcb
+        ? ptToCm(Math.abs(fcb[0] - fcb[2]))
+        : ptToCm(Math.abs(frenteGrupo.height));
+
+    var mejorDiff = 999;
+    for (var ti = 0; ti < jugadores.length; ti++) {
+        var tj   = jugadores[ti];
+        var ta   = parseFloat(tj.ANCHO);
+        var th   = parseFloat(tj.ALTO);
+        if (isNaN(ta) || isNaN(th)) continue;
+        var diff = Math.abs(ta - fAncho) + Math.abs(th - fAlto);
+        if (diff < mejorDiff) { mejorDiff = diff; tallaTemplate = tj; }
+    }
+    if (tallaTemplate && mejorDiff < 2) {
+        Log.ok("Template detectado: talla " + tallaTemplate.TALLA +
+               " (" + fAncho.toFixed(1) + " x " + fAlto.toFixed(1) + " cm)");
+    } else {
+        tallaTemplate = null;
+        Log.info("No se pudo detectar talla del template desde FRENTE");
+    }
+    return tallaTemplate;
+}
