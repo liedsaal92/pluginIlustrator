@@ -3,10 +3,49 @@
 //  Escalado de grupos y cálculo de dimensiones
 // ============================================================
 
-// Escala un grupo al tamaño exacto indicado (en cm).
-// Usa factores independientes en X e Y para que ambas dimensiones queden
-// exactamente iguales al CSV (escala no-uniforme).
-// Devuelve el factor real aplicado { x, y }.
+// Escala la pieza usando ESTATICO como fuente de verdad:
+//   1. Escala ESTATICO al tamaño exacto del CSV (no-uniforme: X e Y independientes)
+//   2. Escala DINAMICO con los mismos factores (para que elementos PROPORCIONAL mantengan escala)
+//   3. Si no hay ESTATICO en la copia, escala el grupo completo como fallback
+// baseEstatico: { ancho, alto } medido desde ESTATICO en el template (precalculado una vez por pieza)
+// Devuelve { x: scaleX, y: scaleY }
+function scalePiezaExact(grupoCopia, targetAncho, targetAlto, baseEstatico) {
+    var scaleX = targetAncho / baseEstatico.ancho;
+    var scaleY = targetAlto  / baseEstatico.alto;
+    var pctX   = scaleX * 100;
+    var pctY   = scaleY * 100;
+
+    var estatico = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
+    var dinamico = findGroupByNameRecursivo(grupoCopia, "DINAMICO");
+
+    if (!estatico) {
+        // Fallback: sin ESTATICO, escalar el grupo completo
+        Log.info("scalePiezaExact: sin ESTATICO — escalando grupo completo");
+        grupoCopia.left = 0;
+        grupoCopia.top  = 0;
+        grupoCopia.resize(pctX, pctY, true, true, true, true, Math.min(pctX, pctY), Transformation.TOPLEFT);
+        grupoCopia.left = 0;
+        grupoCopia.top  = 0;
+        return { x: scaleX, y: scaleY };
+    }
+
+    // 1. Escalar ESTATICO al tamaño exacto del CSV
+    estatico.resize(pctX, pctY, true, true, true, true, Math.min(pctX, pctY), Transformation.TOPLEFT);
+
+    // 2. Escalar DINAMICO con los mismos factores
+    //    (mantiene proporciones relativas; aplicarDinamicos reposiciona después)
+    if (dinamico) {
+        dinamico.resize(pctX, pctY, true, true, true, true, Math.min(pctX, pctY), Transformation.TOPLEFT);
+    }
+
+    // 3. Posicionar el grupo al origen
+    grupoCopia.left = 0;
+    grupoCopia.top  = 0;
+
+    return { x: scaleX, y: scaleY };
+}
+
+// Mantener scaleGroupExact como fallback para llamadas externas o futuras
 function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     var scaleX = targetAnchoCmd / base.ancho;
     var scaleY = targetAltoCmd  / base.alto;
@@ -16,11 +55,7 @@ function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     grupo.left = 0;
     grupo.top  = 0;
 
-    grupo.resize(
-        pctX, pctY,
-        true, true, true, true, Math.min(pctX, pctY),
-        Transformation.TOPLEFT
-    );
+    grupo.resize(pctX, pctY, true, true, true, true, Math.min(pctX, pctY), Transformation.TOPLEFT);
 
     grupo.left = 0;
     grupo.top  = 0;

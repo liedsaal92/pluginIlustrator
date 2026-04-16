@@ -186,21 +186,22 @@ function main() {
         Log._linea("-----", "");
         Log._linea("-----", "=== " + nombrePieza + " ===");
 
-        // Pre-calcular base UNA VEZ por pieza (el template no cambia entre jugadores).
-        // Para mangas sin clip mask: buscar la silueta (path más grande en ESTATICO)
-        // y leer sus bounds directamente — sin modificar el template.
-        // Medir base del template para esta pieza (una vez por pieza).
+        // Pre-calcular base UNA VEZ por pieza leyendo ESTATICO directamente del template.
+        // ESTATICO es la silueta del molde → es la fuente de verdad para las dimensiones.
         // Prioridad:
-        //   1. Clip mask directo en el grupo → bounds exactos del clip path
-        //   2. Manga sin clip mask + talla detectada desde FRENTE → dims del CSV de esa talla
-        //   3. Fallback: bounding box completo del grupo (puede ser incorrecto si el artwork desborda)
+        //   1. ESTATICO presente → bounds exactos del subgrupo ESTATICO
+        //   2. Manga sin ESTATICO + talla detectada desde FRENTE → dims del CSV de esa talla
+        //   3. Fallback: bounding box completo del grupo
         var basePieza;
-        var _cbPieza = buscarClipBounds(grupoTemplate);
-        if (_cbPieza) {
+        var _estaticoTemplate = findGroupByNameRecursivo(grupoTemplate, "ESTATICO");
+        if (_estaticoTemplate) {
+            var _eb = _estaticoTemplate.geometricBounds; // [left, top, right, bottom]
             basePieza = {
-                ancho: ptToCm(Math.abs(_cbPieza[3] - _cbPieza[1])),
-                alto:  ptToCm(Math.abs(_cbPieza[0] - _cbPieza[2]))
+                ancho: ptToCm(Math.abs(_eb[2] - _eb[0])),
+                alto:  ptToCm(Math.abs(_eb[1] - _eb[3]))
             };
+            Log.ok(nombrePieza + ": base desde ESTATICO → " +
+                   basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         } else if ((nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") && _tallaTemplate) {
             basePieza = {
                 ancho: parseFloat(_tallaTemplate.MANGA_ANCHO),
@@ -214,6 +215,8 @@ function main() {
                 ancho: ptToCm(Math.abs(grupoTemplate.width)),
                 alto:  ptToCm(Math.abs(grupoTemplate.height))
             };
+            Log.info(nombrePieza + ": base desde grupo completo (sin ESTATICO) → " +
+                     basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         }
         Log._linea("-----", nombrePieza + " base medida: " +
             basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
@@ -242,8 +245,8 @@ function main() {
                 // Duplicar a capa GENERADO
                 var copia = grupoTemplate.duplicate(capaGenerado, ElementPlacement.PLACEATEND);
 
-                // Escalar — capturar el factor real aplicado
-                var factorPieza = scaleGroupExact(copia, dims.ancho, dims.alto, basePieza);
+                // Escalar — ESTATICO primero, DINAMICO proporcional
+                var factorPieza = scalePiezaExact(copia, dims.ancho, dims.alto, basePieza);
 
                 // Aplicar dinámicos pasando el factor para compensar en líneas
                 aplicarDinamicos(copia, j, nombrePieza, factorPieza);
