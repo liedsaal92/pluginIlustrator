@@ -4,31 +4,28 @@
 // ============================================================
 
 // Escala un grupo al tamaño exacto indicado (en cm).
-// Usa el factor mayor para garantizar que ambas dimensiones queden >= al CSV.
-// Devuelve el factor real aplicado { x, y } (ambos iguales, escala uniforme).
+// Usa factores independientes en X e Y para que ambas dimensiones queden
+// exactamente iguales al CSV (escala no-uniforme).
+// Devuelve el factor real aplicado { x, y }.
 function scaleGroupExact(grupo, targetAnchoCmd, targetAltoCmd, base) {
     var scaleX = targetAnchoCmd / base.ancho;
     var scaleY = targetAltoCmd  / base.alto;
-    // Math.max garantiza que ambas dimensiones queden >= al valor del CSV
-    var factor = Math.max(scaleX, scaleY);
-    var pct    = factor * 100;
+    var pctX   = scaleX * 100;
+    var pctY   = scaleY * 100;
 
     grupo.left = 0;
     grupo.top  = 0;
 
     grupo.resize(
-        pct, pct,
-        true, true, true, true, pct,
+        pctX, pctY,
+        true, true, true, true, Math.min(pctX, pctY),
         Transformation.TOPLEFT
     );
 
     grupo.left = 0;
     grupo.top  = 0;
 
-    // Retorna los factores reales aplicados a cada dimensión
-    // Ambos son iguales (escala uniforme) pero los devolvemos separados
-    // para que las funciones de líneas puedan compensar correctamente
-    return { x: factor, y: factor };
+    return { x: scaleX, y: scaleY };
 }
 
 // Escala el logo desde su centro según LOGO_ANCHO del CSV (define el alto final)
