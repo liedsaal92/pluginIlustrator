@@ -12,6 +12,44 @@ interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
 }
 
+interface TallaBtnProps {
+  t: string;
+  genero: 'H' | 'M' | 'O';
+  playerCount: number;
+  active: boolean;
+  onClick: (t: string) => void;
+}
+function TallaBtn({ t, genero, playerCount, active, onClick }: TallaBtnProps) {
+  return (
+    <button
+      className={`talla-btn ${active ? 'active' : ''} ${playerCount > 0 ? 'has-players' : 'no-players'} ${genero === 'M' ? 'genero-mujer' : ''}`}
+      onClick={() => onClick(t)}
+    >
+      <span className="talla-code">{t}</span>
+      <span className="talla-count">{playerCount > 0 ? `${playerCount} jug.` : '—'}</span>
+    </button>
+  );
+}
+
+interface CopyItemProps {
+  t: string;
+  genero: 'H' | 'M' | 'O';
+  playerCount: number;
+  checked: boolean;
+  onToggle: (t: string) => void;
+}
+function CopyItem({ t, genero, playerCount, checked, onToggle }: CopyItemProps) {
+  const g = genero.toLowerCase();
+  return (
+    <label className={`copy-check-item copy-check-item--${g} ${checked ? 'checked' : ''}`}>
+      <input type="checkbox" checked={checked} onChange={() => onToggle(t)} />
+      <span className={`copy-talla-dot copy-talla-dot--${g}`} />
+      <span className="copy-talla-code">{t}</span>
+      {playerCount > 0 && <span className="copy-talla-count">{playerCount}j</span>}
+    </label>
+  );
+}
+
 export function RulesTab({ onToast }: Props) {
   const {
     tallas, players, tallaRules,
@@ -59,18 +97,6 @@ export function RulesTab({ onToast }: Props) {
     setCopyToSet(allSelected ? new Set() : new Set(copyOptions));
   }
 
-  function CopyItem({ t, genero }: { t: string; genero: 'H' | 'M' | 'O' }) {
-    const count = players.filter(p => p.TALLA === t).length;
-    const g = genero.toLowerCase();
-    return (
-      <label className={`copy-check-item copy-check-item--${g} ${copyToSet.has(t) ? 'checked' : ''}`}>
-        <input type="checkbox" checked={copyToSet.has(t)} onChange={() => toggleCopyTo(t)} />
-        <span className={`copy-talla-dot copy-talla-dot--${g}`} />
-        <span className="copy-talla-code">{t}</span>
-        {count > 0 && <span className="copy-talla-count">{count}j</span>}
-      </label>
-    );
-  }
 
   function handleCopy() {
     if (!activeTalla || copyToSet.size === 0) return;
@@ -79,19 +105,6 @@ export function RulesTab({ onToast }: Props) {
     setCopyToSet(new Set());
   }
 
-  function TallaBtn({ t, genero }: { t: string; genero: 'H' | 'M' | 'O' }) {
-    const count = players.filter(p => p.TALLA === t).length;
-    return (
-      <button
-        key={t}
-        className={`talla-btn ${activeTalla === t ? 'active' : ''} ${count > 0 ? 'has-players' : 'no-players'} ${genero === 'M' ? 'genero-mujer' : ''}`}
-        onClick={() => setActiveTalla(t)}
-      >
-        <span className="talla-code">{t}</span>
-        <span className="talla-count">{count > 0 ? `${count} jug.` : '—'}</span>
-      </button>
-    );
-  }
 
   return (
     <div className="rules-layout">
@@ -102,19 +115,19 @@ export function RulesTab({ onToast }: Props) {
           {hombres.length > 0 && (
             <>
               <div className="sidebar-genero-label">HOMBRES</div>
-              {hombres.map(t => <TallaBtn key={t} t={t} genero="H" />)}
+              {hombres.map(t => <TallaBtn key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
           {mujeres.length > 0 && (
             <>
               <div className="sidebar-genero-label genero-mujer-label">MUJERES</div>
-              {mujeres.map(t => <TallaBtn key={t} t={t} genero="M" />)}
+              {mujeres.map(t => <TallaBtn key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
           {otros.length > 0 && (
             <>
               <div className="sidebar-genero-label">OTROS</div>
-              {otros.map(t => <TallaBtn key={t} t={t} genero="O" />)}
+              {otros.map(t => <TallaBtn key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
         </div>
@@ -144,19 +157,19 @@ export function RulesTab({ onToast }: Props) {
                   {copyH.length > 0 && (
                     <div className="copy-group">
                       <div className="copy-group-header copy-group-header--h">♂ HOMBRES</div>
-                      {copyH.map(t => <CopyItem key={t} t={t} genero="H" />)}
+                      {copyH.map(t => <CopyItem key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyM.length > 0 && (
                     <div className="copy-group">
                       <div className="copy-group-header copy-group-header--m">♀ MUJERES</div>
-                      {copyM.map(t => <CopyItem key={t} t={t} genero="M" />)}
+                      {copyM.map(t => <CopyItem key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyO.length > 0 && (
                     <div className="copy-group">
                       <div className="copy-group-header">OTROS</div>
-                      {copyO.map(t => <CopyItem key={t} t={t} genero="O" />)}
+                      {copyO.map(t => <CopyItem key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                 </>

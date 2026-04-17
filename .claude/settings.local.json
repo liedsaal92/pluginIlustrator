@@ -4,5 +4,9 @@
       "Bash(robocopy \"C:\\\\Users\\\\lieds\\\\Documents\\\\GitHub\\\\pluginIlustrator\\\\IA\" \"C:\\\\Program Files\\\\Adobe\\\\Adobe Illustrator 2024\\\\Presets\\\\es_ES\\\\Secuencias de comandos\\\\IA\" /E /XD web /NFL /NDL /NJH)",
       "Bash(echo \"EXIT_CODE:$?\")"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true
   }
 }

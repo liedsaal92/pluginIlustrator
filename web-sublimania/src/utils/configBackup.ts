@@ -87,6 +87,57 @@ export interface MergeResult {
   tallasUpdated:     number;
   teamsAdded:        number;
   teamsUpdated:      number;
+  teamsMerged:       number;
+}
+
+// Fusiona dos entradas del mismo equipo — local siempre gana en conflicto.
+// Incoming solo aporta: tallas nuevas, jugadores nuevos, overrides de esos jugadores.
+function mergeTeamEntries(local: TeamEntry, incoming: TeamEntry): TeamEntry {
+  // tallaRules: local gana por talla; incoming agrega tallas que local no tiene
+  const mergedTallaRules: Record<string, import('../types').Rules> = {
+    ...incoming.tallaRules,
+    ...local.tallaRules,
+  };
+
+  // tallas: orden local primero, luego nuevas de incoming
+  const mergedTallas = [
+    ...local.tallas,
+    ...incoming.tallas.filter(t => !local.tallas.includes(t)),
+  ];
+
+  // jugadores: local primero; incoming agrega los que no están (por NOMBRE)
+  const localNames = new Set(local.players.map(p => p.NOMBRE.trim().toLowerCase()));
+  const newPlayers = incoming.players.filter(
+    p => !localNames.has(p.NOMBRE.trim().toLowerCase()),
+  );
+  const mergedPlayers = [...local.players, ...newPlayers];
+
+  // overrides: local se mantiene intacto;
+  // overrides de jugadores NUEVOS se remapean al nuevo índice
+  const mergedOverrides: import('../types').Overrides = { ...local.overrides };
+  const incomingNames = incoming.players.map(p => p.NOMBRE.trim().toLowerCase());
+  newPlayers.forEach((player, ni) => {
+    const srcIdx = incomingNames.indexOf(player.NOMBRE.trim().toLowerCase());
+    const srcOverride = incoming.overrides[srcIdx];
+    if (srcOverride && Object.keys(srcOverride).length > 0) {
+      mergedOverrides[local.players.length + ni] = srcOverride;
+    }
+  });
+
+  // exportHistory: local gana en conflicto de talla
+  const mergedExportHistory = { ...incoming.exportHistory, ...local.exportHistory };
+
+  return {
+    ...local,
+    // El nombre del backup gana — permite corregir nombres corruptos/erróneos locales
+    nombre:         incoming.nombre || local.nombre,
+    updatedAt:      new Date().toISOString(),
+    tallas:         mergedTallas,
+    tallaRules:     mergedTallaRules,
+    players:        mergedPlayers,
+    overrides:      mergedOverrides,
+    exportHistory:  mergedExportHistory,
+  };
 }
 
 export function mergeBackup(
@@ -113,33 +164,63 @@ export function mergeBackup(
     mergedTallas[cid] = { ...(mergedTallas[cid] ?? {}), ...tallas };
   });
 
-  // ── Equipos: gana el que tenga updatedAt más reciente ───────
-  let teamsAdded = 0, teamsUpdated = 0;
-  const teamsById = new Map<string, TeamEntry>(currentTeams.map(t => [t.id, t]));
+  // ── Equipos ──────────────────────────────────────────────────
+  // Match: primero por id, luego por nombre (para equipos creados en paralelo
+  // en dos máquinas con distintos ids pero el mismo nombre).
+  // Regla: local siempre gana en conflicto; incoming solo agrega lo que falta.
+  let teamsAdded = 0, teamsUpdated = 0, teamsMerged = 0;
+  const existingIds   = new Set<string>(currentTeams.map(t => t.id));
+  const teamsById     = new Map<string, TeamEntry>(currentTeams.map(t => [t.id, t]));
+  const teamsByNombre = new Map<string, TeamEntry>(
+    currentTeams.map(t => [t.nombre.trim().toLowerCase(), t]),
+  );
+  const addedTeams: TeamEntry[] = [];
+
   backup.teams.forEach(incoming => {
-    const existing = teamsById.get(incoming.id);
+    const byId     = teamsById.get(incoming.id);
+    const byNombre = !byId
+      ? teamsByNombre.get(incoming.nombre.trim().toLowerCase())
+      : undefined;
+    const existing = byId ?? byNombre;
+
     if (!existing) {
       teamsById.set(incoming.id, incoming);
+      teamsByNombre.set(incoming.nombre.trim().toLowerCase(), incoming);
+      addedTeams.push(incoming);
       teamsAdded++;
-    } else {
-      // El backup gana si es más reciente O si el existente quedó corrupto (sin nombre)
-      const incomingNewer = new Date(incoming.updatedAt) >= new Date(existing.updatedAt);
-      const existingCorrupt = !existing.nombre || existing.nombre === 'Sin nombre';
-      if (incomingNewer || existingCorrupt) {
-        teamsById.set(incoming.id, incoming);
-        teamsUpdated++;
-      }
+      return;
     }
+
+    const existingCorrupt = !existing.nombre || existing.nombre === 'Sin nombre';
+    if (existingCorrupt) {
+      // Equipo local corrupto → reemplazar completo
+      teamsById.set(existing.id, { ...incoming, id: existing.id });
+      teamsByNombre.set(existing.nombre.trim().toLowerCase(), teamsById.get(existing.id)!);
+      teamsUpdated++;
+      return;
+    }
+
+    // Match válido → fusionar; local gana
+    const merged = mergeTeamEntries(existing, incoming);
+    teamsById.set(existing.id, merged);
+    teamsByNombre.set(existing.nombre.trim().toLowerCase(), merged);
+    if (byId) teamsUpdated++;
+    else teamsMerged++;
   });
+
+  // Equipos nuevos van al principio — siempre visibles en página 1
+  const existingMerged = Array.from(teamsById.values()).filter(t => existingIds.has(t.id));
+  const mergedTeams    = [...addedTeams, ...existingMerged];
 
   return {
     clientes:         mergedClientes,
     tallasPorCliente: mergedTallas,
-    teams:            Array.from(teamsById.values()),
+    teams:            mergedTeams,
     clientesAdded,
     clientesUpdated,
     tallasUpdated,
     teamsAdded,
     teamsUpdated,
+    teamsMerged,
   };
 }

@@ -168,7 +168,9 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     }
 
     // ── ESCUDO_CENTRAL ──────────────────────────────────────
-    var grupoEscudoCentral = findGroupByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
+    // Nota: en el template ESCUDO_CENTRAL puede ser PathItem o GroupItem,
+    // por eso se usa findItemByNameRecursivo (igual que LOGO_MARCA).
+    var grupoEscudoCentral = findItemByNameRecursivo(dinamico, "ESCUDO_CENTRAL");
 
     if (grupoEscudoCentral) {
         if (jugador.LLEVA_ESCUDO_CENTRAL !== "SI") {
@@ -190,6 +192,8 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     jugador.NOMBRE, nombrePieza, "ESCUDO_CENTRAL"
                 );
             }
+            // Centrar horizontalmente (no había llamada — era la causa del desvío)
+            centrarHorizontalmente(grupoEscudoCentral, grupoCopia);
         }
     }
 
@@ -309,6 +313,58 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
     }
 
+    // ── SPONSOR_TOP_IZQ_SEC ──────────────────────────────────
+    var itemSponsorTopIzqSec = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_IZQ_SEC");
+
+    if (itemSponsorTopIzqSec) {
+        if (jugador.LLEVA_SPONSOR_TOP_IZQ_SEC !== "SI") {
+            itemSponsorTopIzqSec.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ_SEC ocultado (LLEVA=NO)");
+        } else {
+            escalarConRef(
+                itemSponsorTopIzqSec,
+                jugador.SPONSOR_TOP_IZQ_SEC_ANCHO,
+                jugador.SPONSOR_TOP_IZQ_SEC_ALTO,
+                jugador.SPONSOR_TOP_IZQ_SEC_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ_SEC"
+            );
+            var spTopIzqSecMarginSup = parseFloat(jugador.SPONSOR_TOP_IZQ_SEC_MARGIN_SUP);
+            if (!isNaN(spTopIzqSecMarginSup) && spTopIzqSecMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopIzqSec, grupoCopia,
+                    spTopIzqSecMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ_SEC"
+                );
+            }
+        }
+    }
+
+    // ── SPONSOR_TOP_DER_SEC ──────────────────────────────────
+    var itemSponsorTopDerSec = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_DER_SEC");
+
+    if (itemSponsorTopDerSec) {
+        if (jugador.LLEVA_SPONSOR_TOP_DER_SEC !== "SI") {
+            itemSponsorTopDerSec.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER_SEC ocultado (LLEVA=NO)");
+        } else {
+            escalarConRef(
+                itemSponsorTopDerSec,
+                jugador.SPONSOR_TOP_DER_SEC_ANCHO,
+                jugador.SPONSOR_TOP_DER_SEC_ALTO,
+                jugador.SPONSOR_TOP_DER_SEC_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER_SEC"
+            );
+            var spTopDerSecMarginSup = parseFloat(jugador.SPONSOR_TOP_DER_SEC_MARGIN_SUP);
+            if (!isNaN(spTopDerSecMarginSup) && spTopDerSecMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopDerSec, grupoCopia,
+                    spTopDerSecMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER_SEC"
+                );
+            }
+        }
+    }
+
     // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
         var sufManga = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
@@ -380,6 +436,20 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 grupoEscudoManga.left = mangaCentroX - (escAncho2 / 2);
                 Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                        ": ESCUDO (manga) posicionado (inf:" + escMarginInf.toFixed(1) + "cm)");
+            }
+        }
+
+        // 4. Posicionar NUMERO (manga) desde el borde inferior
+        if (itemNumero && jugador.TIENE_NUMERO !== "NO" && llevaNumeroEnEstaPieza) {
+            var numMangaMarginInf = parseFloat(jugador["NUMERO_M_" + sufManga + "_MARGIN_INF"]);
+            if (!isNaN(numMangaMarginInf) && numMangaMarginInf >= 0) {
+                var numMBounds = itemNumero.geometricBounds;
+                var numMAltura = Math.abs(numMBounds[1] - numMBounds[3]);
+                var numMAncho  = Math.abs(numMBounds[2] - numMBounds[0]);
+                itemNumero.top  = mangaBottom + cmToPt(numMangaMarginInf) + numMAltura;
+                itemNumero.left = mangaCentroX - (numMAncho / 2);
+                Log.ok(nombrePieza + " | " + jugador.NOMBRE +
+                       ": NUMERO (manga) posicionado (inf:" + numMangaMarginInf.toFixed(1) + "cm)");
             }
         }
     }
@@ -619,7 +689,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaIzqAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_ALTO"]);
             var lineaIzqRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_IZQ_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaIzq, "IZQ", lineaIzqAncho, lineaIzqAlto, lineaIzqRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
         var itemLineaDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
@@ -631,10 +701,10 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaDerAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_DER_ALTO"]);
             var lineaDerRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_DER_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemLineaDer, "DER", lineaDerAncho, lineaDerAlto, lineaDerRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
-        var grupoLineaInf = findGroupByNameRecursivo(dinamico, "MANGA_LINEA_INF");
+        var grupoLineaInf = findItemByNameRecursivo(dinamico, "MANGA_LINEA_INF");
         if (grupoLineaInf && jugador["LLEVA_MANGA_" + sufMangaL + "_LINEA_INF"] !== "SI") {
             grupoLineaInf.hidden = true;
             Log.info(nombrePieza + " | " + jugador.NOMBRE + ": MANGA_LINEA_INF ocultada (LLEVA=NO)");
@@ -648,7 +718,11 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     }
 }
 
-// ── Helper: escalar un item usando la lógica ANCHO / ALTO / PROPORCIONAL ──
+// ============================================================
+//  HELPERS INTERNOS
+// ============================================================
+
+// Escala un item usando la lógica ANCHO / ALTO / PROPORCIONAL.
 // PROPORCIONAL = no hacer nada extra (el item ya escaló con la pieza en scaleGroupExact)
 function escalarConRef(item, ancho, alto, ref, logPrefijo) {
     var r = trim((ref || "") + "").toUpperCase();
@@ -700,347 +774,3 @@ function inicialPieza(nombrePieza) {
     return "?";
 }
 
-// ============================================================
-//  POSICIONAMIENTO DE ETIQUETA
-// ============================================================
-
-function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, nombrePieza, labelItem) {
-    try {
-        var estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds = estatico ? estatico.geometricBounds
-                                 : grupoPieza.geometricBounds;
-        var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
-
-        var marginSupPt = cmToPt(marginSupCm);
-
-        // item.top es el borde superior del objeto en coordenadas Illustrator
-        item.top = piezaTop - marginSupPt;
-
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": " + labelItem + " posicionado (sup:" + marginSupCm.toFixed(1) + "cm)");
-
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": " + labelItem + " error al posicionar (" + e.message + ") — omitido");
-    }
-}
-
-function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJugador, nombrePieza, labelItem) {
-    try {
-        var estatico   = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds  = estatico ? estatico.geometricBounds : grupoPieza.geometricBounds;
-        var piezaLeft  = refBounds[0];
-        var piezaRight = refBounds[2];
-
-        var itemBounds  = item.geometricBounds;
-        var itemAncho   = Math.abs(itemBounds[2] - itemBounds[0]);
-        var itemCenterX = (itemBounds[0] + itemBounds[2]) / 2;
-        var estCenterX  = (piezaLeft + piezaRight) / 2;
-
-        var marginLatPt = cmToPt(marginLatCm);
-
-        if (itemCenterX < estCenterX) {
-            // Elemento a la izquierda → borde izquierdo como referencia
-            item.left = piezaLeft + marginLatPt;
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": " + labelItem + " posicionado (lat-izq:" + marginLatCm.toFixed(1) + "cm)");
-        } else {
-            // Elemento a la derecha → borde derecho como referencia
-            item.left = piezaRight - marginLatPt - itemAncho;
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": " + labelItem + " posicionado (lat-der:" + marginLatCm.toFixed(1) + "cm)");
-        }
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": " + labelItem + " error al posicionar lat (" + e.message + ") — omitido");
-    }
-}
-
-function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado, nombreJugador, nombrePieza, labelEtiqueta) {
-    try {
-        var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds   = estatico ? estatico.geometricBounds
-                                   : grupoPieza.geometricBounds;
-        var piezaLeft   = refBounds[0];
-        var piezaRight  = refBounds[2];
-        var piezaBottom = refBounds[3];
-
-        var etqBounds = etiqueta.geometricBounds;
-        var etqAncho  = Math.abs(etqBounds[2] - etqBounds[0]);
-        var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
-
-        var marginInfPt = cmToPt(marginInfCm);
-        var marginLatPt = cmToPt(marginLatCm);
-
-        var dinamicoPieza = findGroupByNameRecursivo(grupoPieza, "DINAMICO");
-        var costillaIzq   = dinamicoPieza
-                            ? findItemByNameRecursivo(dinamicoPieza, "COSTILLA_IZQ")
-                            : null;
-        var costillaDer   = dinamicoPieza
-                            ? findItemByNameRecursivo(dinamicoPieza, "COSTILLA_DER")
-                            : null;
-
-        var refLeft  = costillaIzq ? costillaIzq.geometricBounds[0] : piezaLeft;
-        var refRight = costillaDer ? costillaDer.geometricBounds[2] : piezaRight;
-
-        var refBottom = piezaBottom;
-        if (costillaIzq) {
-            var cIzqB      = costillaIzq.geometricBounds;
-            refBottom = cIzqB[1] - Math.abs(cIzqB[1] - cIzqB[3]);
-        } else if (costillaDer) {
-            var cDerB      = costillaDer.geometricBounds;
-            refBottom = cDerB[1] - Math.abs(cDerB[1] - cDerB[3]);
-        }
-
-        var nuevoTop  = refBottom + marginInfPt + etqAlto;
-        var nuevoLeft = (lado === "IZQ")
-                        ? refLeft  + marginLatPt
-                        : refRight - marginLatPt - etqAncho;
-
-        etiqueta.left = nuevoLeft;
-        etiqueta.top  = nuevoTop;
-
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": " + labelEtiqueta + " posicionada (inf:" +
-               marginInfCm.toFixed(1) + "cm, lat:" +
-               marginLatCm.toFixed(1) + "cm, lado:" + lado + ")");
-
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": " + labelEtiqueta + " error al posicionar (" + e.message + ") — omitida");
-    }
-}
-
-// ============================================================
-//  PROCESAMIENTO DE LÍNEAS DE MANGA
-// ============================================================
-
-// Líneas laterales (IZQ y DER)
-// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga (comportamiento original)
-// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga
-// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
-    if (!item) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": MANGA_LINEA_" + lado + " no encontrada — omitida");
-        return;
-    }
-
-    if (ref === "PROPORCIONAL") {
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": MANGA_LINEA_" + lado + " → proporcional (escala con pieza)");
-        return;
-    }
-
-    try {
-        var boundsAntes = item.geometricBounds;
-        var leftAntes   = boundsAntes[0];
-        var rightAntes  = boundsAntes[2];
-        var topAntes    = boundsAntes[1];
-        var botAntes    = boundsAntes[3];
-
-        if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
-            var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
-            if (anchoRealCm <= 0) return;
-            var factorAncho = (targetAncho / anchoRealCm) * 100;
-
-            item.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
-
-            var boundsDespues = item.geometricBounds;
-            var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
-            item.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAncho;
-            item.top  = topAntes;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
-
-        } else if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
-            var altoRealCm = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
-            if (altoRealCm <= 0) return;
-            var factorAlto = (targetAlto / altoRealCm) * 100;
-
-            item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
-            item.left = boundsAntes[0];
-            item.top  = topAntes;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
-
-        } else {
-            Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_" + lado + " sin valores válidos en CSV — no escalada");
-        }
-
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": MANGA_LINEA_" + lado + " error (" + e.message + ") — omitida");
-    }
-}
-
-// Línea inferior
-// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga (comportamiento original)
-// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga
-// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
-    if (!grupoLinea) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": MANGA_LINEA_INF no encontrada — omitida");
-        return;
-    }
-
-    if (ref === "PROPORCIONAL") {
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": MANGA_LINEA_INF → proporcional (escala con pieza)");
-        return;
-    }
-
-    try {
-        var boundsAntes = grupoLinea.geometricBounds;
-        var leftAntes   = boundsAntes[0];
-        var bottomAntes = boundsAntes[3];
-
-        if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
-            var altoActualReal = CONFIG.lineaMangaBase.inf_alto * factorPieza.y;
-            var factorAlto     = (targetAlto / altoActualReal) * 100;
-
-            grupoLinea.resize(100, factorAlto, true, true, true, true, 100, Transformation.BOTTOMLEFT);
-
-            var boundsDespues = grupoLinea.geometricBounds;
-            var nuevoAlto     = Math.abs(boundsDespues[1] - boundsDespues[3]);
-            grupoLinea.left = leftAntes;
-            grupoLinea.top  = bottomAntes + nuevoAlto;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_INF → alto " + targetAlto.toFixed(1) + "cm");
-
-        } else if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
-            var anchoActualCm = ptToCm(Math.abs(boundsAntes[2] - boundsAntes[0]));
-            if (anchoActualCm <= 0) return;
-            var factorAncho2  = (targetAncho / anchoActualCm) * 100;
-
-            grupoLinea.resize(factorAncho2, 100, true, true, true, true, 100, Transformation.BOTTOMLEFT);
-            grupoLinea.left = leftAntes;
-            grupoLinea.top  = bottomAntes + Math.abs(grupoLinea.geometricBounds[1] - grupoLinea.geometricBounds[3]);
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_INF → ancho " + targetAncho.toFixed(1) + "cm");
-
-        } else {
-            Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_INF sin valores válidos en CSV — no escalada");
-        }
-
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": MANGA_LINEA_INF error (" + e.message + ") — omitida");
-    }
-}
-
-// ============================================================
-//  PROCESAMIENTO DE COSTILLAS
-// ============================================================
-
-// REF=ANCHO → fija el ancho al valor del CSV, alto escala con la pieza (comportamiento original)
-// REF=ALTO  → fija el alto al valor del CSV, ancho escala con la pieza
-// REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, grupoPieza, nombreJugador, nombrePieza) {
-    if (!grupoCostilla) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": COSTILLA_" + lado + " no encontrada en DINAMICO — omitida");
-        return;
-    }
-
-    if (ref === "PROPORCIONAL") {
-        Log.ok(nombrePieza + " | " + nombreJugador +
-               ": COSTILLA_" + lado + " → proporcional (escala con pieza)");
-        return;
-    }
-
-    try {
-        var boundsAntes  = grupoCostilla.geometricBounds;
-        var leftAntes    = boundsAntes[0];
-        var rightAntes   = boundsAntes[2];
-        var topAntes     = boundsAntes[1];
-
-        if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
-            var anchoActCm  = ptToCm(Math.abs(rightAntes - leftAntes));
-            if (anchoActCm <= 0) return;
-            var factorAncho = (targetAncho / anchoActCm) * 100;
-
-            grupoCostilla.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
-
-            var boundsDespues = grupoCostilla.geometricBounds;
-            var nuevoAncho    = Math.abs(boundsDespues[2] - boundsDespues[0]);
-            grupoCostilla.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAncho;
-            grupoCostilla.top  = topAntes;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": COSTILLA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
-
-        } else if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
-            var altoActCm  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
-            if (altoActCm <= 0) return;
-            var factorAlto = (targetAlto / altoActCm) * 100;
-
-            grupoCostilla.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
-            grupoCostilla.left = boundsAntes[0];
-            grupoCostilla.top  = topAntes;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": COSTILLA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
-
-        } else if (ref === "AMBOS" && !isNaN(targetAncho) && targetAncho > 0 && !isNaN(targetAlto) && targetAlto > 0) {
-            var anchoActCmA = ptToCm(Math.abs(rightAntes - leftAntes));
-            var altoActCmA  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
-            if (anchoActCmA <= 0 || altoActCmA <= 0) return;
-            var factorAnchoA = (targetAncho / anchoActCmA) * 100;
-            var factorAltoA  = (targetAlto  / altoActCmA)  * 100;
-            var bottomAntes  = boundsAntes[3];
-
-            grupoCostilla.resize(factorAnchoA, factorAltoA, true, true, true, true, 100, Transformation.TOPLEFT);
-
-            var boundsDespuesA = grupoCostilla.geometricBounds;
-            var nuevoAnchoA    = Math.abs(boundsDespuesA[2] - boundsDespuesA[0]);
-            var nuevoAltoA     = Math.abs(boundsDespuesA[1] - boundsDespuesA[3]);
-
-            grupoCostilla.left = (lado === "IZQ") ? leftAntes : rightAntes - nuevoAnchoA;
-            grupoCostilla.top  = bottomAntes + nuevoAltoA;
-
-            Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": COSTILLA_" + lado + " → ambos " + targetAncho.toFixed(1) + "x" + targetAlto.toFixed(1) + "cm (ancla inf)");
-
-        } else {
-            Log.info(nombrePieza + " | " + nombreJugador +
-                     ": COSTILLA_" + lado + " sin valores válidos en CSV — no escalada");
-        }
-
-    } catch(e) {
-        Log.info(nombrePieza + " | " + nombreJugador +
-                 ": COSTILLA_" + lado + " error (" + e.message + ") — omitida");
-    }
-}
-
-// ============================================================
-//  CENTRADO HORIZONTAL DE TEXTO
-// ============================================================
-
-function centrarHorizontalmente(textFrame, grupoPieza) {
-    try {
-        var piezaBounds  = grupoPieza.geometricBounds;
-        var piezaLeft    = piezaBounds[0];
-        var piezaRight   = piezaBounds[2];
-        var piezaCentroX = (piezaLeft + piezaRight) / 2;
-
-        try {
-            var parrafo = textFrame.textRange.paragraphAttributes;
-            parrafo.justification = Justification.CENTER;
-        } catch(e) { /* ignorar si no es accesible */ }
-
-        var tfBounds = textFrame.visibleBounds;
-        var tfAncho  = Math.abs(tfBounds[2] - tfBounds[0]);
-        textFrame.left = piezaCentroX - (tfAncho / 2);
-
-    } catch(e) {
-        // Si falla el centrado, el texto queda en su posición original
-    }
-}

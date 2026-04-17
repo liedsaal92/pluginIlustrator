@@ -26,6 +26,8 @@ export const CSV_COLUMN_ORDER: string[] = [
   // FRENTE — SPONSORS TOP
   'LLEVA_SPONSOR_TOP_IZQ', 'SPONSOR_TOP_IZQ_ANCHO', 'SPONSOR_TOP_IZQ_ALTO', 'SPONSOR_TOP_IZQ_REF', 'SPONSOR_TOP_IZQ_MARGIN_SUP',
   'LLEVA_SPONSOR_TOP_DER', 'SPONSOR_TOP_DER_ANCHO', 'SPONSOR_TOP_DER_ALTO', 'SPONSOR_TOP_DER_REF', 'SPONSOR_TOP_DER_MARGIN_SUP',
+  'LLEVA_SPONSOR_TOP_IZQ_SEC', 'SPONSOR_TOP_IZQ_SEC_ANCHO', 'SPONSOR_TOP_IZQ_SEC_ALTO', 'SPONSOR_TOP_IZQ_SEC_REF', 'SPONSOR_TOP_IZQ_SEC_MARGIN_SUP',
+  'LLEVA_SPONSOR_TOP_DER_SEC', 'SPONSOR_TOP_DER_SEC_ANCHO', 'SPONSOR_TOP_DER_SEC_ALTO', 'SPONSOR_TOP_DER_SEC_REF', 'SPONSOR_TOP_DER_SEC_MARGIN_SUP',
   // FRENTE — SPONSOR PRINCIPAL / SECUNDARIO
   'LLEVA_SPONSOR_PRINCIPAL_F', 'SPONSOR_PRINCIPAL_F_ANCHO', 'SPONSOR_PRINCIPAL_F_ALTO', 'SPONSOR_PRINCIPAL_F_REF', 'SPONSOR_PRINCIPAL_F_MARGIN_SUP',
   'LLEVA_SPONSOR_SECUNDARIO_F', 'SPONSOR_SECUNDARIO_F_ANCHO', 'SPONSOR_SECUNDARIO_F_ALTO', 'SPONSOR_SECUNDARIO_F_REF', 'SPONSOR_SECUNDARIO_F_MARGIN_SUP',
@@ -56,7 +58,7 @@ export const CSV_COLUMN_ORDER: string[] = [
   // ESPALDA — COSTILLA
   'LLEVA_COSTILLA_E', 'COSTILLA_E_ANCHO', 'COSTILLA_E_ALTO', 'COSTILLA_E_REF',
   // MANGA IZQ — NÚMERO
-  'LLEVA_NUMERO_M_IZQ', 'NUMERO_M_IZQ_ANCHO', 'NUMERO_M_IZQ_ALTO', 'NUMERO_M_IZQ_REF',
+  'LLEVA_NUMERO_M_IZQ', 'NUMERO_M_IZQ_ANCHO', 'NUMERO_M_IZQ_ALTO', 'NUMERO_M_IZQ_REF', 'NUMERO_M_IZQ_MARGIN_INF',
   // MANGA IZQ — ESCUDO
   'LLEVA_ESCUDO_M_IZQ', 'ESCUDO_M_IZQ_ANCHO', 'ESCUDO_M_IZQ_ALTO', 'ESCUDO_M_IZQ_REF', 'ESCUDO_M_IZQ_MARGIN_INF',
   // MANGA IZQ — SPONSOR SECUNDARIO
@@ -66,7 +68,7 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_MANGA_IZQ_LINEA_DER', 'MANGA_IZQ_LINEA_DER_ANCHO', 'MANGA_IZQ_LINEA_DER_ALTO', 'MANGA_IZQ_LINEA_DER_REF',
   'LLEVA_MANGA_IZQ_LINEA_INF', 'MANGA_IZQ_LINEA_INF_ANCHO', 'MANGA_IZQ_LINEA_INF_ALTO', 'MANGA_IZQ_LINEA_INF_REF',
   // MANGA DER — NÚMERO
-  'LLEVA_NUMERO_M_DER', 'NUMERO_M_DER_ANCHO', 'NUMERO_M_DER_ALTO', 'NUMERO_M_DER_REF',
+  'LLEVA_NUMERO_M_DER', 'NUMERO_M_DER_ANCHO', 'NUMERO_M_DER_ALTO', 'NUMERO_M_DER_REF', 'NUMERO_M_DER_MARGIN_INF',
   // MANGA DER — ESCUDO
   'LLEVA_ESCUDO_M_DER', 'ESCUDO_M_DER_ANCHO', 'ESCUDO_M_DER_ALTO', 'ESCUDO_M_DER_REF', 'ESCUDO_M_DER_MARGIN_INF',
   // MANGA DER — SPONSOR SECUNDARIO
@@ -103,6 +105,10 @@ export const SCHEMA: Schema = {
         fields: [numField('SPONSOR_TOP_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_REF'), numField('SPONSOR_TOP_IZQ_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_top_der', label: 'SPONSOR TOP DER', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER',
         fields: [numField('SPONSOR_TOP_DER_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_REF'), numField('SPONSOR_TOP_DER_MARGIN_SUP', 'Margen sup')] },
+      { id: 'sponsor_top_izq_sec', label: 'SPONSOR TOP IZQ SEC', icon: '◧', toggleKey: 'LLEVA_SPONSOR_TOP_IZQ_SEC',
+        fields: [numField('SPONSOR_TOP_IZQ_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_SEC_REF'), numField('SPONSOR_TOP_IZQ_SEC_MARGIN_SUP', 'Margen sup')] },
+      { id: 'sponsor_top_der_sec', label: 'SPONSOR TOP DER SEC', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER_SEC',
+        fields: [numField('SPONSOR_TOP_DER_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_SEC_REF'), numField('SPONSOR_TOP_DER_SEC_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_principal_f', label: 'SPONSOR PRINCIPAL', icon: '★', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_F',
         fields: [numField('SPONSOR_PRINCIPAL_F_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_F_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_F_REF'), numField('SPONSOR_PRINCIPAL_F_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_secundario_f', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_F',
@@ -163,7 +169,7 @@ export const SCHEMA: Schema = {
     color: '#4A9BE8',
     elements: [
       { id: 'numero_m_izq', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_IZQ',
-        fields: [numField('NUMERO_M_IZQ_ANCHO', 'Ancho'), numField('NUMERO_M_IZQ_ALTO', 'Alto'), refField('NUMERO_M_IZQ_REF')] },
+        fields: [numField('NUMERO_M_IZQ_ANCHO', 'Ancho'), numField('NUMERO_M_IZQ_ALTO', 'Alto'), refField('NUMERO_M_IZQ_REF'), numField('NUMERO_M_IZQ_MARGIN_INF', 'Margen inf')] },
       { id: 'escudo_m_izq', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_IZQ',
         fields: [numField('ESCUDO_M_IZQ_ANCHO', 'Ancho'), numField('ESCUDO_M_IZQ_ALTO', 'Alto'), refField('ESCUDO_M_IZQ_REF'), numField('ESCUDO_M_IZQ_MARGIN_INF', 'Margen inf')] },
       { id: 'sponsor_secundario_m_izq', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_IZQ',
@@ -182,7 +188,7 @@ export const SCHEMA: Schema = {
     color: '#7B5CF0',
     elements: [
       { id: 'numero_m_der', label: 'NÚMERO', icon: '#', toggleKey: 'LLEVA_NUMERO_M_DER',
-        fields: [numField('NUMERO_M_DER_ANCHO', 'Ancho'), numField('NUMERO_M_DER_ALTO', 'Alto'), refField('NUMERO_M_DER_REF')] },
+        fields: [numField('NUMERO_M_DER_ANCHO', 'Ancho'), numField('NUMERO_M_DER_ALTO', 'Alto'), refField('NUMERO_M_DER_REF'), numField('NUMERO_M_DER_MARGIN_INF', 'Margen inf')] },
       { id: 'escudo_m_der', label: 'ESCUDO', icon: '⬡', toggleKey: 'LLEVA_ESCUDO_M_DER',
         fields: [numField('ESCUDO_M_DER_ANCHO', 'Ancho'), numField('ESCUDO_M_DER_ALTO', 'Alto'), refField('ESCUDO_M_DER_REF'), numField('ESCUDO_M_DER_MARGIN_INF', 'Margen inf')] },
       { id: 'sponsor_secundario_m_der', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_M_DER',
