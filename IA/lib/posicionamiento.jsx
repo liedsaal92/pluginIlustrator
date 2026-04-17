@@ -13,17 +13,53 @@ function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, no
                                  : grupoPieza.geometricBounds;
         var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
 
+        Log._linea("-----", labelItem + " posicionarDesdeTop | piezaTop=" +
+            ptToCm(piezaTop).toFixed(3) + "cm | marginSup=" + marginSupCm.toFixed(3) + "cm" +
+            " | refSrc=" + (estatico ? "ESTATICO" : "grupoPieza"));
+
+        var geomBounds = item.geometricBounds; // [L, T, R, B]
+        Log._linea("-----", labelItem + " geometricBounds top=" +
+            ptToCm(geomBounds[1]).toFixed(3) + "cm" +
+            " bottom=" + ptToCm(geomBounds[3]).toFixed(3) + "cm" +
+            " alto=" + ptToCm(Math.abs(geomBounds[1]-geomBounds[3])).toFixed(3) + "cm");
+
+        // Para texto: usar el borde visual real (cap height) en lugar del bounding box
+        // tipográfico, que incluye espacio vacío por encima del glifo real.
+        var itemTopRef = geomBounds[1];
+        var vb = getTextVisualBounds(item);
+        if (vb) {
+            Log._linea("-----", labelItem + " visualBounds top=" +
+                ptToCm(vb[1]).toFixed(3) + "cm" +
+                " bottom=" + ptToCm(vb[3]).toFixed(3) + "cm" +
+                " altoVisual=" + ptToCm(Math.abs(vb[1]-vb[3])).toFixed(3) + "cm" +
+                " | espacioVacio=" + ptToCm(Math.abs(geomBounds[1] - vb[1])).toFixed(3) + "cm");
+            itemTopRef = vb[1]; // tomar el tope visual real del glifo
+        } else {
+            Log._linea("-----", labelItem + " sin visualBounds — usando geometricBounds top");
+        }
+
         var marginSupPt = cmToPt(marginSupCm);
         var targetTop   = piezaTop - marginSupPt;
+
+        Log._linea("-----", labelItem + " targetTop=" +
+            ptToCm(targetTop).toFixed(3) + "cm | itemTopRef=" +
+            ptToCm(itemTopRef).toFixed(3) + "cm | deltaY=" +
+            ptToCm(targetTop - itemTopRef).toFixed(3) + "cm");
 
         // Usar translate() en lugar de item.top = value para que funcione
         // correctamente también en grupos con clip mask (clipped = true),
         // donde el setter .top puede fallar silenciosamente o lanzar error.
-        var deltaY = targetTop - item.geometricBounds[1];
+        var deltaY = targetTop - itemTopRef;
         item.translate(0, deltaY);
 
+        var postBounds = item.geometricBounds;
+        Log._linea("-----", labelItem + " POST geomTop=" +
+            ptToCm(postBounds[1]).toFixed(3) + "cm | esperado geomTop=" +
+            ptToCm(geomBounds[1] + deltaY).toFixed(3) + "cm");
+
         Log.ok(nombrePieza + " | " + nombreJugador +
-               ": " + labelItem + " posicionado (sup:" + marginSupCm.toFixed(1) + "cm)");
+               ": " + labelItem + " posicionado (sup:" + marginSupCm.toFixed(1) + "cm)" +
+               (vb ? " [ref=visual]" : " [ref=geom]"));
 
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +

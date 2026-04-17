@@ -16,10 +16,12 @@ function scalePiezaExact(grupoCopia, targetAncho, targetAlto, baseEstatico) {
     var pctY   = scaleY * 100;
 
     var estatico = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
+    // ESTATICO puede ser PathItem (ej. ESPALDA) — usar findItemByNameRecursivo como fallback
+    if (!estatico) estatico = findItemByNameRecursivo(grupoCopia, "ESTATICO");
     var dinamico = findGroupByNameRecursivo(grupoCopia, "DINAMICO");
 
     if (!estatico) {
-        // Fallback: sin ESTATICO, escalar el grupo completo
+        // Fallback: sin ESTATICO de ningún tipo, escalar el grupo completo
         Log.info("scalePiezaExact: sin ESTATICO — escalando grupo completo");
         grupoCopia.left = 0;
         grupoCopia.top  = 0;
@@ -107,8 +109,23 @@ function getTextVisualBounds(item) {
 
     var doc = app.activeDocument;
     var layer;
-    try   { layer = doc.layers.getByName("GENERADO"); }
-    catch (e) { layer = doc.activeLayer; }
+    // Buscar capa GENERADO* (nombre variable: GENERADO_XS_S, etc.)
+    // Primero intento exacto, luego prefijo, luego activeLayer como fallback.
+    try {
+        layer = doc.layers.getByName("GENERADO");
+    } catch (e) {
+        layer = null;
+        try {
+            for (var _li = 0; _li < doc.layers.length; _li++) {
+                if (doc.layers[_li].name.indexOf("GENERADO") === 0) {
+                    layer = doc.layers[_li];
+                    break;
+                }
+            }
+        } catch (e2) {}
+        if (!layer) layer = doc.activeLayer;
+        Log._linea("-----", "getTextVisualBounds: layer=" + (layer ? layer.name : "null"));
+    }
 
     // — Mover duplicado al nivel de capa —
     try {
