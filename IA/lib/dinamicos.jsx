@@ -313,6 +313,58 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
     }
 
+    // ── SPONSOR_TOP_IZQ_SEC ──────────────────────────────────
+    var itemSponsorTopIzqSec = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_IZQ_SEC");
+
+    if (itemSponsorTopIzqSec) {
+        if (jugador.LLEVA_SPONSOR_TOP_IZQ_SEC !== "SI") {
+            itemSponsorTopIzqSec.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ_SEC ocultado (LLEVA=NO)");
+        } else {
+            escalarConRef(
+                itemSponsorTopIzqSec,
+                jugador.SPONSOR_TOP_IZQ_SEC_ANCHO,
+                jugador.SPONSOR_TOP_IZQ_SEC_ALTO,
+                jugador.SPONSOR_TOP_IZQ_SEC_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_IZQ_SEC"
+            );
+            var spTopIzqSecMarginSup = parseFloat(jugador.SPONSOR_TOP_IZQ_SEC_MARGIN_SUP);
+            if (!isNaN(spTopIzqSecMarginSup) && spTopIzqSecMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopIzqSec, grupoCopia,
+                    spTopIzqSecMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ_SEC"
+                );
+            }
+        }
+    }
+
+    // ── SPONSOR_TOP_DER_SEC ──────────────────────────────────
+    var itemSponsorTopDerSec = findItemByNameRecursivo(dinamico, "SPONSOR_TOP_DER_SEC");
+
+    if (itemSponsorTopDerSec) {
+        if (jugador.LLEVA_SPONSOR_TOP_DER_SEC !== "SI") {
+            itemSponsorTopDerSec.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER_SEC ocultado (LLEVA=NO)");
+        } else {
+            escalarConRef(
+                itemSponsorTopDerSec,
+                jugador.SPONSOR_TOP_DER_SEC_ANCHO,
+                jugador.SPONSOR_TOP_DER_SEC_ALTO,
+                jugador.SPONSOR_TOP_DER_SEC_REF,
+                nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_TOP_DER_SEC"
+            );
+            var spTopDerSecMarginSup = parseFloat(jugador.SPONSOR_TOP_DER_SEC_MARGIN_SUP);
+            if (!isNaN(spTopDerSecMarginSup) && spTopDerSecMarginSup >= 0) {
+                posicionarItemDesdeTop(
+                    itemSponsorTopDerSec, grupoCopia,
+                    spTopDerSecMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER_SEC"
+                );
+            }
+        }
+    }
+
     // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
         var sufManga = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";

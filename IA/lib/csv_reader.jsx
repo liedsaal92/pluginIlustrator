@@ -90,6 +90,10 @@ function leerXlsx(csvFile) {
                     hdr === "SPONSOR_TOP_IZQ_MARGIN_SUP" ||
                     hdr === "SPONSOR_TOP_DER_ANCHO" || hdr === "SPONSOR_TOP_DER_ALTO" ||
                     hdr === "SPONSOR_TOP_DER_MARGIN_SUP" ||
+                    hdr === "SPONSOR_TOP_IZQ_SEC_ANCHO" || hdr === "SPONSOR_TOP_IZQ_SEC_ALTO" ||
+                    hdr === "SPONSOR_TOP_IZQ_SEC_MARGIN_SUP" ||
+                    hdr === "SPONSOR_TOP_DER_SEC_ANCHO" || hdr === "SPONSOR_TOP_DER_SEC_ALTO" ||
+                    hdr === "SPONSOR_TOP_DER_SEC_MARGIN_SUP" ||
                     // SPONSORS PRINCIPAL
                     hdr === "SPONSOR_PRINCIPAL_F_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_F_ALTO"  ||
                     hdr === "SPONSOR_PRINCIPAL_E_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_E_ALTO"  ||
@@ -144,6 +148,7 @@ function leerXlsx(csvFile) {
                 "LLEVA_NOMBRE_F", "LLEVA_NUMERO_F",
                 "LLEVA_ESCUDO_CENTRAL", "LLEVA_LOGO_MARCA",
                 "LLEVA_SPONSOR_TOP_IZQ", "LLEVA_SPONSOR_TOP_DER",
+                "LLEVA_SPONSOR_TOP_IZQ_SEC", "LLEVA_SPONSOR_TOP_DER_SEC",
                 "LLEVA_SPONSOR_PRINCIPAL_F", "LLEVA_SPONSOR_SECUNDARIO_F",
                 "LLEVA_COSTILLA_F",
                 "LLEVA_ETIQUETA_PRINCIPAL_F", "LLEVA_ETIQUETA_SECUNDARIA_F",
