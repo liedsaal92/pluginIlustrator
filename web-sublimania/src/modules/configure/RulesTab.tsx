@@ -1,7 +1,7 @@
 // ============================================================
 //  modules/configure/RulesTab.tsx — Tab de reglas por talla
 // ============================================================
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { SCHEMA, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
@@ -189,7 +189,7 @@ export function RulesTab({ onToast }: Props) {
 
       <div className="rules-main">
         <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
-        <div className="elements-grid">
+        <div className="elements-grid" style={{ '--pieza-color': schema?.color } as CSSProperties}>
           {activeTalla && schema?.elements.map(el => (
             <ElementCard
               key={el.id}

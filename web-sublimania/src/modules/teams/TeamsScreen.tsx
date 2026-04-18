@@ -36,11 +36,12 @@ export function TeamsScreen({ onToast }: Props) {
   const { setScreen, loadFromEntry } = useTeamStore();
   const canManageSettings = usePermission('settings:manage');
 
-  // Paginación
-  const PAGE_SIZE = 9;
+  // Paginación — active team shown as featured, paginate the rest
+  const PAGE_SIZE = 8;
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(teams.length / PAGE_SIZE);
-  const pagedTeams = teams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const otherTeams = teams.filter(t => t.id !== activeTeamId);
+  const totalPages = Math.ceil(otherTeams.length / PAGE_SIZE);
+  const pagedTeams = otherTeams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Estado del modal "nuevo equipo"
   const [showNewModal, setShowNewModal] = useState(false);
@@ -148,16 +149,69 @@ export function TeamsScreen({ onToast }: Props) {
         </div>
       ) : (
         <>
+        {/* ── Featured active team ───────────────────────────── */}
+        {(() => {
+          const featured = teams.find(t => t.id === activeTeamId);
+          if (!featured) return null;
+          const isEmpty = featured.players.length === 0;
+          return (
+            <div className="team-card-featured">
+              <div className="team-card-featured-info">
+                <div className="team-card-featured-label">▶ EQUIPO ACTIVO</div>
+                <div className="team-card-featured-name">{featured.nombre || 'Sin nombre'}</div>
+                <div className="team-card-featured-meta">
+                  <span><strong>{featured.players.length}</strong> jugadores · <strong>{featured.tallas.length}</strong> tallas{featured.tallas.length > 0 ? `: ${featured.tallas.join(', ')}` : ''}</span>
+                  {!isEmpty && <span>{exportSummary(featured)}</span>}
+                </div>
+                <div className="team-card-featured-dates">
+                  Modificado: {formatDate(featured.updatedAt)}
+                </div>
+              </div>
+              <div className="team-card-featured-actions">
+                {isEmpty ? (
+                  <button className="btn btn-primary btn-sm" onClick={() => handleLoadPlayers(featured)}>
+                    📂 CARGAR JUGADORES
+                  </button>
+                ) : (
+                  <>
+                    <button className="btn btn-primary btn-sm" onClick={() => handleOpen(featured)}>
+                      ✏ CONTINUAR
+                    </button>
+                    <button className="btn btn-ghost btn-sm" style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.2)' }} onClick={() => handleLoadPlayers(featured)}>
+                      🔄 RE-CARGAR
+                    </button>
+                  </>
+                )}
+                <button
+                  className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === featured.id ? 'is-base' : ''}`}
+                  style={{ color: baseTeamId === featured.id ? '#f5a623' : 'rgba(255,255,255,0.35)', borderColor: 'rgba(255,255,255,0.15)' }}
+                  title={baseTeamId === featured.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
+                  onClick={() => setBaseTeam(featured.id)}
+                >
+                  {baseTeamId === featured.id ? '★' : '☆'}
+                </button>
+                {canManageSettings && (
+                  <ConfirmButton
+                    className="btn btn-ghost btn-sm btn-danger"
+                    title="Eliminar equipo"
+                    onConfirm={() => handleDelete(featured.id)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Rest of teams ──────────────────────────────────── */}
+        {pagedTeams.length > 0 && (
         <div className="teams-grid">
           {pagedTeams.map(entry => {
-            const isActive = entry.id === activeTeamId;
             const isEmpty = entry.players.length === 0;
             return (
-              <div key={entry.id} className={`team-card ${isActive ? 'active' : ''} ${isEmpty ? 'empty' : ''}`}>
+              <div key={entry.id} className={`team-card ${isEmpty ? 'empty' : ''}`}>
                 <div className="team-card-header">
                   <div className="team-card-name">{entry.nombre || 'Sin nombre'}</div>
                   <div style={{ display: 'flex', gap: '0.3rem' }}>
-                    {isActive && <span className="team-active-badge">ACTIVO</span>}
                     {isEmpty && <span className="team-empty-badge">VACÍO</span>}
                   </div>
                 </div>
@@ -177,13 +231,13 @@ export function TeamsScreen({ onToast }: Props) {
                         📂 CARGAR JUGADORES
                       </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => handleOpen(entry)}>
-                        {isActive ? '✏ CONTINUAR' : '▶ ABRIR'}
+                        ▶ ABRIR
                       </button>
                     </>
                   ) : (
                     <>
                       <button className="btn btn-primary btn-sm" onClick={() => handleOpen(entry)}>
-                        {isActive ? '✏ CONTINUAR' : '▶ ABRIR'}
+                        ▶ ABRIR
                       </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(entry)}>
                         🔄 RE-CARGAR
@@ -209,6 +263,7 @@ export function TeamsScreen({ onToast }: Props) {
             );
           })}
         </div>
+        )}
         {totalPages > 1 && (
           <div className="teams-pagination">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (

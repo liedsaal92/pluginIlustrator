@@ -94,7 +94,10 @@ export function Header({ onToast }: Props) {
 
           {session && (
             <div className="header-user">
-              <span className="header-user-name">{session.user.nombre}</span>
+              <div className="header-user-info">
+                <span className="header-user-name">{session.user.nombre}</span>
+                <span className="header-org-name">{session.user.orgName}</span>
+              </div>
               <span className={`header-role-badge role-${session.user.role}`}>
                 {session.user.role.toUpperCase()}
               </span>

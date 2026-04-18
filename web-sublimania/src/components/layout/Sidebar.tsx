@@ -1,0 +1,202 @@
+// ============================================================
+//  components/layout/Sidebar.tsx — Navegación persistente
+// ============================================================
+import { useRef } from 'react';
+import { useTeamStore } from '../../store/useTeamStore';
+import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
+import { useClientesStore } from '../../store/useClientesStore';
+import { useTallasStore } from '../../store/useTallasStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { usePermission } from '../../hooks/usePermission';
+import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
+
+interface Props {
+  onToast: (msg: string, type: 'ok' | 'error') => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ onToast, isOpen, onClose }: Props) {
+  const screen    = useTeamStore(s => s.screen);
+  const setScreen = useTeamStore(s => s.setScreen);
+  const players   = useTeamStore(s => s.players);
+  const { session, logout } = useAuthStore();
+  const { teams, activeTeamId } = useTeamsStore();
+  const activeTeam = teams.find(t => t.id === activeTeamId);
+  const canManageSettings = usePermission('settings:manage');
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const hasPlayers = players.length > 0;
+
+  // Indicador de paso para el workspace
+  function stepStatus(forScreen: string): 'done' | 'active' | 'pending' {
+    if (screen === forScreen) return 'active';
+    if (forScreen === 'upload' && hasPlayers) return 'done';
+    if (forScreen === 'configure' && hasPlayers && screen === 'export') return 'done';
+    return 'pending';
+  }
+
+  function handleExportBackup() {
+    saveActiveTeam();
+    const { teams: allTeams } = useTeamsStore.getState();
+    const { clientes }        = useClientesStore.getState();
+    const { tallasPorCliente } = useTallasStore.getState();
+    exportBackup(clientes, tallasPorCliente, allTeams);
+    onToast('Configuración exportada', 'ok');
+  }
+
+  async function handleImportBackupFile(file: File) {
+    try {
+      const backup = await importBackup(file);
+      const { clientes: curClientes }          = useClientesStore.getState();
+      const { tallasPorCliente: curTallas }    = useTallasStore.getState();
+      const result = mergeBackup(backup, curClientes, curTallas, useTeamsStore.getState().teams);
+      useClientesStore.setState({ clientes: result.clientes });
+      useTallasStore.setState({ tallasPorCliente: result.tallasPorCliente });
+      useTeamsStore.getState().replaceAll(result.teams);
+      onToast('Combinado correctamente', 'ok');
+    } catch (e) {
+      onToast((e as Error).message ?? 'Error al importar', 'error');
+    }
+  }
+
+  function handleNavClick(action: () => void) {
+    action();
+    onClose?.();
+  }
+
+  return (
+    <nav className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+
+      {/* ── BRAND ────────────────────────────────────────────── */}
+      <div
+        className="sidebar-brand"
+        onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
+        role="button"
+        tabIndex={0}
+      >
+        <div className="sidebar-logo-name">SUBLI<span>FLOW</span></div>
+        <div className="sidebar-logo-tag">// PRODUCCIÓN DEPORTIVA v1.0</div>
+      </div>
+
+      {/* ── NAV ──────────────────────────────────────────────── */}
+      <div className="sidebar-nav">
+
+        {/* Equipos */}
+        <div className="sidebar-section">
+          <button
+            className={`sidebar-nav-item ${screen === 'teams' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
+          >
+            <span className="sidebar-nav-item-icon">☰</span>
+            MIS EQUIPOS
+            {teams.length > 0 && (
+              <span className="sidebar-count-badge">{teams.length}</span>
+            )}
+          </button>
+        </div>
+
+        {/* Workspace (equipo activo) */}
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">EQUIPO ACTIVO</div>
+          {activeTeam ? (
+            <>
+              <div className="sidebar-active-team-name">{activeTeam.nombre || '— sin nombre'}</div>
+
+              <button
+                className={`sidebar-nav-item sub ${screen === 'upload' ? 'active' : ''}`}
+                onClick={() => handleNavClick(() => setScreen('upload'))}
+              >
+                <span className="sidebar-nav-item-icon">↑</span>
+                CARGAR EXCEL
+                <span className={`sidebar-step-dot ${stepStatus('upload')}`} />
+              </button>
+
+              <button
+                className={`sidebar-nav-item sub ${screen === 'configure' ? 'active' : ''}`}
+                onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('configure'); })}
+              >
+                <span className="sidebar-nav-item-icon">⚙</span>
+                CONFIGURAR
+                <span className={`sidebar-step-dot ${stepStatus('configure')}`} />
+              </button>
+
+              <button
+                className={`sidebar-nav-item sub ${screen === 'export' ? 'active' : ''}`}
+                onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('export'); })}
+              >
+                <span className="sidebar-nav-item-icon">↗</span>
+                EXPORTAR CSV
+                <span className={`sidebar-step-dot ${stepStatus('export')}`} />
+              </button>
+            </>
+          ) : (
+            <div className="sidebar-no-team">Sin equipo activo.<br/>Seleccioná uno en Mis Equipos.</div>
+          )}
+        </div>
+
+        {/* Ajustes — solo admin */}
+        {canManageSettings && (
+          <div className="sidebar-section">
+            <button
+              className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
+            >
+              <span className="sidebar-nav-item-icon">◈</span>
+              AJUSTES
+            </button>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <div className="sidebar-footer">
+        {session && (
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">{session.user.nombre}</div>
+            <div className="sidebar-user-org">{session.user.orgName}</div>
+            <span className={`sidebar-role-badge role-${session.user.role}`}>
+              {session.user.role.toUpperCase()}
+            </span>
+          </div>
+        )}
+
+        <div className="sidebar-footer-actions">
+          {canManageSettings && (
+            <>
+              <button
+                className="sidebar-footer-btn"
+                onClick={() => importInputRef.current?.click()}
+                title="Importar configuración"
+              >
+                ↓ IMPORT
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  if (e.target.files?.[0]) handleImportBackupFile(e.target.files[0]);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                className="sidebar-footer-btn"
+                onClick={handleExportBackup}
+                title="Exportar configuración"
+              >
+                ↑ EXPORT
+              </button>
+            </>
+          )}
+          <button className="sidebar-footer-btn btn-logout" onClick={() => logout()}>
+            SALIR
+          </button>
+        </div>
+      </div>
+
+    </nav>
+  );
+}
