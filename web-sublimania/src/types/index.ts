@@ -86,5 +86,5 @@ export interface Cliente {
 // ── PANTALLAS ─────────────────────────────────────────────────
 export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'settings';
 export type ConfigTab = 'rules' | 'players';
-export type SettingsTab = 'clientes' | 'tallas';
+export type SettingsTab = 'clientes' | 'tallas' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

@@ -3,8 +3,10 @@
 // ============================================================
 import { useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
+import { usePermission } from '../../hooks/usePermission';
 import { ClientesTab } from './ClientesTab';
 import { TallasSettingsTab } from './TallasSettingsTab';
+import { UsersTab } from './UsersTab';
 import type { SettingsTab } from '../../types';
 
 interface Props {
@@ -13,6 +15,7 @@ interface Props {
 
 export function SettingsScreen({ onToast }: Props) {
   const { screen: prevScreen, setScreen } = useTeamStore();
+  const canManageUsers = usePermission('users:manage');
   const [tab, setTab] = useState<SettingsTab>('clientes');
 
   // Volver a la pantalla anterior (no siempre configure)
@@ -43,11 +46,20 @@ export function SettingsScreen({ onToast }: Props) {
         >
           📐 TALLAS
         </button>
+        {canManageUsers && (
+          <button
+            className={`tab-btn ${tab === 'users' ? 'active' : ''}`}
+            onClick={() => setTab('users')}
+          >
+            🔑 USUARIOS
+          </button>
+        )}
       </div>
 
       <div className="config-body">
         {tab === 'clientes' && <ClientesTab onToast={onToast} />}
         {tab === 'tallas'   && <TallasSettingsTab />}
+        {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
       </div>
     </div>
   );

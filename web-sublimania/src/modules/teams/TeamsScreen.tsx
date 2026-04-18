@@ -6,6 +6,7 @@ import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTeamStore } from '../../store/useTeamStore';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
+import { usePermission } from '../../hooks/usePermission';
 import type { TeamEntry } from '../../types';
 
 interface Props {
@@ -33,6 +34,7 @@ const EMPTY_ENTRY: TeamEntry = {
 export function TeamsScreen({ onToast }: Props) {
   const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam } = useTeamsStore();
   const { setScreen, loadFromEntry } = useTeamStore();
+  const canManageSettings = usePermission('settings:manage');
 
   // Paginación
   const PAGE_SIZE = 9;
@@ -195,11 +197,13 @@ export function TeamsScreen({ onToast }: Props) {
                   >
                     {baseTeamId === entry.id ? '★' : '☆'}
                   </button>
-                  <ConfirmButton
-                    className="btn btn-ghost btn-sm btn-danger"
-                    title="Eliminar equipo"
-                    onConfirm={() => handleDelete(entry.id)}
-                  />
+                  {canManageSettings && (
+                    <ConfirmButton
+                      className="btn btn-ghost btn-sm btn-danger"
+                      title="Eliminar equipo"
+                      onConfirm={() => handleDelete(entry.id)}
+                    />
+                  )}
                 </div>
               </div>
             );
