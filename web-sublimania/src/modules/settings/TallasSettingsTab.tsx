@@ -8,11 +8,13 @@ import { useClientesStore } from '../../store/useClientesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
-const FIELDS: { key: keyof TallaDims; label: string }[] = [
-  { key: 'ALTO', label: 'ALTO' },
-  { key: 'ANCHO', label: 'ANCHO' },
-  { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
-  { key: 'MANGA_ALTO', label: 'MANGA ALTO' },
+const FIELDS: { key: keyof TallaDims; label: string; ranglan?: boolean }[] = [
+  { key: 'ALTO',               label: 'ALTO'              },
+  { key: 'ANCHO',              label: 'ANCHO'             },
+  { key: 'MANGA_ANCHO',        label: 'MANGA ANCHO'       },
+  { key: 'MANGA_ALTO',         label: 'MANGA ALTO'        },
+  { key: 'MANGA_RANGLAN_ANCHO', label: 'RANGLAN ANCHO', ranglan: true },
+  { key: 'MANGA_RANGLAN_ALTO',  label: 'RANGLAN ALTO',  ranglan: true },
 ];
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -139,7 +141,9 @@ export function TallasSettingsTab() {
                           <tr>
                             <th className="col-talla">TALLA</th>
                             {FIELDS.map(f => (
-                              <th key={f.key} className="col-dim">{f.label} <span className="unit">cm</span></th>
+                              <th key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
+                                {f.label} <span className="unit">cm</span>
+                              </th>
                             ))}
                             <th className="col-del"></th>
                           </tr>
@@ -151,13 +155,14 @@ export function TallasSettingsTab() {
                                 <span className="talla-badge" style={{ background: tallaColor(talla) }}>{talla}</span>
                               </td>
                               {FIELDS.map(f => (
-                                <td key={f.key} className="col-dim">
+                                <td key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
                                   <input
                                     className="input-dim"
                                     type="number"
                                     step="0.01"
                                     min="0"
-                                    value={tallas[talla][f.key]}
+                                    value={tallas[talla][f.key] ?? ''}
+                                    placeholder={f.ranglan ? '—' : ''}
                                     onChange={e => setDim(clienteId, talla, f.key, e.target.value)}
                                   />
                                 </td>

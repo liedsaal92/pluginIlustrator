@@ -24,10 +24,10 @@ export const CSV_COLUMN_ORDER: string[] = [
   // FRENTE — LOGO MARCA
   'LLEVA_LOGO_MARCA', 'LOGO_MARCA_ANCHO', 'LOGO_MARCA_ALTO', 'LOGO_MARCA_REF', 'LOGO_MARCA_MARGIN_SUP', 'LOGO_MARCA_MARGIN_LAT',
   // FRENTE — SPONSORS TOP
-  'LLEVA_SPONSOR_TOP_IZQ', 'SPONSOR_TOP_IZQ_ANCHO', 'SPONSOR_TOP_IZQ_ALTO', 'SPONSOR_TOP_IZQ_REF', 'SPONSOR_TOP_IZQ_MARGIN_SUP',
-  'LLEVA_SPONSOR_TOP_DER', 'SPONSOR_TOP_DER_ANCHO', 'SPONSOR_TOP_DER_ALTO', 'SPONSOR_TOP_DER_REF', 'SPONSOR_TOP_DER_MARGIN_SUP',
-  'LLEVA_SPONSOR_TOP_IZQ_SEC', 'SPONSOR_TOP_IZQ_SEC_ANCHO', 'SPONSOR_TOP_IZQ_SEC_ALTO', 'SPONSOR_TOP_IZQ_SEC_REF', 'SPONSOR_TOP_IZQ_SEC_MARGIN_SUP',
-  'LLEVA_SPONSOR_TOP_DER_SEC', 'SPONSOR_TOP_DER_SEC_ANCHO', 'SPONSOR_TOP_DER_SEC_ALTO', 'SPONSOR_TOP_DER_SEC_REF', 'SPONSOR_TOP_DER_SEC_MARGIN_SUP',
+  'LLEVA_SPONSOR_TOP_IZQ', 'SPONSOR_TOP_IZQ_ANCHO', 'SPONSOR_TOP_IZQ_ALTO', 'SPONSOR_TOP_IZQ_REF', 'SPONSOR_TOP_IZQ_MARGIN_SUP', 'SPONSOR_TOP_IZQ_MARGIN_LAT',
+  'LLEVA_SPONSOR_TOP_DER', 'SPONSOR_TOP_DER_ANCHO', 'SPONSOR_TOP_DER_ALTO', 'SPONSOR_TOP_DER_REF', 'SPONSOR_TOP_DER_MARGIN_SUP', 'SPONSOR_TOP_DER_MARGIN_LAT',
+  'LLEVA_SPONSOR_TOP_IZQ_SEC', 'SPONSOR_TOP_IZQ_SEC_ANCHO', 'SPONSOR_TOP_IZQ_SEC_ALTO', 'SPONSOR_TOP_IZQ_SEC_REF', 'SPONSOR_TOP_IZQ_SEC_MARGIN_SUP', 'SPONSOR_TOP_IZQ_SEC_MARGIN_LAT',
+  'LLEVA_SPONSOR_TOP_DER_SEC', 'SPONSOR_TOP_DER_SEC_ANCHO', 'SPONSOR_TOP_DER_SEC_ALTO', 'SPONSOR_TOP_DER_SEC_REF', 'SPONSOR_TOP_DER_SEC_MARGIN_SUP', 'SPONSOR_TOP_DER_SEC_MARGIN_LAT',
   // FRENTE — SPONSOR PRINCIPAL / SECUNDARIO
   'LLEVA_SPONSOR_PRINCIPAL_F', 'SPONSOR_PRINCIPAL_F_ANCHO', 'SPONSOR_PRINCIPAL_F_ALTO', 'SPONSOR_PRINCIPAL_F_REF', 'SPONSOR_PRINCIPAL_F_MARGIN_SUP',
   'LLEVA_SPONSOR_SECUNDARIO_F', 'SPONSOR_SECUNDARIO_F_ANCHO', 'SPONSOR_SECUNDARIO_F_ALTO', 'SPONSOR_SECUNDARIO_F_REF', 'SPONSOR_SECUNDARIO_F_MARGIN_SUP',
@@ -77,6 +77,10 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_MANGA_DER_LINEA_IZQ', 'MANGA_DER_LINEA_IZQ_ANCHO', 'MANGA_DER_LINEA_IZQ_ALTO', 'MANGA_DER_LINEA_IZQ_REF',
   'LLEVA_MANGA_DER_LINEA_DER', 'MANGA_DER_LINEA_DER_ANCHO', 'MANGA_DER_LINEA_DER_ALTO', 'MANGA_DER_LINEA_DER_REF',
   'LLEVA_MANGA_DER_LINEA_INF', 'MANGA_DER_LINEA_INF_ANCHO', 'MANGA_DER_LINEA_INF_ALTO', 'MANGA_DER_LINEA_INF_REF',
+  // MANGA IZQ — LINEAS ADIDAS (ranglan)
+  'LLEVA_LINEAS_ADIDAS_M_IZQ', 'LINEAS_ADIDAS_M_IZQ_ANCHO', 'LINEAS_ADIDAS_M_IZQ_REF', 'LINEAS_ADIDAS_M_IZQ_MARGIN_INF', 'MANGA_IZQ_ES_RANGLAN',
+  // MANGA DER — LINEAS ADIDAS (ranglan)
+  'LLEVA_LINEAS_ADIDAS_M_DER', 'LINEAS_ADIDAS_M_DER_ANCHO', 'LINEAS_ADIDAS_M_DER_REF', 'LINEAS_ADIDAS_M_DER_MARGIN_INF', 'MANGA_DER_ES_RANGLAN',
 ];
 
 const numField = (key: string, label: string): SchemaField => ({
@@ -102,13 +106,13 @@ export const SCHEMA: Schema = {
       { id: 'logo_marca', label: 'LOGO MARCA', icon: '◈', toggleKey: 'LLEVA_LOGO_MARCA',
         fields: [numField('LOGO_MARCA_ANCHO', 'Ancho'), numField('LOGO_MARCA_ALTO', 'Alto'), refField('LOGO_MARCA_REF'), numField('LOGO_MARCA_MARGIN_SUP', 'Margen sup'), numField('LOGO_MARCA_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_top_izq', label: 'SPONSOR TOP IZQ', icon: '◧', toggleKey: 'LLEVA_SPONSOR_TOP_IZQ',
-        fields: [numField('SPONSOR_TOP_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_REF'), numField('SPONSOR_TOP_IZQ_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('SPONSOR_TOP_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_REF'), numField('SPONSOR_TOP_IZQ_MARGIN_SUP', 'Margen sup'), numField('SPONSOR_TOP_IZQ_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_top_der', label: 'SPONSOR TOP DER', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER',
-        fields: [numField('SPONSOR_TOP_DER_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_REF'), numField('SPONSOR_TOP_DER_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('SPONSOR_TOP_DER_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_REF'), numField('SPONSOR_TOP_DER_MARGIN_SUP', 'Margen sup'), numField('SPONSOR_TOP_DER_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_top_izq_sec', label: 'SPONSOR TOP IZQ SEC', icon: '◧', toggleKey: 'LLEVA_SPONSOR_TOP_IZQ_SEC',
-        fields: [numField('SPONSOR_TOP_IZQ_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_SEC_REF'), numField('SPONSOR_TOP_IZQ_SEC_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('SPONSOR_TOP_IZQ_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_IZQ_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_IZQ_SEC_REF'), numField('SPONSOR_TOP_IZQ_SEC_MARGIN_SUP', 'Margen sup'), numField('SPONSOR_TOP_IZQ_SEC_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_top_der_sec', label: 'SPONSOR TOP DER SEC', icon: '◨', toggleKey: 'LLEVA_SPONSOR_TOP_DER_SEC',
-        fields: [numField('SPONSOR_TOP_DER_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_SEC_REF'), numField('SPONSOR_TOP_DER_SEC_MARGIN_SUP', 'Margen sup')] },
+        fields: [numField('SPONSOR_TOP_DER_SEC_ANCHO', 'Ancho'), numField('SPONSOR_TOP_DER_SEC_ALTO', 'Alto'), refField('SPONSOR_TOP_DER_SEC_REF'), numField('SPONSOR_TOP_DER_SEC_MARGIN_SUP', 'Margen sup'), numField('SPONSOR_TOP_DER_SEC_MARGIN_LAT', 'Margen lat')] },
       { id: 'sponsor_principal_f', label: 'SPONSOR PRINCIPAL', icon: '★', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_F',
         fields: [numField('SPONSOR_PRINCIPAL_F_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_F_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_F_REF'), numField('SPONSOR_PRINCIPAL_F_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_secundario_f', label: 'SPONSOR SECUNDARIO', icon: '☆', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_F',
@@ -180,6 +184,13 @@ export const SCHEMA: Schema = {
         fields: [numField('MANGA_IZQ_LINEA_DER_ANCHO', 'Ancho'), numField('MANGA_IZQ_LINEA_DER_ALTO', 'Alto'), refField('MANGA_IZQ_LINEA_DER_REF')] },
       { id: 'linea_izq_inf', label: 'LÍNEA INFERIOR', icon: '—', toggleKey: 'LLEVA_MANGA_IZQ_LINEA_INF',
         fields: [numField('MANGA_IZQ_LINEA_INF_ANCHO', 'Ancho'), numField('MANGA_IZQ_LINEA_INF_ALTO', 'Alto'), refField('MANGA_IZQ_LINEA_INF_REF')] },
+      { id: 'lineas_adidas_izq', label: 'LINEAS ADIDAS', icon: '≡', toggleKey: 'LLEVA_LINEAS_ADIDAS_M_IZQ',
+        fields: [
+          numField('LINEAS_ADIDAS_M_IZQ_ANCHO', 'Ancho'),
+          refField('LINEAS_ADIDAS_M_IZQ_REF'),
+          numField('LINEAS_ADIDAS_M_IZQ_MARGIN_INF', 'Margen inf'),
+          { key: 'MANGA_IZQ_ES_RANGLAN', label: 'Ranglan', type: 'select' as const, options: ['SI', 'NO'] },
+        ] },
     ],
   },
 
@@ -199,6 +210,13 @@ export const SCHEMA: Schema = {
         fields: [numField('MANGA_DER_LINEA_DER_ANCHO', 'Ancho'), numField('MANGA_DER_LINEA_DER_ALTO', 'Alto'), refField('MANGA_DER_LINEA_DER_REF')] },
       { id: 'linea_der_inf', label: 'LÍNEA INFERIOR', icon: '—', toggleKey: 'LLEVA_MANGA_DER_LINEA_INF',
         fields: [numField('MANGA_DER_LINEA_INF_ANCHO', 'Ancho'), numField('MANGA_DER_LINEA_INF_ALTO', 'Alto'), refField('MANGA_DER_LINEA_INF_REF')] },
+      { id: 'lineas_adidas_der', label: 'LINEAS ADIDAS', icon: '≡', toggleKey: 'LLEVA_LINEAS_ADIDAS_M_DER',
+        fields: [
+          numField('LINEAS_ADIDAS_M_DER_ANCHO', 'Ancho'),
+          refField('LINEAS_ADIDAS_M_DER_REF'),
+          numField('LINEAS_ADIDAS_M_DER_MARGIN_INF', 'Margen inf'),
+          { key: 'MANGA_DER_ES_RANGLAN', label: 'Ranglan', type: 'select' as const, options: ['SI', 'NO'] },
+        ] },
     ],
   },
 };
