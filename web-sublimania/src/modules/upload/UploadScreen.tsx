@@ -114,12 +114,23 @@ export function UploadScreen({ onToast }: Props) {
           onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
           onDragLeave={e => e.currentTarget.classList.remove('drag-over')}
           onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
         >
+          <div className="drop-icon">
+            <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="48" height="48" stroke="currentColor" strokeWidth="2.5"/>
+              <line x1="4" y1="22" x2="52" y2="22" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="4" y1="38" x2="52" y2="38" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="22" y1="4" x2="22" y2="52" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="38" y1="4" x2="38" y2="52" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="4" y="4" width="18" height="18" fill="currentColor" fillOpacity="0.15"/>
+            </svg>
+          </div>
           <div className="drop-label">SOLTÁ TU .XLSX ACÁ</div>
           <div className="drop-sub-label">
             Columnas requeridas: NOMBRE · NOMBRE_CAMISETA · NUMERO · TALLA
           </div>
-          <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()}>
+          <button className="btn btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
             SELECCIONAR ARCHIVO
           </button>
           <input

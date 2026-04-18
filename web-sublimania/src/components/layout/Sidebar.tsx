@@ -122,16 +122,27 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
               </button>
 
               <button
-                className={`sidebar-nav-item sub ${screen === 'export' ? 'active' : ''}`}
+                className={`sidebar-export-btn ${screen === 'export' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('export'); })}
               >
-                <span className="sidebar-nav-item-icon">↗</span>
-                EXPORTAR CSV
+                <span>↗ EXPORTAR CSV</span>
                 <span className={`sidebar-step-dot ${stepStatus('export')}`} />
               </button>
             </>
           ) : (
-            <div className="sidebar-no-team">Sin equipo activo.<br/>Seleccioná uno en Mis Equipos.</div>
+            <div className="sidebar-no-team">
+              <div className="sidebar-no-team-glyph">
+                <svg viewBox="0 0 32 32" fill="none" width="28" height="28">
+                  <rect x="2" y="2" width="28" height="28" stroke="currentColor" strokeWidth="1.5"/>
+                  <line x1="2" y1="11" x2="30" y2="11" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="2" y1="20" x2="30" y2="20" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="12" y1="2" x2="12" y2="30" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="21" y1="2" x2="21" y2="30" stroke="currentColor" strokeWidth="1"/>
+                </svg>
+              </div>
+              <span className="sidebar-no-team-label">SIN EQUIPO<br/>ACTIVO</span>
+              <span className="sidebar-no-team-hint">Seleccioná uno en<br/>Mis Equipos ↑</span>
+            </div>
           )}
         </div>
 

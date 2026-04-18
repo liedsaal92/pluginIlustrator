@@ -24,42 +24,50 @@ export function SettingsScreen({ onToast }: Props) {
   return (
     <div className="screen settings-screen">
       <div className="settings-header">
+        <div className="settings-title-block">
+          <div className="settings-title">◈ AJUSTES</div>
+          <div className="settings-subtitle">// Administración del sistema</div>
+        </div>
         <button
           className="btn btn-ghost btn-sm"
           onClick={() => setScreen(returnScreen === 'settings' ? 'teams' : returnScreen)}
         >
           ← VOLVER
         </button>
-        <h2 className="settings-title">CONFIGURACIÓN</h2>
       </div>
 
-      <div className="config-tabs">
-        <button
-          className={`tab-btn ${tab === 'clientes' ? 'active' : ''}`}
-          onClick={() => setTab('clientes')}
-        >
-          👤 CLIENTES
-        </button>
-        <button
-          className={`tab-btn ${tab === 'tallas' ? 'active' : ''}`}
-          onClick={() => setTab('tallas')}
-        >
-          📐 TALLAS
-        </button>
-        {canManageUsers && (
+      <div className="settings-body">
+        <nav className="settings-sidenav">
           <button
-            className={`tab-btn ${tab === 'users' ? 'active' : ''}`}
-            onClick={() => setTab('users')}
+            className={`settings-nav-item ${tab === 'clientes' ? 'active' : ''}`}
+            onClick={() => setTab('clientes')}
           >
-            🔑 USUARIOS
+            <span className="settings-nav-icon">◉</span>
+            CLIENTES
           </button>
-        )}
-      </div>
+          <button
+            className={`settings-nav-item ${tab === 'tallas' ? 'active' : ''}`}
+            onClick={() => setTab('tallas')}
+          >
+            <span className="settings-nav-icon">▦</span>
+            TALLAS
+          </button>
+          {canManageUsers && (
+            <button
+              className={`settings-nav-item ${tab === 'users' ? 'active' : ''}`}
+              onClick={() => setTab('users')}
+            >
+              <span className="settings-nav-icon">◈</span>
+              USUARIOS
+            </button>
+          )}
+        </nav>
 
-      <div className="config-body">
-        {tab === 'clientes' && <ClientesTab onToast={onToast} />}
-        {tab === 'tallas'   && <TallasSettingsTab />}
-        {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
+        <div className="settings-content">
+          {tab === 'clientes' && <ClientesTab onToast={onToast} />}
+          {tab === 'tallas'   && <TallasSettingsTab />}
+          {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
+        </div>
       </div>
     </div>
   );

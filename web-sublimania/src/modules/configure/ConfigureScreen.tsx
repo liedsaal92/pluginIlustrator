@@ -2,7 +2,6 @@
 //  modules/configure/ConfigureScreen.tsx
 // ============================================================
 import { useTeamStore } from '../../store/useTeamStore';
-import { saveActiveTeam } from '../../store/useTeamsStore';
 import { GLOBAL_FIELDS, getGeneroTalla, getNumeroTalla } from '../../utils/schema';
 import { useSaveStatus } from '../../components/ui/SaveStatus';
 
@@ -19,51 +18,63 @@ export function ConfigureScreen({ onToast }: Props) {
     players, tallas,
     configTab, globalConfig,
     activeTalla,
-    setScreen, setConfigTab, setGlobalConfig,
+    setConfigTab, setGlobalConfig,
   } = useTeamStore();
 
-  const { statusClass, statusContent, handleSaveAndGoTeams } = useSaveStatus();
+  const { statusClass, statusContent } = useSaveStatus();
 
+
+  const primaryField   = GLOBAL_FIELDS[0];          // EQUIPO
+  const secondaryFields = GLOBAL_FIELDS.slice(1);   // NOTAS + future
 
   return (
     <div className="screen configure-screen">
       <div className="config-header">
-        <div className="config-header-left">
-          <div className="config-stats">
-            <span className="stat-badge stat-players">{players.length} JUGADORES</span>
-            <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
-            {configTab === 'rules' && activeTalla && (
-              <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
-            )}
-          </div>
-        </div>
 
-        <div className="config-global">
-          {GLOBAL_FIELDS.map(f => (
-            <div key={f.key} className="global-field">
-              <label>{f.label.toUpperCase()}</label>
+        {/* ── Row 1: team name + stats + actions ─────────── */}
+        <div className="config-header-main">
+          {primaryField && (
+            <div className="config-primary-field">
+              <label className="config-field-label">{primaryField.label.toUpperCase()}</label>
               <input
                 type="text"
-                className="input-global"
-                value={globalConfig[f.key]}
-                placeholder={f.placeholder}
-                onChange={e => setGlobalConfig(f.key, e.target.value)}
+                className="config-equipo-input"
+                value={globalConfig[primaryField.key]}
+                placeholder={primaryField.placeholder}
+                onChange={e => setGlobalConfig(primaryField.key, e.target.value)}
               />
             </div>
-          ))}
-        </div>
-
-        <div className="config-header-right">
-          <div className={statusClass}>{statusContent}</div>
-          <div className="config-actions">
-            <button className="btn btn-ghost btn-sm" onClick={handleSaveAndGoTeams} title="Ver todos los equipos">
-              ☰ EQUIPOS
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('export'); }}>
-              EXPORTAR CSV →
-            </button>
+          )}
+          <div className="config-header-right">
+            <div className="config-stats">
+              <span className="stat-badge stat-players">{players.length} JUG.</span>
+              <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
+              {configTab === 'rules' && activeTalla && (
+                <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* ── Row 2: secondary fields + save status ──────── */}
+        <div className="config-header-secondary">
+          <div className="config-secondary-fields">
+            {secondaryFields.map(f => (
+              <div key={f.key} className="config-secondary-field">
+                <label className="config-field-label">{f.label.toUpperCase()}</label>
+                <input
+                  type="text"
+                  className="config-notas-input"
+                  value={globalConfig[f.key]}
+                  placeholder={f.placeholder}
+                  onChange={e => setGlobalConfig(f.key, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+          <div className={statusClass}>{statusContent}</div>
+        </div>
+
       </div>
 
       <div className="config-tabs">

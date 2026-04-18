@@ -58,34 +58,42 @@ export function PlayerCard({ idx }: Props) {
   return (
     <div className={`player-card ${hasOverride(idx) ? 'has-override' : ''}`}>
       <div className="player-card-header" onClick={() => !editing && setExpandedPlayer(expanded ? null : idx)}>
-        <div className="player-info">
-          <span className="player-talla-badge" style={{ background: tallaColor(player.TALLA) }}>
-            {player.TALLA || '—'}
+        {/* Jersey number — left anchor */}
+        <div className="player-num-col">
+          <span className={`player-num-display${!player.NUMERO ? ' is-empty' : ''}`}>
+            {player.NUMERO || '—'}
           </span>
+        </div>
+
+        {/* Name block */}
+        <div className="player-main-info">
           <span className="player-name">{player.NOMBRE}</span>
           {player.NOMBRE_CAMISETA && (
             <span className="player-camiseta">"{player.NOMBRE_CAMISETA}"</span>
           )}
         </div>
+
+        {/* Right meta + actions */}
         <div className="player-meta">
-          {player.NUMERO
-            ? <span className="player-num">#{player.NUMERO}</span>
-            : <span className="player-num-empty">S/N</span>
-          }
-          {hasOverride(idx) && <span className="override-badge">✎ OVERRIDE</span>}
-          <button
-            className="btn-edit-player"
-            title="Editar datos del jugador"
-            onClick={e => { e.stopPropagation(); setEditing(v => !v); setExpandedPlayer(null); }}
-          >
-            ✎
-          </button>
-          <ConfirmButton
-            className="btn-del-player"
-            title="Eliminar jugador"
-            onConfirm={() => removePlayer(idx)}
-            stopPropagation
-          />
+          <span className="player-talla-badge" style={{ background: tallaColor(player.TALLA) }}>
+            {player.TALLA || '—'}
+          </span>
+          {hasOverride(idx) && <span className="override-badge">✎</span>}
+          <div className="player-actions" onClick={e => e.stopPropagation()}>
+            <button
+              className="btn-edit-player"
+              title="Editar datos del jugador"
+              onClick={e => { e.stopPropagation(); setEditing(v => !v); setExpandedPlayer(null); }}
+            >
+              ✎
+            </button>
+            <ConfirmButton
+              className="btn-del-player"
+              title="Eliminar jugador"
+              onConfirm={() => removePlayer(idx)}
+              stopPropagation
+            />
+          </div>
           {!editing && <span className="player-toggle">{expanded ? '▲' : '▼'}</span>}
         </div>
       </div>
