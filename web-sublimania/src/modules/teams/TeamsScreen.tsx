@@ -177,14 +177,14 @@ export function TeamsScreen({ onToast }: Props) {
                     <button className="btn btn-primary btn-sm" onClick={() => handleOpen(featured)}>
                       ✏ CONTINUAR
                     </button>
-                    <button className="btn btn-ghost btn-sm" style={{ color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.2)' }} onClick={() => handleLoadPlayers(featured)}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(featured)}>
                       🔄 RE-CARGAR
                     </button>
                   </>
                 )}
                 <button
                   className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === featured.id ? 'is-base' : ''}`}
-                  style={{ color: baseTeamId === featured.id ? '#f5a623' : 'rgba(255,255,255,0.35)', borderColor: 'rgba(255,255,255,0.15)' }}
+                  style={{ color: baseTeamId === featured.id ? '#f5a623' : undefined }}
                   title={baseTeamId === featured.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
                   onClick={() => setBaseTeam(featured.id)}
                 >

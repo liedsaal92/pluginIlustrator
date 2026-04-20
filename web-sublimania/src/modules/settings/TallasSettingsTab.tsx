@@ -2,7 +2,7 @@
 //  modules/settings/TallasSettingsTab.tsx
 //  Tabla CRUD de tallas filtrada por cliente
 // ============================================================
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
@@ -27,13 +27,25 @@ function tallaColor(talla: string): string {
 }
 
 
-export function TallasSettingsTab() {
+interface Props {
+  onToast: (msg: string, type: 'ok' | 'error') => void;
+}
+
+export function TallasSettingsTab({ onToast }: Props) {
   const { clientes } = useClientesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
   const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [dimSaved, setDimSaved] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  function flashSaved() {
+    setDimSaved(true);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => setDimSaved(false), 1800);
+  }
 
   const tallas = clienteId ? getTallas(clienteId) : {};
   const allKeys = Object.keys(tallas).sort((a, b) => {
@@ -49,6 +61,7 @@ export function TallasSettingsTab() {
     if (!t || !clienteId) return;
     addTalla(clienteId, t);
     setNewTalla('');
+    onToast(`Talla "${t}" agregada`, 'ok');
   }
 
   function handleReset() {
@@ -56,6 +69,7 @@ export function TallasSettingsTab() {
     if (!confirmReset) { setConfirmReset(true); return; }
     initClienteFromDefault(clienteId);
     setConfirmReset(false);
+    onToast('Tallas restablecidas a valores por defecto', 'ok');
   }
 
   if (clientes.length === 0) {
@@ -113,6 +127,8 @@ export function TallasSettingsTab() {
             >
               {confirmReset ? '¿CONFIRMAR RESET?' : '↺ RESTABLECER DEFAULTS'}
             </button>
+            <div className="tallas-toolbar-sep" />
+            <span className={`tallas-dim-saved ${dimSaved ? 'visible' : ''}`}>✓ GUARDADO</span>
           </>
         )}
 
@@ -163,7 +179,7 @@ export function TallasSettingsTab() {
                                     min="0"
                                     value={tallas[talla][f.key] ?? ''}
                                     placeholder={f.ranglan ? '—' : ''}
-                                    onChange={e => setDim(clienteId, talla, f.key, e.target.value)}
+                                    onChange={e => { setDim(clienteId, talla, f.key, e.target.value); flashSaved(); }}
                                   />
                                 </td>
                               ))}

@@ -42,6 +42,7 @@ export interface SchemaElement {
   icon: string;
   toggleKey: string | null;
   fields: SchemaField[];
+  group?: string;
 }
 
 export interface SchemaPieza {

@@ -1042,6 +1042,89 @@ body {
   overflow: hidden;
 }
 
+/* ── Element groups (accordion) ──────────────────────────────── */
+.element-groups-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.element-group {
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.element-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--cream);
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: left;
+  transition: background 0.12s;
+  user-select: none;
+}
+.element-group-header:hover {
+  background: var(--yellow);
+}
+.element-group-header.expanded {
+  background: var(--pieza-color, var(--cream));
+  border-bottom-color: var(--black);
+}
+.element-group-icon {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  min-width: 16px;
+  text-align: center;
+}
+.element-group-label {
+  flex: 1;
+  color: var(--black);
+}
+.element-group-count {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  opacity: 0.55;
+  letter-spacing: 0;
+}
+.element-group-chevron {
+  font-size: 0.75rem;
+  color: var(--black);
+  opacity: 0.6;
+  min-width: 12px;
+  text-align: center;
+}
+
+.element-group-body {
+  background: var(--white);
+  border-top: var(--border);
+  padding: 1rem;
+}
+
+/* Rules empty state */
+.rules-empty-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2rem;
+  color: #aaa;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+.rules-empty-icon {
+  font-size: 1.4rem;
+  opacity: 0.4;
+}
+
 /* Elements grid */
 .elements-grid {
   display: grid;
@@ -1422,6 +1505,18 @@ body {
   color: #fff;
   border-color: #c0392b;
 }
+
+.tallas-dim-saved {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.tallas-dim-saved.visible { opacity: 1; }
 
 .tallas-hint {
   font-size: 11px;
@@ -1818,6 +1913,39 @@ body {
 .btn-base-team { color: #bbb; font-size: 1rem !important; }
 .btn-base-team:hover { color: #f5a623; }
 .btn-base-team.is-base { color: #f5a623 !important; }
+
+/* ── Buttons on dark (featured card) background ───────────────── */
+.team-card-featured .btn {
+  border-color: rgba(255,255,255,0.4);
+}
+.team-card-featured .btn-ghost {
+  color: rgba(255,255,255,0.8);
+  border-color: rgba(255,255,255,0.4);
+}
+.team-card-featured .btn-ghost:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.7);
+  color: var(--white);
+  box-shadow: none;
+}
+.team-card-featured .btn-danger {
+  border-color: rgba(255,80,80,0.5) !important;
+}
+.team-card-featured .btn-danger:hover {
+  border-color: var(--red) !important;
+}
+.team-card-featured .btn-base-team {
+  color: rgba(255,255,255,0.45);
+  border-color: rgba(255,255,255,0.25);
+}
+.team-card-featured .btn-base-team:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(245,166,35,0.5);
+  box-shadow: none;
+}
+.team-card-featured .btn-base-team.is-base {
+  border-color: rgba(245,166,35,0.45) !important;
+}
 
 .teams-pagination {
   display: flex;

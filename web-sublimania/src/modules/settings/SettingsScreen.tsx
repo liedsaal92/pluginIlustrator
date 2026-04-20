@@ -65,7 +65,7 @@ export function SettingsScreen({ onToast }: Props) {
 
         <div className="settings-content">
           {tab === 'clientes' && <ClientesTab onToast={onToast} />}
-          {tab === 'tallas'   && <TallasSettingsTab />}
+          {tab === 'tallas'   && <TallasSettingsTab onToast={onToast} />}
           {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
         </div>
       </div>
