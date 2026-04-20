@@ -1,11 +1,13 @@
 // ============================================================
-//  store/useTallasStore.ts — Dimensiones de tallas por cliente
-//  Estructura: clienteId → tallaNombre → TallaDims
-//  Global, persiste en localStorage como "sublimania_tallas_v2"
+//  store/useTallasStore.ts — Dimensiones de tallas
+//  Estructura: clienteId → moldeId → tallaNombre → TallaDims
+//  Persiste en localStorage como "sublimania_tallas_v3"
+//  Migra automáticamente datos de v2 (sin molde) al molde default
 // ============================================================
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { TallaDims } from '../types';
+import { MOLDE_DEFAULT_ID } from './useMoldesStore';
 
 export const TALLAS_DEFAULT: Record<string, TallaDims> = {
   // ── Hombres ──────────────────────────────────────────────
@@ -36,81 +38,113 @@ export const TALLAS_DEFAULT: Record<string, TallaDims> = {
   '44M': { ALTO: '80.5',  ANCHO: '62.5',  MANGA_ANCHO: '51',   MANGA_ALTO: '28',   MANGA_RANGLAN_ANCHO: '', MANGA_RANGLAN_ALTO: '' },
 };
 
-const EMPTY_DIMS: TallaDims = { ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '', MANGA_RANGLAN_ANCHO: '', MANGA_RANGLAN_ALTO: '' };
+const EMPTY_DIMS: TallaDims = {
+  ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '', MANGA_RANGLAN_ANCHO: '', MANGA_RANGLAN_ALTO: '',
+};
+
+function normalizeDims(d: TallaDims): TallaDims {
+  return {
+    ALTO:                d.ALTO                ?? '',
+    ANCHO:               d.ANCHO               ?? '',
+    MANGA_ANCHO:         d.MANGA_ANCHO         ?? '',
+    MANGA_ALTO:          d.MANGA_ALTO          ?? '',
+    MANGA_RANGLAN_ANCHO: d.MANGA_RANGLAN_ANCHO ?? '',
+    MANGA_RANGLAN_ALTO:  d.MANGA_RANGLAN_ALTO  ?? '',
+  };
+}
+
+// ── Migration from v2 ─────────────────────────────────────────
+function migrateFromV2(): Record<string, Record<string, Record<string, TallaDims>>> {
+  try {
+    const raw = localStorage.getItem('sublimania_tallas_v2');
+    if (!raw) return {};
+    const v2 = JSON.parse(raw)?.state?.tallasPorCliente as Record<string, Record<string, TallaDims>> | undefined;
+    if (!v2 || typeof v2 !== 'object') return {};
+    const result: Record<string, Record<string, Record<string, TallaDims>>> = {};
+    for (const [clienteId, tallas] of Object.entries(v2)) {
+      result[clienteId] = { [MOLDE_DEFAULT_ID]: tallas };
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+// clienteId → moldeId → tallaNombre → TallaDims
+type TallasPorCliente = Record<string, Record<string, Record<string, TallaDims>>>;
 
 interface TallasState {
-  // clienteId → tallaNombre → TallaDims
-  tallasPorCliente: Record<string, Record<string, TallaDims>>;
+  tallasPorCliente: TallasPorCliente;
 
-  getTallas:              (clienteId: string) => Record<string, TallaDims>;
-  setDim:                 (clienteId: string, talla: string, field: keyof TallaDims, value: string) => void;
-  addTalla:               (clienteId: string, talla: string) => void;
-  removeTalla:            (clienteId: string, talla: string) => void;
-  initClienteFromDefault: (clienteId: string) => void;
+  getTallas:              (clienteId: string, moldeId: string) => Record<string, TallaDims>;
+  setDim:                 (clienteId: string, moldeId: string, talla: string, field: keyof TallaDims, value: string) => void;
+  addTalla:               (clienteId: string, moldeId: string, talla: string) => void;
+  removeTalla:            (clienteId: string, moldeId: string, talla: string) => void;
+  initClienteFromDefault: (clienteId: string, moldeId: string) => void;
   removeCliente:          (clienteId: string) => void;
+  removeMoldeData:        (moldeId: string) => void;
 }
 
 export const useTallasStore = create<TallasState>()(
   persist(
     (set, get) => ({
-      tallasPorCliente: {},
+      tallasPorCliente: migrateFromV2(),
 
-      getTallas: (clienteId) => {
-        const raw = get().tallasPorCliente[clienteId] ?? {};
-        // Normalizar al leer: garantiza campos nuevos en datos de localStorage antiguos
+      getTallas: (clienteId, moldeId) => {
+        const raw = get().tallasPorCliente[clienteId]?.[moldeId] ?? {};
         return Object.fromEntries(
-          Object.entries(raw).map(([t, d]) => [t, {
-            ALTO:                d.ALTO                ?? '',
-            ANCHO:               d.ANCHO               ?? '',
-            MANGA_ANCHO:         d.MANGA_ANCHO         ?? '',
-            MANGA_ALTO:          d.MANGA_ALTO          ?? '',
-            MANGA_RANGLAN_ANCHO: d.MANGA_RANGLAN_ANCHO ?? '',
-            MANGA_RANGLAN_ALTO:  d.MANGA_RANGLAN_ALTO  ?? '',
-          }]),
+          Object.entries(raw).map(([t, d]) => [t, normalizeDims(d)]),
         );
       },
 
-      setDim: (clienteId, talla, field, value) => {
+      setDim: (clienteId, moldeId, talla, field, value) => {
         const prev = get().tallasPorCliente;
-        const clienteTallas = prev[clienteId] ?? {};
+        const byMolde = prev[clienteId] ?? {};
+        const byTalla = byMolde[moldeId] ?? {};
         set({
           tallasPorCliente: {
             ...prev,
             [clienteId]: {
-              ...clienteTallas,
-              [talla]: { ...(clienteTallas[talla] ?? EMPTY_DIMS), [field]: value },
+              ...byMolde,
+              [moldeId]: {
+                ...byTalla,
+                [talla]: { ...(byTalla[talla] ?? EMPTY_DIMS), [field]: value },
+              },
             },
           },
         });
       },
 
-      addTalla: (clienteId, talla) => {
+      addTalla: (clienteId, moldeId, talla) => {
         const t = talla.trim().toUpperCase();
         if (!t) return;
         const prev = get().tallasPorCliente;
-        const clienteTallas = prev[clienteId] ?? {};
-        if (clienteTallas[t]) return; // ya existe
+        const byMolde = prev[clienteId] ?? {};
+        const byTalla = byMolde[moldeId] ?? {};
+        if (byTalla[t]) return;
         set({
           tallasPorCliente: {
             ...prev,
-            [clienteId]: { ...clienteTallas, [t]: { ...EMPTY_DIMS } },
+            [clienteId]: { ...byMolde, [moldeId]: { ...byTalla, [t]: { ...EMPTY_DIMS } } },
           },
         });
       },
 
-      removeTalla: (clienteId, talla) => {
+      removeTalla: (clienteId, moldeId, talla) => {
         const prev = get().tallasPorCliente;
-        const clienteTallas = { ...(prev[clienteId] ?? {}) };
-        delete clienteTallas[talla];
-        set({ tallasPorCliente: { ...prev, [clienteId]: clienteTallas } });
+        const byMolde = { ...(prev[clienteId] ?? {}) };
+        const byTalla = { ...(byMolde[moldeId] ?? {}) };
+        delete byTalla[talla];
+        set({ tallasPorCliente: { ...prev, [clienteId]: { ...byMolde, [moldeId]: byTalla } } });
       },
 
-      initClienteFromDefault: (clienteId) => {
+      initClienteFromDefault: (clienteId, moldeId) => {
         const prev = get().tallasPorCliente;
+        const byMolde = prev[clienteId] ?? {};
         set({
           tallasPorCliente: {
             ...prev,
-            [clienteId]: { ...TALLAS_DEFAULT },
+            [clienteId]: { ...byMolde, [moldeId]: { ...TALLAS_DEFAULT } },
           },
         });
       },
@@ -120,7 +154,17 @@ export const useTallasStore = create<TallasState>()(
         delete next[clienteId];
         set({ tallasPorCliente: next });
       },
+
+      removeMoldeData: (moldeId) => {
+        const prev = get().tallasPorCliente;
+        const next: TallasPorCliente = {};
+        for (const [clienteId, byMolde] of Object.entries(prev)) {
+          const { [moldeId]: _removed, ...rest } = byMolde;
+          next[clienteId] = rest;
+        }
+        set({ tallasPorCliente: next });
+      },
     }),
-    { name: 'sublimania_tallas_v2' }
+    { name: 'sublimania_tallas_v3' }
   )
 );

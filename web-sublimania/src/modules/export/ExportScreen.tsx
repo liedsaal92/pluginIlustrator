@@ -6,9 +6,26 @@ import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTea
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
 import { saveActiveTeam } from '../../store/useTeamsStore';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
+
+// Columnas visibles en el preview de tabla
+const PREVIEW_COLS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA', 'ALTO', 'ANCHO', 'MANGA_ALTO', 'MANGA_ANCHO'];
+
+function parseCSVRow(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes; continue; }
+    if (ch === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+    current += ch;
+  }
+  result.push(current);
+  return result;
+}
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -19,13 +36,28 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2)  return 'ahora';
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `hace ${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'ayer';
+  if (days < 30)  return `hace ${days} días`;
+  return `hace ${Math.floor(days / 30)} mes${Math.floor(days / 30) > 1 ? 'es' : ''}`;
+}
+
 export function ExportScreen({ onToast }: Props) {
   const { players, tallas, tallaRules, overrides, globalConfig, setScreen } = useTeamStore();
   const { activeTeamId, getActiveTeam, markExported, saveTeam } = useTeamsStore();
   const { getTallas } = useTallasStore();
   const clientes = useClientesStore(s => s.clientes);
+  const { moldes } = useMoldesStore();
 
   const [clienteId, setClienteId] = useState<string>('');
+  const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
 
   const activeTeam = getActiveTeam();
   const teamHistory = activeTeam?.exportHistory ?? {};
@@ -52,7 +84,7 @@ export function ExportScreen({ onToast }: Props) {
 
   const tallasSeleccionadasArr = Array.from(seleccionadas);
 
-  const tallaDims = clienteId ? getTallas(clienteId) : {};
+  const tallaDims = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
 
   const csv = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
@@ -68,8 +100,27 @@ export function ExportScreen({ onToast }: Props) {
     [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
   );
 
-  const preview = previewCSV.split('\r\n').slice(0, 6).join('\n');
   const jugadoresFiltrados = players.filter(p => seleccionadas.has(p.TALLA ?? ''));
+
+  // Historia de exportaciones
+  const historialEntries = tallasConJugadores
+    .map(t => ({ talla: t, count: players.filter(p => p.TALLA === t).length, info: teamHistory[t] ?? null }))
+    .filter(e => e.count > 0);
+  const lastExportTs = Object.values(teamHistory)
+    .map(h => new Date(h.exportedAt).getTime())
+    .sort((a, b) => b - a)[0] ?? null;
+
+  // Parse preview CSV into table rows
+  const { previewHeaders, previewColIndices, previewRows } = useMemo(() => {
+    const lines = previewCSV.split('\r\n').filter(Boolean);
+    if (lines.length < 1) return { previewHeaders: [], previewColIndices: [], previewRows: [] };
+    const allHeaders = parseCSVRow(lines[0]);
+    const indices = PREVIEW_COLS.map(col => allHeaders.indexOf(col)).filter(i => i >= 0);
+    const headers = indices.map(i => allHeaders[i]);
+    const rows = lines.slice(1, 7).map(line => parseCSVRow(line));
+    return { previewHeaders: headers, previewColIndices: indices, previewRows: rows };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewCSV]);
 
   function handleDownload() {
     if (!equipo) {
@@ -105,9 +156,10 @@ export function ExportScreen({ onToast }: Props) {
     setSeleccionadas(new Set());
   }
 
-  const canDownload = seleccionadas.size > 0 && !!equipo && !!clienteId;
+  const canDownload = seleccionadas.size > 0 && !!equipo && !!clienteId && !!moldeId;
   const downloadHint = !equipo ? 'Completá el nombre del equipo'
     : !clienteId ? 'Seleccioná un cliente'
+    : !moldeId ? 'Seleccioná un molde'
     : seleccionadas.size === 0 ? 'Seleccioná al menos una talla'
     : '';
 
@@ -157,6 +209,29 @@ export function ExportScreen({ onToast }: Props) {
             )}
           </div>
 
+          {/* Molde */}
+          <div className="export-section">
+            <div className="export-section-label">
+              TIPO DE MOLDE <span className="export-required">*</span>
+            </div>
+            {moldes.length === 0 ? (
+              <div className="export-no-clientes">
+                ⚠ Sin moldes — creá uno en <strong>⚙ Ajustes → Moldes</strong>
+              </div>
+            ) : (
+              <select
+                className="export-cliente-select"
+                value={moldeId}
+                onChange={e => setMoldeId(e.target.value)}
+              >
+                <option value="">— Seleccionar —</option>
+                {moldes.map(m => (
+                  <option key={m.id} value={m.id}>{m.nombre}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
           {/* Tallas */}
           <div className="export-section">
             <div className="export-section-label">TALLAS A EXPORTAR</div>
@@ -184,12 +259,40 @@ export function ExportScreen({ onToast }: Props) {
                     <span className="talla-toggle-count">
                       {hasPlayers ? `${count} jug.` : 'vacía'}
                     </span>
-                    {exportInfo && <span className="talla-toggle-exported">✓</span>}
+                    {exportInfo && (
+                      <span className="talla-toggle-exported" title={formatDate(exportInfo.exportedAt)}>
+                        ✓ {formatRelative(exportInfo.exportedAt)}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* Historial — debajo de los toggles, contexto para decidir qué exportar */}
+          {historialEntries.length > 0 && (
+            <div className="export-section">
+              <div className="export-historial">
+                <div className="export-historial-label">HISTORIAL</div>
+                <div className="export-historial-rows">
+                  {historialEntries.map(({ talla, count, info }) => (
+                    <div key={talla} className={`export-hist-row ${info ? 'hist-exported' : ''}`}>
+                      <span className="hist-talla">{talla}</span>
+                      <span className="hist-count">{count} jug.</span>
+                      {info ? (
+                        <span className="hist-date" title={formatDate(info.exportedAt)}>
+                          ✓ {formatRelative(info.exportedAt)}
+                        </span>
+                      ) : (
+                        <span className="hist-never">sin exportar</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── RIGHT: output ──────────────────────────────── */}
@@ -209,19 +312,60 @@ export function ExportScreen({ onToast }: Props) {
               <span className="export-stat-num">{CSV_COLUMN_ORDER.length}</span>
               <span className="export-stat-lbl">COLUMNAS</span>
             </div>
-            <div className="export-stat-pill">
-              <span className="export-stat-num">{Object.keys(overrides).length}</span>
-              <span className="export-stat-lbl">OVERRIDES</span>
+            <div className="export-stat-pill" title={lastExportTs ? formatDate(new Date(lastExportTs).toISOString()) : ''}>
+              <span className="export-stat-num export-stat-num--sm">
+                {lastExportTs ? formatRelative(new Date(lastExportTs).toISOString()) : '—'}
+              </span>
+              <span className="export-stat-lbl">ÚLT. EXPORT</span>
             </div>
           </div>
 
           {/* Preview */}
           <div className="export-preview">
             <div className="preview-label">
-              PREVIEW {seleccionadas.size > 0 ? `· ${tallasSeleccionadasArr.join(', ')}` : '— seleccioná tallas'}
+              PREVIEW {seleccionadas.size > 0 ? `· ${jugadoresFiltrados.length} jugadores` : '— seleccioná tallas'}
             </div>
+
+            {/* Talla breakdown */}
+            {seleccionadas.size > 0 && (
+              <div className="talla-breakdown">
+                {tallasSeleccionadasArr.map(talla => {
+                  const jug = players.filter(p => p.TALLA === talla);
+                  return (
+                    <div key={talla} className="tdb-row">
+                      <span className="tdb-talla">{talla}</span>
+                      <span className="tdb-count">{jug.length} jug.</span>
+                      <span className="tdb-names">
+                        {jug.map(p => p.NOMBRE_CAMISETA || p.NOMBRE).join(' · ')}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* CSV preview table */}
             <div className="preview-scroll">
-              <pre className="preview-csv">{seleccionadas.size > 0 ? preview : ''}</pre>
+              {seleccionadas.size > 0 && previewRows.length > 0 ? (
+                <table className="preview-table">
+                  <thead>
+                    <tr>
+                      {previewHeaders.map(h => <th key={h}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, i) => (
+                      <tr key={i}>
+                        {previewColIndices.map(j => (
+                          <td key={j}>{row[j] ?? ''}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="preview-empty">Seleccioná tallas para ver el preview</div>
+              )}
             </div>
           </div>
 

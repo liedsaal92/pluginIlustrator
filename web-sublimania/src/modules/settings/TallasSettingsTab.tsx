@@ -1,10 +1,11 @@
 // ============================================================
 //  modules/settings/TallasSettingsTab.tsx
-//  Tabla CRUD de tallas filtrada por cliente
+//  Tabla CRUD de tallas filtrada por cliente + molde
 // ============================================================
 import { useState, useRef } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
@@ -26,16 +27,17 @@ function tallaColor(talla: string): string {
   return colorMap[talla];
 }
 
-
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
 }
 
 export function TallasSettingsTab({ onToast }: Props) {
   const { clientes } = useClientesStore();
+  const { moldes } = useMoldesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
+  const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
   const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [dimSaved, setDimSaved] = useState(false);
@@ -47,7 +49,7 @@ export function TallasSettingsTab({ onToast }: Props) {
     saveTimer.current = setTimeout(() => setDimSaved(false), 1800);
   }
 
-  const tallas = clienteId ? getTallas(clienteId) : {};
+  const tallas = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
   const allKeys = Object.keys(tallas).sort((a, b) => {
     const numA = parseInt(a), numB = parseInt(b);
     return numA !== numB ? numA - numB : a.localeCompare(b);
@@ -58,16 +60,16 @@ export function TallasSettingsTab({ onToast }: Props) {
 
   function handleAdd() {
     const t = newTalla.trim().toUpperCase();
-    if (!t || !clienteId) return;
-    addTalla(clienteId, t);
+    if (!t || !clienteId || !moldeId) return;
+    addTalla(clienteId, moldeId, t);
     setNewTalla('');
     onToast(`Talla "${t}" agregada`, 'ok');
   }
 
   function handleReset() {
-    if (!clienteId) return;
+    if (!clienteId || !moldeId) return;
     if (!confirmReset) { setConfirmReset(true); return; }
-    initClienteFromDefault(clienteId);
+    initClienteFromDefault(clienteId, moldeId);
     setConfirmReset(false);
     onToast('Tallas restablecidas a valores por defecto', 'ok');
   }
@@ -82,10 +84,20 @@ export function TallasSettingsTab({ onToast }: Props) {
     );
   }
 
+  if (moldes.length === 0) {
+    return (
+      <div className="tallas-tab">
+        <div className="tallas-no-clientes">
+          No hay moldes registrados. Creá un molde en la pestaña <strong>MOLDES</strong> primero.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tallas-tab">
 
-      {/* ── Barra de controles unificada ── */}
+      {/* ── Barra de controles ── */}
       <div className="tallas-toolbar">
 
         <div className="tallas-toolbar-group">
@@ -104,7 +116,23 @@ export function TallasSettingsTab({ onToast }: Props) {
           </select>
         </div>
 
-        {clienteId && (
+        <div className="tallas-toolbar-sep" />
+
+        <div className="tallas-toolbar-group">
+          <span className="tallas-toolbar-label">MOLDE</span>
+          <select
+            className="tallas-cliente-select"
+            value={moldeId}
+            onChange={e => { setMoldeId(e.target.value); setConfirmReset(false); }}
+          >
+            <option value="">— Seleccionar —</option>
+            {moldes.map(m => (
+              <option key={m.id} value={m.id}>{m.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        {clienteId && moldeId && (
           <>
             <div className="tallas-toolbar-sep" />
             <input
@@ -134,11 +162,11 @@ export function TallasSettingsTab({ onToast }: Props) {
 
       </div>
 
-      {clienteId && (
+      {clienteId && moldeId && (
         <>
           {allKeys.length === 0 ? (
             <p className="tallas-hint" style={{ textAlign: 'center' }}>
-              Sin tallas — agregá una o usá ↺ RESTABLECER DEFAULTS
+              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ RESTABLECER DEFAULTS
             </p>
           ) : (
             <div className="tallas-generos">
@@ -179,7 +207,7 @@ export function TallasSettingsTab({ onToast }: Props) {
                                     min="0"
                                     value={tallas[talla][f.key] ?? ''}
                                     placeholder={f.ranglan ? '—' : ''}
-                                    onChange={e => { setDim(clienteId, talla, f.key, e.target.value); flashSaved(); }}
+                                    onChange={e => { setDim(clienteId, moldeId, talla, f.key, e.target.value); flashSaved(); }}
                                   />
                                 </td>
                               ))}
@@ -187,7 +215,7 @@ export function TallasSettingsTab({ onToast }: Props) {
                                 <ConfirmButton
                                   className="btn-del-talla"
                                   title="Eliminar talla"
-                                  onConfirm={() => removeTalla(clienteId, talla)}
+                                  onConfirm={() => removeTalla(clienteId, moldeId, talla)}
                                 />
                               </td>
                             </tr>
@@ -202,8 +230,7 @@ export function TallasSettingsTab({ onToast }: Props) {
           )}
 
           <p className="tallas-hint">
-            {allKeys.length} tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong>.
-            Los valores se aplican al exportar el CSV según el cliente seleccionado.
+            {allKeys.length} tallas · <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> · <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong>
           </p>
         </>
       )}
@@ -211,5 +238,4 @@ export function TallasSettingsTab({ onToast }: Props) {
   );
 }
 
-// También exportamos el valor por defecto de TALLAS_DEFAULT para referencia
 export { TALLAS_DEFAULT };

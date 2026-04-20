@@ -18,11 +18,26 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function exportSummary(entry: TeamEntry): string {
-  const count = Object.keys(entry.exportHistory).length;
-  if (count === 0) return 'Sin exportaciones';
-  const tallas = Object.keys(entry.exportHistory).join(', ');
-  return `${count} talla${count !== 1 ? 's' : ''} exportadas: ${tallas}`;
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2)  return 'ahora';
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `hace ${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'ayer';
+  if (days < 30)  return `hace ${days} días`;
+  return `hace ${Math.floor(days / 30)} mes${Math.floor(days / 30) > 1 ? 'es' : ''}`;
+}
+
+function lastExportInfo(entry: TeamEntry): { relative: string; full: string; tallas: string } | null {
+  const entries = Object.entries(entry.exportHistory);
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => new Date(b[1].exportedAt).getTime() - new Date(a[1].exportedAt).getTime());
+  const [, { exportedAt }] = entries[0];
+  const tallas = entries.map(([t]) => t).join(', ');
+  return { relative: formatRelative(exportedAt), full: formatDate(exportedAt), tallas };
 }
 
 const EMPTY_ENTRY: TeamEntry = {
@@ -161,7 +176,12 @@ export function TeamsScreen({ onToast }: Props) {
                 <div className="team-card-featured-name">{featured.nombre || 'Sin nombre'}</div>
                 <div className="team-card-featured-meta">
                   <span><strong>{featured.players.length}</strong> jugadores · <strong>{featured.tallas.length}</strong> tallas{featured.tallas.length > 0 ? `: ${featured.tallas.join(', ')}` : ''}</span>
-                  {!isEmpty && <span>{exportSummary(featured)}</span>}
+                  {!isEmpty && (() => {
+                    const exp = lastExportInfo(featured);
+                    return exp
+                      ? <span title={exp.full}>✓ exportado {exp.relative} · {exp.tallas}</span>
+                      : <span>Sin exportaciones</span>;
+                  })()}
                 </div>
                 <div className="team-card-featured-dates">
                   Modificado: {formatDate(featured.updatedAt)}
@@ -219,7 +239,10 @@ export function TeamsScreen({ onToast }: Props) {
                   <span>{entry.players.length} jugadores</span>
                   {!isEmpty && <span>{entry.tallas.length} tallas: {entry.tallas.join(', ')}</span>}
                 </div>
-                {!isEmpty && <div className="team-card-export">{exportSummary(entry)}</div>}
+                {!isEmpty && (() => {
+                  const exp = lastExportInfo(entry);
+                  return <div className="team-card-export">{exp ? `✓ ${exp.relative} · ${exp.tallas}` : 'Sin exportaciones'}</div>;
+                })()}
                 <div className="team-card-dates">
                   <span>Creado: {formatDate(entry.createdAt)}</span>
                   <span>Modificado: {formatDate(entry.updatedAt)}</span>

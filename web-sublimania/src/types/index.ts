@@ -84,8 +84,14 @@ export interface Cliente {
   casaCosturera: string;
 }
 
+// ── MOLDE (tipo de prenda) ────────────────────────────────────
+export interface Molde {
+  id: string;
+  nombre: string;
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
 export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'settings';
 export type ConfigTab = 'rules' | 'players';
-export type SettingsTab = 'clientes' | 'tallas' | 'users';
+export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';
