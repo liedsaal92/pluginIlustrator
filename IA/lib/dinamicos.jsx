@@ -445,6 +445,12 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         var mangaRight   = mangaBounds[2];
         var mangaCentroX = (mangaLeft + mangaRight) / 2;
 
+        Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+            ": DIAG MANGA ref=" + (estaticManga ? "ESTATICO" : "grupoCopia") +
+            " mangaTop=" + ptToCm(mangaBounds[1]).toFixed(4) + "cm" +
+            " mangaBot=" + ptToCm(mangaBottom).toFixed(4) + "cm" +
+            " mangaAlto=" + ptToCm(Math.abs(mangaBounds[1]-mangaBottom)).toFixed(4) + "cm");
+
         if (itemSponsorSecundarioManga) {
             var ssmMarginInf = parseFloat(jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_MARGIN_INF"]);
             if (!isNaN(ssmMarginInf) && ssmMarginInf >= 0) {
@@ -472,14 +478,40 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
 
         // 4. Posicionar NUMERO (manga) desde el borde inferior
+        // NUMERO es un Area TextFrame: el borde geométrico incluye espacio vacío debajo
+        // del glifo. Usamos visual bounds (outlines) para saber dónde está el glifo real
+        // y posicionamos con .top (documento-coords), no translate() — translate opera
+        // en coordenadas locales del grupo escalado (DINAMICO) y aplica factor incorrecto.
         if (itemNumero && jugador.TIENE_NUMERO !== "NO" && llevaNumeroEnEstaPieza) {
             var numMangaMarginInf = parseFloat(jugador["NUMERO_M_" + sufManga + "_MARGIN_INF"]);
             if (!isNaN(numMangaMarginInf) && numMangaMarginInf >= 0) {
-                var numMBounds = itemNumero.geometricBounds;
-                var numMAltura = Math.abs(numMBounds[1] - numMBounds[3]);
-                var numMAncho  = Math.abs(numMBounds[2] - numMBounds[0]);
-                itemNumero.top  = mangaBottom + cmToPt(numMangaMarginInf) + numMAltura;
+                var numMBounds     = itemNumero.geometricBounds;
+                var numMAncho      = Math.abs(numMBounds[2] - numMBounds[0]);
+                var numTargetBot   = mangaBottom + cmToPt(numMangaMarginInf);
+
+                // Obtener borde inferior VISUAL del glifo para alinear correctamente
+                var numVB = getTextVisualBounds(itemNumero);
+                var numVisualBot = numVB ? numVB[3] : numMBounds[3];
+
+                Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                    ": DIAG NUMERO geomTop=" + ptToCm(numMBounds[1]).toFixed(4) + "cm" +
+                    " geomBot=" + ptToCm(numMBounds[3]).toFixed(4) + "cm" +
+                    " visualBot=" + ptToCm(numVisualBot).toFixed(4) + "cm" +
+                    " targetBot=" + ptToCm(numTargetBot).toFixed(4) + "cm");
+
+                // .top es geomTop; queremos: visualBot + delta = targetBot
+                // → nuevo .top = geomTop + (targetBot - visualBot)
+                var numTopNuevo = numMBounds[1] + (numTargetBot - numVisualBot);
+                itemNumero.top  = numTopNuevo;
                 itemNumero.left = mangaCentroX - (numMAncho / 2);
+
+                var numMBoundsPost = itemNumero.geometricBounds;
+                Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                    ": DIAG NUMERO POST" +
+                    " geomTop=" + ptToCm(numMBoundsPost[1]).toFixed(4) + "cm" +
+                    " geomBot=" + ptToCm(numMBoundsPost[3]).toFixed(4) + "cm" +
+                    " distBotManga=" + ptToCm(numMBoundsPost[3] - mangaBottom).toFixed(4) + "cm");
+
                 Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                        ": NUMERO (manga) posicionado (inf:" + numMangaMarginInf.toFixed(1) + "cm)");
             }
