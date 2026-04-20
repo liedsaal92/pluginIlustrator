@@ -125,7 +125,8 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
                 className={`sidebar-export-btn ${screen === 'export' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('export'); })}
               >
-                <span>↗ EXPORTAR CSV</span>
+                <span className="sidebar-nav-item-icon">↗</span>
+                EXPORTAR CSV
                 <span className={`sidebar-step-dot ${stepStatus('export')}`} />
               </button>
             </>
@@ -163,25 +164,18 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
 
       {/* ── FOOTER ───────────────────────────────────────────── */}
       <div className="sidebar-footer">
-        {session && (
-          <div className="sidebar-user-info">
-            <div className="sidebar-user-name">{session.user.nombre}</div>
-            <div className="sidebar-user-org">{session.user.orgName}</div>
-            <span className={`sidebar-role-badge role-${session.user.role}`}>
-              {session.user.role.toUpperCase()}
-            </span>
-          </div>
-        )}
 
-        <div className="sidebar-footer-actions">
-          {canManageSettings && (
-            <>
+        {/* Config backup — admin only */}
+        {canManageSettings && (
+          <div className="sidebar-backup">
+            <div className="sidebar-backup-label">// BACKUP</div>
+            <div className="sidebar-backup-actions">
               <button
-                className="sidebar-footer-btn"
+                className="sidebar-backup-btn"
                 onClick={() => importInputRef.current?.click()}
                 title="Importar configuración"
               >
-                ↓ IMPORT
+                ↓ IMPORTAR
               </button>
               <input
                 ref={importInputRef}
@@ -194,18 +188,32 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
                 }}
               />
               <button
-                className="sidebar-footer-btn"
+                className="sidebar-backup-btn"
                 onClick={handleExportBackup}
                 title="Exportar configuración"
               >
-                ↑ EXPORT
+                ↑ EXPORTAR
               </button>
-            </>
-          )}
-          <button className="sidebar-footer-btn btn-logout" onClick={() => logout()}>
-            SALIR
-          </button>
-        </div>
+            </div>
+          </div>
+        )}
+
+        {/* User info + logout */}
+        {session && (
+          <div className="sidebar-user-section">
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{session.user.nombre}</div>
+              <div className="sidebar-user-org">{session.user.orgName}</div>
+              <span className={`sidebar-role-badge role-${session.user.role}`}>
+                {session.user.role.toUpperCase()}
+              </span>
+            </div>
+            <button className="sidebar-footer-btn btn-logout" onClick={() => logout()}>
+              SALIR
+            </button>
+          </div>
+        )}
+
       </div>
 
     </nav>

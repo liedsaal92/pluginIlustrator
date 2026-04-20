@@ -294,32 +294,32 @@ body {
 }
 
 /* Step progress dots */
-/* Export CTA button in sidebar */
+/* Export nav button — same style as other sub items */
 .sidebar-export-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 1.25rem;
-  margin: 0.5rem 0.75rem 0.25rem;
-  background: rgba(255,230,0,0.08);
-  border: 1.5px solid rgba(255,230,0,0.25);
-  color: var(--yellow);
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0.5rem 2rem;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.45);
   font-family: var(--mono);
   font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
-  width: calc(100% - 1.5rem);
+  transition: color 0.1s, background 0.1s;
+  width: 100%;
+  text-align: left;
 }
 .sidebar-export-btn:hover {
-  background: rgba(255,230,0,0.15);
-  border-color: rgba(255,230,0,0.5);
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.04);
 }
 .sidebar-export-btn.active {
-  background: var(--yellow);
-  border-color: var(--yellow);
+  background: var(--cyan);
   color: var(--black);
+  font-weight: 700;
 }
 
 .sidebar-step-dot {
@@ -343,29 +343,6 @@ body {
   gap: 0.75rem;
 }
 
-.sidebar-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.sidebar-user-name {
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.55);
-  letter-spacing: 0.04em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sidebar-user-org {
-  font-family: var(--mono);
-  font-size: 0.53rem;
-  color: #333;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .sidebar-role-badge {
   font-family: var(--mono);
   font-size: 0.5rem;
@@ -401,8 +378,78 @@ body {
   border-color: #333;
   background: rgba(255,255,255,0.03);
 }
-.sidebar-footer-btn.btn-logout { color: #5a1a1a; border-color: #2a1010; }
-.sidebar-footer-btn.btn-logout:hover { color: #e55; border-color: #5a1a1a; background: rgba(220,50,50,0.06); }
+.sidebar-footer-btn.btn-logout { color: #c03030; border-color: #6a2020; }
+.sidebar-footer-btn.btn-logout:hover { color: #ff5555; border-color: #c03030; background: rgba(220,50,50,0.1); }
+
+/* ── SIDEBAR BACKUP ───────────────────────────────────────────── */
+.sidebar-backup {
+  padding: 10px 0 6px;
+  border-top: 1px solid #1a1a1a;
+}
+.sidebar-backup-label {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #555;
+  margin-bottom: 7px;
+}
+.sidebar-backup-actions {
+  display: flex;
+  gap: 6px;
+}
+.sidebar-backup-btn {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 7px 8px;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  text-align: center;
+}
+.sidebar-backup-btn:hover {
+  background: var(--cyan);
+  color: var(--black);
+}
+
+/* ── SIDEBAR USER SECTION ─────────────────────────────────────── */
+.sidebar-user-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0 0;
+  border-top: 1px solid #1a1a1a;
+}
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sidebar-user-name {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-user-org {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── APP MAIN ─────────────────────────────────────────────────── */
 .app-main {
