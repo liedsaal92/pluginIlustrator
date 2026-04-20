@@ -284,6 +284,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ"
                 );
             }
+            var spTopIzqMarginLat = parseFloat(jugador.SPONSOR_TOP_IZQ_MARGIN_LAT);
+            if (!isNaN(spTopIzqMarginLat) && spTopIzqMarginLat >= 0) {
+                posicionarItemDesdeLatMasCercano(
+                    itemSponsorTopIzq, grupoCopia,
+                    spTopIzqMarginLat,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ"
+                );
+            }
         }
     }
 
@@ -307,6 +315,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 posicionarItemDesdeTop(
                     itemSponsorTopDer, grupoCopia,
                     spTopDerMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER"
+                );
+            }
+            var spTopDerMarginLat = parseFloat(jugador.SPONSOR_TOP_DER_MARGIN_LAT);
+            if (!isNaN(spTopDerMarginLat) && spTopDerMarginLat >= 0) {
+                posicionarItemDesdeLatMasCercano(
+                    itemSponsorTopDer, grupoCopia,
+                    spTopDerMarginLat,
                     jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER"
                 );
             }
@@ -336,6 +352,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ_SEC"
                 );
             }
+            var spTopIzqSecMarginLat = parseFloat(jugador.SPONSOR_TOP_IZQ_SEC_MARGIN_LAT);
+            if (!isNaN(spTopIzqSecMarginLat) && spTopIzqSecMarginLat >= 0) {
+                posicionarItemDesdeLatMasCercano(
+                    itemSponsorTopIzqSec, grupoCopia,
+                    spTopIzqSecMarginLat,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_IZQ_SEC"
+                );
+            }
         }
     }
 
@@ -359,6 +383,14 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 posicionarItemDesdeTop(
                     itemSponsorTopDerSec, grupoCopia,
                     spTopDerSecMarginSup,
+                    jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER_SEC"
+                );
+            }
+            var spTopDerSecMarginLat = parseFloat(jugador.SPONSOR_TOP_DER_SEC_MARGIN_LAT);
+            if (!isNaN(spTopDerSecMarginLat) && spTopDerSecMarginLat >= 0) {
+                posicionarItemDesdeLatMasCercano(
+                    itemSponsorTopDerSec, grupoCopia,
+                    spTopDerSecMarginLat,
                     jugador.NOMBRE, nombrePieza, "SPONSOR_TOP_DER_SEC"
                 );
             }
@@ -714,6 +746,25 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaInfRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
             procesarLineaMangaInf(grupoLineaInf, lineaInfAncho, lineaInfAlto, lineaInfRef,
                                   jugador.NOMBRE, nombrePieza, factorPieza);
+        }
+
+        // ── LINEAS ADIDAS (manga ranglan) ─────────────────────
+        var itemLineasAdidas = findItemByNameRecursivo(dinamico, "LINEAS_ADIDAS");
+        if (itemLineasAdidas) {
+            if (jugador["LLEVA_LINEAS_ADIDAS_M_" + sufMangaL] !== "SI") {
+                itemLineasAdidas.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": LINEAS_ADIDAS ocultadas (LLEVA=NO)");
+            } else {
+                var laAncho    = parseFloat(jugador["LINEAS_ADIDAS_M_" + sufMangaL + "_ANCHO"]);
+                var laRef      = trim((jugador["LINEAS_ADIDAS_M_" + sufMangaL + "_REF"] || "") + "").toUpperCase();
+                var laMarginInf = parseFloat(jugador["LINEAS_ADIDAS_M_" + sufMangaL + "_MARGIN_INF"]);
+                var laRanglan  = trim((jugador["MANGA_" + sufMangaL + "_ES_RANGLAN"] || "NO") + "").toUpperCase();
+                procesarLineasAdidas(
+                    itemLineasAdidas, sufMangaL,
+                    laAncho, laRef, laMarginInf, laRanglan,
+                    grupoCopia, jugador.NOMBRE, nombrePieza
+                );
+            }
         }
     }
 }

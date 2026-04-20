@@ -259,6 +259,97 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
     }
 }
 
+// ============================================================
+//  PROCESAMIENTO DE LINEAS ADIDAS (manga ranglan)
+// ============================================================
+// ANCHO fijo según CSV. Alto calculado dinámicamente:
+//   ES_RANGLAN=SI → alto = alto_ESTATICO - marginInf
+//                   posición: top alineado al top de ESTATICO
+//   ES_RANGLAN=NO → posiciona desde el borde inferior del ESTATICO
+//                   (igual que ESCUDO en manga)
+// Centrado horizontalmente sobre el ESTATICO.
+function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan, grupoPieza, nombreJugador, nombrePieza) {
+    if (!item) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": LINEAS_ADIDAS (manga " + suf + ") no encontrada — omitida");
+        return;
+    }
+
+    Log.info(nombrePieza + " | " + nombreJugador +
+             ": LINEAS_ADIDAS CSV → ANCHO=" + targetAncho +
+             " REF=" + ref + " MARGIN_INF=" + marginInf + " ES_RANGLAN=" + esRanglan);
+
+    try {
+        // ── Obtener bounds del ESTATICO ──────────────────────
+        var _estRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+        if (!_estRef) _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
+        var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
+        var estTop    = _estBounds[1]; // borde superior (mayor Y en coordenadas AI)
+        var estBottom = _estBounds[3]; // borde inferior (menor Y)
+        var estLeft   = _estBounds[0];
+        var estRight  = _estBounds[2];
+        var estAlto   = Math.abs(estTop - estBottom);
+
+        // ── 1. Escalar ANCHO ─────────────────────────────────
+        if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
+            var boundsAntes = item.geometricBounds;
+            var anchoActCm  = ptToCm(Math.abs(boundsAntes[2] - boundsAntes[0]));
+            if (anchoActCm > 0) {
+                var factorAncho = (targetAncho / anchoActCm) * 100;
+                item.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
+                Log.ok(nombrePieza + " | " + nombreJugador +
+                       ": LINEAS_ADIDAS → ancho " + targetAncho.toFixed(1) + "cm");
+            }
+        }
+        // ref=PROPORCIONAL: no resize de ancho
+
+        // ── 2. Alto dinámico (ranglan) o posicionado desde inf ──
+        var marginInfPt = cmToPt(isNaN(marginInf) ? 0 : marginInf);
+
+        if (esRanglan === "SI") {
+            // Alto = alto_ESTATICO − marginInf
+            var targetAltoPt = estAlto - marginInfPt;
+            if (targetAltoPt > 0) {
+                var boundsParaAlto = item.geometricBounds;
+                var altoActPt = Math.abs(boundsParaAlto[1] - boundsParaAlto[3]);
+                if (altoActPt > 0) {
+                    var factorAlto = (targetAltoPt / altoActPt) * 100;
+                    item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
+                    Log.ok(nombrePieza + " | " + nombreJugador +
+                           ": LINEAS_ADIDAS → alto dinámico " +
+                           ptToCm(targetAltoPt).toFixed(2) + "cm (ranglan)");
+                }
+            }
+
+            // Alinear top del item con top del ESTATICO
+            var bPost1 = item.geometricBounds;
+            item.translate(0, estTop - bPost1[1]);
+
+        } else {
+            // Posicionar desde borde inferior: bottom_item = estBottom + marginInf
+            var bPost2    = item.geometricBounds;
+            var itemAlto2 = Math.abs(bPost2[1] - bPost2[3]);
+            item.translate(0, (estBottom + marginInfPt + itemAlto2) - bPost2[1]);
+        }
+
+        // ── 3. Centrar horizontalmente ───────────────────────
+        var centerX  = (estLeft + estRight) / 2;
+        var bCentrar = item.geometricBounds;
+        var itemMidX = (bCentrar[0] + bCentrar[2]) / 2;
+        item.translate(centerX - itemMidX, 0);
+
+        var bFinal = item.geometricBounds;
+        Log.ok(nombrePieza + " | " + nombreJugador +
+               ": LINEAS_ADIDAS posicionada → left=" + ptToCm(bFinal[0]).toFixed(2) +
+               "cm top=" + ptToCm(bFinal[1]).toFixed(2) +
+               "cm bot=" + ptToCm(bFinal[3]).toFixed(2) + "cm");
+
+    } catch(e) {
+        Log.info(nombrePieza + " | " + nombreJugador +
+                 ": LINEAS_ADIDAS error (" + e.message + ") — omitida");
+    }
+}
+
 // Línea inferior
 // REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga (comportamiento original)
 // REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga

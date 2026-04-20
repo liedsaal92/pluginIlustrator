@@ -6,6 +6,19 @@ import type { TeamEntry, TallaDims, Cliente } from '../types';
 
 const BACKUP_VERSION = 2;
 
+// Garantiza que todos los campos de TallaDims estén presentes.
+// Necesario al importar backups antiguos que no tenían los campos nuevos.
+function normalizeTallaDims(d: Partial<TallaDims>): TallaDims {
+  return {
+    ALTO:                d.ALTO                ?? '',
+    ANCHO:               d.ANCHO               ?? '',
+    MANGA_ANCHO:         d.MANGA_ANCHO         ?? '',
+    MANGA_ALTO:          d.MANGA_ALTO          ?? '',
+    MANGA_RANGLAN_ANCHO: d.MANGA_RANGLAN_ANCHO ?? '',
+    MANGA_RANGLAN_ALTO:  d.MANGA_RANGLAN_ALTO  ?? '',
+  };
+}
+
 export interface ConfigBackup {
   version: number;
   exportedAt: string;
@@ -157,11 +170,17 @@ export function mergeBackup(
   const mergedClientes = Array.from(clientesById.values());
 
   // ── Tallas por cliente: el archivo importado gana ───────────
+  // Se normalizan los TallaDims entrantes para garantizar que los campos
+  // nuevos (MANGA_RANGLAN_ANCHO, MANGA_RANGLAN_ALTO) existan aunque el
+  // backup haya sido generado antes de que se agregaran esos campos.
   let tallasUpdated = 0;
   const mergedTallas = { ...currentTallas };
-  Object.entries(backup.tallasPorCliente ?? {}).forEach(([cid, tallas]) => {
+  Object.entries(backup.tallasPorCliente ?? {}).forEach(([cid, tallasIncoming]) => {
+    const tallasNorm = Object.fromEntries(
+      Object.entries(tallasIncoming).map(([t, d]) => [t, normalizeTallaDims(d as Partial<TallaDims>)]),
+    );
     if (mergedTallas[cid]) tallasUpdated++;
-    mergedTallas[cid] = { ...(mergedTallas[cid] ?? {}), ...tallas };
+    mergedTallas[cid] = { ...(mergedTallas[cid] ?? {}), ...tallasNorm };
   });
 
   // ── Equipos ──────────────────────────────────────────────────
