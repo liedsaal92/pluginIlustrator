@@ -131,6 +131,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     // ── ESCUDO ──────────────────────────────────────────────
     // Item genérico ESCUDO en piezas FRENTE o ESPALDA
     var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+    var _ladoEscudoF = null; // se captura para que LOGO_MARCA vaya al lado opuesto
 
     if (grupoEscudo) {
         var sufEscudo    = (nombrePieza === "ESPALDA") ? "_E" : "_F";
@@ -157,7 +158,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 }
                 var escudoMarginLat = parseFloat(jugador.ESCUDO_F_MARGIN_LAT);
                 if (!isNaN(escudoMarginLat) && escudoMarginLat >= 0) {
-                    posicionarItemDesdeLatMasCercano(
+                    _ladoEscudoF = posicionarItemDesdeLatMasCercano(
                         grupoEscudo, grupoCopia,
                         escudoMarginLat,
                         jugador.NOMBRE, nombrePieza, "ESCUDO_F"
@@ -535,6 +536,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"],
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL"
             );
+            centrarHorizontalmente(itemSponsorPrincipal, grupoCopia);
             if (nombrePieza === "FRENTE") {
                 var spMarginSup = parseFloat(jugador.SPONSOR_PRINCIPAL_F_MARGIN_SUP);
                 if (!isNaN(spMarginSup) && spMarginSup >= 0) {
@@ -615,6 +617,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.ETIQUETA_TOP_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_TOP"
             );
+            centrarHorizontalmente(itemEtiquetaTop, grupoCopia);
             var etqTopMarginSup = parseFloat(jugador.ETIQUETA_TOP_MARGIN_SUP);
             if (!isNaN(etqTopMarginSup) && etqTopMarginSup >= 0) {
                 posicionarItemDesdeTop(
@@ -651,10 +654,19 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             }
             var logoMarginLat = parseFloat(jugador.LOGO_MARCA_MARGIN_LAT);
             if (!isNaN(logoMarginLat) && logoMarginLat >= 0) {
+                // LOGO_MARCA va al lado opuesto del ESCUDO (si ESCUDO fue posicionado).
+                // Si no hay ESCUDO, auto-detecta por posición del item.
+                var _logoLadoOpuesto = (_ladoEscudoF === "IZQ") ? "DER"
+                                     : (_ladoEscudoF === "DER") ? "IZQ"
+                                     : null;
+                if (_logoLadoOpuesto) {
+                    Log._linea("-----", "LOGO_MARCA: lado opuesto a ESCUDO (" + _ladoEscudoF + ") → forzando " + _logoLadoOpuesto);
+                }
                 posicionarItemDesdeLatMasCercano(
                     itemLogoMarca, grupoCopia,
                     logoMarginLat,
-                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
+                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA",
+                    _logoLadoOpuesto
                 );
             }
         }

@@ -67,35 +67,72 @@ function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, no
     }
 }
 
-function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJugador, nombrePieza, labelItem) {
+// ladoForzado: "IZQ", "DER", o null/undefined para auto-detectar por posición del item.
+// Referencia: usa clip mask bounds cuando ESTATICO está clipped (área visible real),
+// igual que posicionarEtiqueta. Esto hace que los márgenes CSV sean relativos al
+// borde visible de la silueta, no al contenido desbordante.
+function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJugador, nombrePieza, labelItem, ladoForzado) {
     try {
         var estatico   = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds  = estatico ? estatico.geometricBounds : grupoPieza.geometricBounds;
         var piezaLeft  = refBounds[0];
         var piezaRight = refBounds[2];
+        var _latSrcRef = estatico ? "ESTATICO-contenido" : "grupoPieza";
+        if (estatico && estatico.clipped) {
+            try {
+                var _clipBLat = estatico.pageItems[0].geometricBounds;
+                piezaLeft  = _clipBLat[0];
+                piezaRight = _clipBLat[2];
+                _latSrcRef = "clipMask";
+            } catch(_ecl) { /* fallback a geomBounds */ }
+        }
 
         var itemBounds  = item.geometricBounds;
         var itemAncho   = Math.abs(itemBounds[2] - itemBounds[0]);
         var itemCenterX = (itemBounds[0] + itemBounds[2]) / 2;
         var estCenterX  = (piezaLeft + piezaRight) / 2;
 
+        var ladoDecidido = ladoForzado
+                           ? trim(ladoForzado + "").toUpperCase()
+                           : (itemCenterX < estCenterX ? "IZQ" : "DER");
+
+        Log._linea("-----", labelItem + " LAT DIAG:" +
+            " piezaL=" + ptToCm(piezaLeft).toFixed(3) + "cm" +
+            " piezaR=" + ptToCm(piezaRight).toFixed(3) + "cm" +
+            " estCentroX=" + ptToCm(estCenterX).toFixed(3) + "cm" +
+            " ref=" + _latSrcRef);
+        Log._linea("-----", labelItem + " LAT DIAG:" +
+            " itemL=" + ptToCm(itemBounds[0]).toFixed(3) + "cm" +
+            " itemR=" + ptToCm(itemBounds[2]).toFixed(3) + "cm" +
+            " itemCentroX=" + ptToCm(itemCenterX).toFixed(3) + "cm" +
+            " ancho=" + ptToCm(itemAncho).toFixed(3) + "cm");
+        Log._linea("-----", labelItem + " LAT DIAG: decision=" + ladoDecidido +
+            (ladoForzado ? " (FORZADO)" : " (auto)") +
+            " margin=" + marginLatCm.toFixed(3) + "cm");
+
         var marginLatPt = cmToPt(marginLatCm);
 
-        if (itemCenterX < estCenterX) {
-            // Elemento a la izquierda → borde izquierdo como referencia
+        if (ladoDecidido === "IZQ") {
             item.left = piezaLeft + marginLatPt;
+            var _postLat = item.geometricBounds;
+            Log._linea("-----", labelItem + " LAT POST: itemL=" + ptToCm(_postLat[0]).toFixed(3) +
+                "cm distIzq=" + ptToCm(_postLat[0] - piezaLeft).toFixed(3) + "cm");
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": " + labelItem + " posicionado (lat-izq:" + marginLatCm.toFixed(1) + "cm)");
         } else {
-            // Elemento a la derecha → borde derecho como referencia
             item.left = piezaRight - marginLatPt - itemAncho;
+            var _postLat2 = item.geometricBounds;
+            Log._linea("-----", labelItem + " LAT POST: itemR=" + ptToCm(_postLat2[2]).toFixed(3) +
+                "cm distDer=" + ptToCm(piezaRight - _postLat2[2]).toFixed(3) + "cm");
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": " + labelItem + " posicionado (lat-der:" + marginLatCm.toFixed(1) + "cm)");
         }
+        return ladoDecidido;
     } catch(e) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": " + labelItem + " error al posicionar lat (" + e.message + ") — omitido");
+        return null;
     }
 }
 
@@ -105,13 +142,44 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
         if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         var refBounds   = estatico ? estatico.geometricBounds
                                    : grupoPieza.geometricBounds;
+        // Usar clip mask bounds cuando ESTATICO está clipped:
+        // geometricBounds devuelve bounds del CONTENIDO. El clip (pageItems[0])
+        // es la silueta visible real del molde — es la referencia correcta para márgenes.
         var piezaLeft   = refBounds[0];
         var piezaRight  = refBounds[2];
         var piezaBottom = refBounds[3];
+        var _etqSrcRef  = estatico ? "ESTATICO-contenido" : "grupoPieza";
+        if (estatico && estatico.clipped) {
+            try {
+                var _clipBEtq = estatico.pageItems[0].geometricBounds;
+                Log._linea("-----", labelEtiqueta + " ETQ DIAG: ESTATICO clipped → usando clipMask=" +
+                    "[L=" + ptToCm(_clipBEtq[0]).toFixed(3) + " T=" + ptToCm(_clipBEtq[1]).toFixed(3) +
+                    " R=" + ptToCm(_clipBEtq[2]).toFixed(3) + " B=" + ptToCm(_clipBEtq[3]).toFixed(3) + "]cm" +
+                    " anchoClip=" + ptToCm(Math.abs(_clipBEtq[2]-_clipBEtq[0])).toFixed(3) + "cm" +
+                    " altoClip=" + ptToCm(Math.abs(_clipBEtq[1]-_clipBEtq[3])).toFixed(3) + "cm" +
+                    " (contenido: L=" + ptToCm(refBounds[0]).toFixed(3) + " R=" + ptToCm(refBounds[2]).toFixed(3) + " B=" + ptToCm(refBounds[3]).toFixed(3) + "cm)");
+                piezaLeft   = _clipBEtq[0];
+                piezaRight  = _clipBEtq[2];
+                piezaBottom = _clipBEtq[3];
+                _etqSrcRef  = "clipMask";
+            } catch(_ece) {
+                Log._linea("-----", labelEtiqueta + " ETQ DIAG: ESTATICO clipped pero clip mask no leible (" + _ece.message + ") — usando geomBounds");
+            }
+        }
+
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: refBounds=" +
+            "[L=" + ptToCm(piezaLeft).toFixed(3) + " T=" + ptToCm(refBounds[1]).toFixed(3) +
+            " R=" + ptToCm(piezaRight).toFixed(3) + " B=" + ptToCm(piezaBottom).toFixed(3) + "]cm" +
+            " src=" + _etqSrcRef);
 
         var etqBounds = etiqueta.geometricBounds;
         var etqAncho  = Math.abs(etqBounds[2] - etqBounds[0]);
         var etqAlto   = Math.abs(etqBounds[1] - etqBounds[3]);
+
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: etiqueta antes=" +
+            "[L=" + ptToCm(etqBounds[0]).toFixed(3) + " T=" + ptToCm(etqBounds[1]).toFixed(3) +
+            " R=" + ptToCm(etqBounds[2]).toFixed(3) + " B=" + ptToCm(etqBounds[3]).toFixed(3) + "]cm" +
+            " ancho=" + ptToCm(etqAncho).toFixed(3) + "cm alto=" + ptToCm(etqAlto).toFixed(3) + "cm");
 
         var marginInfPt = cmToPt(marginInfCm);
         var marginLatPt = cmToPt(marginLatCm);
@@ -123,6 +191,11 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
         var costillaDer   = dinamicoPieza
                             ? findItemByNameRecursivo(dinamicoPieza, "COSTILLA_DER")
                             : null;
+
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: costillaIzq=" +
+            (costillaIzq ? ("[L=" + ptToCm(costillaIzq.geometricBounds[0]).toFixed(3) + " R=" + ptToCm(costillaIzq.geometricBounds[2]).toFixed(3) + "]cm hidden=" + costillaIzq.hidden) : "null") +
+            " costillaDer=" +
+            (costillaDer ? ("[L=" + ptToCm(costillaDer.geometricBounds[0]).toFixed(3) + " R=" + ptToCm(costillaDer.geometricBounds[2]).toFixed(3) + "]cm hidden=" + costillaDer.hidden) : "null"));
 
         var refLeft  = costillaIzq ? costillaIzq.geometricBounds[0] : piezaLeft;
         var refRight = costillaDer ? costillaDer.geometricBounds[2] : piezaRight;
@@ -136,13 +209,29 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
             refBottom = cDerB[1] - Math.abs(cDerB[1] - cDerB[3]);
         }
 
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: refLeft=" + ptToCm(refLeft).toFixed(3) + "cm" +
+            " refRight=" + ptToCm(refRight).toFixed(3) + "cm" +
+            " refBottom=" + ptToCm(refBottom).toFixed(3) + "cm" +
+            " lado=" + lado + " marginLat=" + marginLatCm.toFixed(3) + "cm" +
+            " marginInf=" + marginInfCm.toFixed(3) + "cm");
+
         var nuevoTop  = refBottom + marginInfPt + etqAlto;
         var nuevoLeft = (lado === "IZQ")
                         ? refLeft  + marginLatPt
                         : refRight - marginLatPt - etqAncho;
 
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: nuevoLeft=" + ptToCm(nuevoLeft).toFixed(3) + "cm" +
+            " nuevoTop=" + ptToCm(nuevoTop).toFixed(3) + "cm");
+
         etiqueta.left = nuevoLeft;
         etiqueta.top  = nuevoTop;
+
+        var etqBoundsPost = etiqueta.geometricBounds;
+        Log._linea("-----", labelEtiqueta + " ETQ DIAG: post=" +
+            "[L=" + ptToCm(etqBoundsPost[0]).toFixed(3) + " T=" + ptToCm(etqBoundsPost[1]).toFixed(3) +
+            " R=" + ptToCm(etqBoundsPost[2]).toFixed(3) + " B=" + ptToCm(etqBoundsPost[3]).toFixed(3) + "]cm" +
+            " distIzqRef=" + ptToCm(etqBoundsPost[0] - refLeft).toFixed(3) + "cm" +
+            " distBotRef=" + ptToCm(etqBoundsPost[3] - refBottom).toFixed(3) + "cm");
 
         Log.ok(nombrePieza + " | " + nombreJugador +
                ": " + labelEtiqueta + " posicionada (inf:" +
@@ -168,6 +257,12 @@ function centrarHorizontalmente(item, grupoPieza) {
         }
         var _refBounds = _estatico ? _estatico.geometricBounds
                                    : grupoPieza.geometricBounds;
+        if (_estatico && _estatico.clipped) {
+            try {
+                var _clipBC = _estatico.pageItems[0].geometricBounds;
+                _refBounds = _clipBC;
+            } catch(_ecc) { /* fallback */ }
+        }
         var piezaCentroX = (_refBounds[0] + _refBounds[2]) / 2;
 
         // ── DIAGNÓSTICO: tipo y justificación ANTES del cambio ──
