@@ -9,13 +9,11 @@ import { useMoldesStore } from '../../store/useMoldesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
-const FIELDS: { key: keyof TallaDims; label: string; ranglan?: boolean }[] = [
-  { key: 'ALTO',               label: 'ALTO'              },
-  { key: 'ANCHO',              label: 'ANCHO'             },
-  { key: 'MANGA_ANCHO',        label: 'MANGA ANCHO'       },
-  { key: 'MANGA_ALTO',         label: 'MANGA ALTO'        },
-  { key: 'MANGA_RANGLAN_ANCHO', label: 'RANGLAN ANCHO', ranglan: true },
-  { key: 'MANGA_RANGLAN_ALTO',  label: 'RANGLAN ALTO',  ranglan: true },
+const FIELDS: { key: keyof TallaDims; label: string }[] = [
+  { key: 'ALTO',        label: 'ALTO'        },
+  { key: 'ANCHO',       label: 'ANCHO'       },
+  { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
+  { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
 ];
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -185,7 +183,7 @@ export function TallasSettingsTab({ onToast }: Props) {
                           <tr>
                             <th className="col-talla">TALLA</th>
                             {FIELDS.map(f => (
-                              <th key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
+                              <th key={f.key} className="col-dim">
                                 {f.label} <span className="unit">cm</span>
                               </th>
                             ))}
@@ -199,14 +197,13 @@ export function TallasSettingsTab({ onToast }: Props) {
                                 <span className="talla-badge" style={{ background: tallaColor(talla) }}>{talla}</span>
                               </td>
                               {FIELDS.map(f => (
-                                <td key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
+                                <td key={f.key} className="col-dim">
                                   <input
                                     className="input-dim"
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     value={tallas[talla][f.key] ?? ''}
-                                    placeholder={f.ranglan ? '—' : ''}
                                     onChange={e => { setDim(clienteId, moldeId, talla, f.key, e.target.value); flashSaved(); }}
                                   />
                                 </td>

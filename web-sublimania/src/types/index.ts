@@ -73,8 +73,6 @@ export interface TallaDims {
   ANCHO: string;
   MANGA_ANCHO: string;
   MANGA_ALTO: string;
-  MANGA_RANGLAN_ANCHO: string;
-  MANGA_RANGLAN_ALTO: string;
 }
 
 // ── CLIENTE (costurera) ───────────────────────────────────────
