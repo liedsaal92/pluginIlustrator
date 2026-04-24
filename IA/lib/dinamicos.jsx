@@ -402,7 +402,8 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
         var sufManga = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
-        var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+        var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo)
+                                       || findItemByNameRecursivo(dinamico, CONFIG.itemEscudo);
         var itemSponsorSecundarioManga = findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO");
 
         // 1. Escalar SPONSOR_SECUNDARIO
