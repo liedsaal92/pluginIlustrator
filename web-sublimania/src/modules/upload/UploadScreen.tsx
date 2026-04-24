@@ -1,7 +1,7 @@
 // ============================================================
 //  modules/upload/UploadScreen.tsx
 // ============================================================
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
@@ -17,8 +17,9 @@ interface Props {
 export function UploadScreen({ onToast }: Props) {
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { setPlayers, setScreen } = useTeamStore();
+  const { setPlayers, setScreen, players } = useTeamStore();
   const { teams, replaceAll } = useTeamsStore();
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   function handleExportBackup() {
     const { clientes } = useClientesStore.getState();
@@ -92,11 +93,19 @@ export function UploadScreen({ onToast }: Props) {
     }
   }
 
+  function requestFile(file: File) {
+    if (players.length > 0) {
+      setPendingFile(file);
+    } else {
+      handleFile(file);
+    }
+  }
+
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) requestFile(file);
   }
 
   return (
@@ -114,7 +123,7 @@ export function UploadScreen({ onToast }: Props) {
           onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
           onDragLeave={e => e.currentTarget.classList.remove('drag-over')}
           onDrop={onDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !pendingFile && fileInputRef.current?.click()}
         >
           <div className="drop-icon">
             <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -130,15 +139,32 @@ export function UploadScreen({ onToast }: Props) {
           <div className="drop-sub-label">
             Columnas requeridas: NOMBRE · NOMBRE_CAMISETA · NUMERO · TALLA
           </div>
-          <button className="btn btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-            SELECCIONAR ARCHIVO
-          </button>
+          {pendingFile ? (
+            <div className="upload-confirm">
+              <div className="upload-confirm-msg">
+                ⚠ Ya hay <strong>{players.length} jugadores</strong> cargados.<br/>
+                ¿Reemplazar con <strong>{pendingFile.name}</strong>?
+              </div>
+              <div className="upload-confirm-actions">
+                <button className="btn btn-danger btn-sm" onClick={() => { handleFile(pendingFile); setPendingFile(null); }}>
+                  REEMPLAZAR
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setPendingFile(null); fileInputRef.current && (fileInputRef.current.value = ''); }}>
+                  CANCELAR
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+              SELECCIONAR ARCHIVO
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
             accept=".xlsx,.xls"
             style={{ display: 'none' }}
-            onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+            onChange={e => { if (e.target.files?.[0]) requestFile(e.target.files[0]); e.target.value = ''; }}
           />
         </div>
 

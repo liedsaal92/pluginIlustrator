@@ -192,6 +192,19 @@ export function RulesTab({ onToast }: Props) {
     setCopyToSet(new Set());
   }
 
+  if (tallas.length === 0) {
+    return (
+      <div className="rules-empty-fullscreen">
+        <div className="rules-empty-glyph">↑</div>
+        <div className="rules-empty-title">SIN JUGADORES CARGADOS</div>
+        <div className="rules-empty-hint">Cargá un Excel en el paso anterior para configurar las reglas por talla.</div>
+        <button className="btn btn-primary btn-sm" onClick={() => useTeamStore.getState().setScreen('upload')}>
+          CARGAR EXCEL
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="rules-layout">
       {/* ── Sidebar tallas ── */}
