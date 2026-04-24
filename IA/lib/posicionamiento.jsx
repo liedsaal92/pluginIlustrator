@@ -5,12 +5,30 @@
 //  y centrado horizontal.
 // ============================================================
 
+// Devuelve los bounds de referencia del ESTATICO para posicionamiento.
+// Prioridad: clip mask directo → clip mask en subgrupo → geometricBounds.
+// Necesario porque cuando el clip está en un subgrupo interno (estatico.clipped=false),
+// geometricBounds del ESTATICO incluye contenido que desborda la silueta visible.
+function getEstaticoRefBounds(estatico, fallback) {
+    if (!estatico) return fallback;
+    if (estatico.clipped) {
+        try { return estatico.pageItems[0].geometricBounds; } catch(e) {}
+    }
+    for (var _i = 0; _i < estatico.pageItems.length; _i++) {
+        var _c = estatico.pageItems[_i];
+        if (_c.typename === "GroupItem" && _c.clipped) {
+            var _cb = buscarClipBounds(_c);
+            if (_cb) return _cb;
+        }
+    }
+    return estatico.geometricBounds;
+}
+
 function posicionarItemDesdeTop(item, grupoPieza, marginSupCm, nombreJugador, nombrePieza, labelItem) {
     try {
         var estatico  = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds = estatico ? estatico.geometricBounds
-                                 : grupoPieza.geometricBounds;
+        var refBounds = getEstaticoRefBounds(estatico, grupoPieza.geometricBounds);
         var piezaTop  = refBounds[1]; // borde superior del ESTATICO en pts
 
         Log._linea("-----", labelItem + " posicionarDesdeTop | piezaTop=" +
@@ -75,18 +93,10 @@ function posicionarItemDesdeLatMasCercano(item, grupoPieza, marginLatCm, nombreJ
     try {
         var estatico   = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds  = estatico ? estatico.geometricBounds : grupoPieza.geometricBounds;
+        var refBounds  = getEstaticoRefBounds(estatico, grupoPieza.geometricBounds);
         var piezaLeft  = refBounds[0];
         var piezaRight = refBounds[2];
         var _latSrcRef = estatico ? "ESTATICO-contenido" : "grupoPieza";
-        if (estatico && estatico.clipped) {
-            try {
-                var _clipBLat = estatico.pageItems[0].geometricBounds;
-                piezaLeft  = _clipBLat[0];
-                piezaRight = _clipBLat[2];
-                _latSrcRef = "clipMask";
-            } catch(_ecl) { /* fallback a geomBounds */ }
-        }
 
         var itemBounds  = item.geometricBounds;
         var itemAncho   = Math.abs(itemBounds[2] - itemBounds[0]);
@@ -140,32 +150,11 @@ function posicionarEtiqueta(etiqueta, grupoPieza, marginInfCm, marginLatCm, lado
     try {
         var estatico    = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!estatico) estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-        var refBounds   = estatico ? estatico.geometricBounds
-                                   : grupoPieza.geometricBounds;
-        // Usar clip mask bounds cuando ESTATICO está clipped:
-        // geometricBounds devuelve bounds del CONTENIDO. El clip (pageItems[0])
-        // es la silueta visible real del molde — es la referencia correcta para márgenes.
+        var refBounds   = getEstaticoRefBounds(estatico, grupoPieza.geometricBounds);
         var piezaLeft   = refBounds[0];
         var piezaRight  = refBounds[2];
         var piezaBottom = refBounds[3];
         var _etqSrcRef  = estatico ? "ESTATICO-contenido" : "grupoPieza";
-        if (estatico && estatico.clipped) {
-            try {
-                var _clipBEtq = estatico.pageItems[0].geometricBounds;
-                Log._linea("-----", labelEtiqueta + " ETQ DIAG: ESTATICO clipped → usando clipMask=" +
-                    "[L=" + ptToCm(_clipBEtq[0]).toFixed(3) + " T=" + ptToCm(_clipBEtq[1]).toFixed(3) +
-                    " R=" + ptToCm(_clipBEtq[2]).toFixed(3) + " B=" + ptToCm(_clipBEtq[3]).toFixed(3) + "]cm" +
-                    " anchoClip=" + ptToCm(Math.abs(_clipBEtq[2]-_clipBEtq[0])).toFixed(3) + "cm" +
-                    " altoClip=" + ptToCm(Math.abs(_clipBEtq[1]-_clipBEtq[3])).toFixed(3) + "cm" +
-                    " (contenido: L=" + ptToCm(refBounds[0]).toFixed(3) + " R=" + ptToCm(refBounds[2]).toFixed(3) + " B=" + ptToCm(refBounds[3]).toFixed(3) + "cm)");
-                piezaLeft   = _clipBEtq[0];
-                piezaRight  = _clipBEtq[2];
-                piezaBottom = _clipBEtq[3];
-                _etqSrcRef  = "clipMask";
-            } catch(_ece) {
-                Log._linea("-----", labelEtiqueta + " ETQ DIAG: ESTATICO clipped pero clip mask no leible (" + _ece.message + ") — usando geomBounds");
-            }
-        }
 
         Log._linea("-----", labelEtiqueta + " ETQ DIAG: refBounds=" +
             "[L=" + ptToCm(piezaLeft).toFixed(3) + " T=" + ptToCm(refBounds[1]).toFixed(3) +
@@ -255,14 +244,7 @@ function centrarHorizontalmente(item, grupoPieza) {
         if (!_estatico) {
             _estatico = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         }
-        var _refBounds = _estatico ? _estatico.geometricBounds
-                                   : grupoPieza.geometricBounds;
-        if (_estatico && _estatico.clipped) {
-            try {
-                var _clipBC = _estatico.pageItems[0].geometricBounds;
-                _refBounds = _clipBC;
-            } catch(_ecc) { /* fallback */ }
-        }
+        var _refBounds = getEstaticoRefBounds(_estatico, grupoPieza.geometricBounds);
         var piezaCentroX = (_refBounds[0] + _refBounds[2]) / 2;
 
         // ── DIAGNÓSTICO: tipo y justificación ANTES del cambio ──

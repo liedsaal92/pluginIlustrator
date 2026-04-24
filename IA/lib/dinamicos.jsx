@@ -130,7 +130,8 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     // ── ESCUDO ──────────────────────────────────────────────
     // Item genérico ESCUDO en piezas FRENTE o ESPALDA
-    var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+    var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo)
+                   || findItemByNameRecursivo(dinamico, CONFIG.itemEscudo);
     var _ladoEscudoF = null; // se captura para que LOGO_MARCA vaya al lado opuesto
 
     if (grupoEscudo) {
