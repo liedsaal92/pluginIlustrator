@@ -129,6 +129,14 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
                 EXPORTAR CSV
                 <span className={`sidebar-step-dot ${stepStatus('export')}`} />
               </button>
+
+              <button
+                className={`sidebar-nav-item sub ${screen === 'preview' ? 'active' : ''}`}
+                onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('preview'); })}
+              >
+                <span className="sidebar-nav-item-icon">◫</span>
+                PREVIEW
+              </button>
             </>
           ) : (
             <div className="sidebar-no-team">

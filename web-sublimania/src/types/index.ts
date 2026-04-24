@@ -89,7 +89,7 @@ export interface Molde {
 }
 
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'settings';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings';
 export type ConfigTab = 'rules' | 'players';
 export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

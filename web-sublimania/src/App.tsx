@@ -14,6 +14,7 @@ import { UploadScreen } from './modules/upload/UploadScreen';
 import { ConfigureScreen } from './modules/configure/ConfigureScreen';
 import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
+import { PreviewScreen } from './modules/preview/PreviewScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
@@ -90,6 +91,7 @@ export default function App() {
           {screen === 'upload'    && <UploadScreen    onToast={showToast} />}
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
+          {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
           {screen === 'settings'  && hasPermission(session.user.role, 'settings:manage') && (
             <SettingsScreen onToast={showToast} />
           )}
