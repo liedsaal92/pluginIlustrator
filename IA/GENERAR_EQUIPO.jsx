@@ -206,9 +206,29 @@ function main() {
                     Log._linea("-----", nombrePieza + " ESTATICO clip mask error: " + _ece2.message + " — usando geomBounds");
                 }
             } else {
-                _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
-                _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
-                _baseSrc   = "geom";
+                // ESTATICO no está clipped directamente — buscar subgrupo clipped interno
+                // (ocurre cuando el clip está en un grupo hijo, ej. ESPALDA con MARCA_AGUA)
+                var _innerClipB = null;
+                for (var _ci = 0; _ci < _estaticoTemplate.pageItems.length; _ci++) {
+                    var _cand = _estaticoTemplate.pageItems[_ci];
+                    if (_cand.typename === "GroupItem" && _cand.clipped) {
+                        var _cb = buscarClipBounds(_cand);
+                        if (_cb) { _innerClipB = _cb; break; }
+                    }
+                }
+                if (_innerClipB) {
+                    _baseAncho = ptToCm(Math.abs(_innerClipB[2] - _innerClipB[0]));
+                    _baseAlto  = ptToCm(Math.abs(_innerClipB[1] - _innerClipB[3]));
+                    _baseSrc   = "clip mask (subgrupo)";
+                    Log._linea("-----", nombrePieza + " ESTATICO subgrupo clipped → usando clip " +
+                        _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
+                        " (contenido era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
+                        "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
+                } else {
+                    _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
+                    _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
+                    _baseSrc   = "geom";
+                }
             }
 
             basePieza = { ancho: _baseAncho, alto: _baseAlto };
