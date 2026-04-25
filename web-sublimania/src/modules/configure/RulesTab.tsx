@@ -6,6 +6,7 @@ import { useTeamStore } from '../../store/useTeamStore';
 import { SCHEMA, ELEMENT_GROUPS, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
+import { PiezaPreviewModal } from './PiezaPreviewModal';
 import type { PiezaKey, SchemaElement } from '../../types';
 
 interface Props {
@@ -113,6 +114,7 @@ export function RulesTab({ onToast }: Props) {
     setTallaRule, applyTallaToAll, copyTallaRules,
   } = useTeamStore();
 
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [copyToSet, setCopyToSet] = useState<Set<string>>(new Set());
   // expandedGroups: key = "pieza:group", value = boolean
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -388,7 +390,32 @@ export function RulesTab({ onToast }: Props) {
 
       {/* ── Main rules area ── */}
       <div className="rules-main">
-        <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
+        <div className="rules-main-topbar">
+          <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
+          {activeTalla && (
+            <button
+              className="rules-preview-trigger"
+              title={`Ver preview de ${SCHEMA[activePieza]?.label} — ${activeTalla}`}
+              onClick={() => setPreviewOpen(true)}
+            >
+              <svg viewBox="0 0 20 20" fill="none" width="15" height="15" aria-hidden="true">
+                <rect x="2" y="4" width="16" height="12" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                <circle cx="10" cy="10" r="1" fill="currentColor"/>
+              </svg>
+              PREVIEW
+            </button>
+          )}
+        </div>
+
+        {previewOpen && activeTalla && (
+          <PiezaPreviewModal
+            pieza={activePieza}
+            talla={activeTalla}
+            rules={rules}
+            onClose={() => setPreviewOpen(false)}
+          />
+        )}
 
         {!activeTalla ? (
           <div className="rules-empty-state">
