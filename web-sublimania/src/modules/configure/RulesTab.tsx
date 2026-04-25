@@ -6,6 +6,7 @@ import { useTeamStore } from '../../store/useTeamStore';
 import { SCHEMA, ELEMENT_GROUPS, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
+import { PiezaPreviewPanel } from './PiezaPreviewPanel';
 import { PiezaPreviewModal } from './PiezaPreviewModal';
 import type { PiezaKey, SchemaElement } from '../../types';
 
@@ -114,6 +115,7 @@ export function RulesTab({ onToast }: Props) {
     setTallaRule, applyTallaToAll, copyTallaRules,
   } = useTeamStore();
 
+  const [showPreviewPanel, setShowPreviewPanel] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [copyToSet, setCopyToSet] = useState<Set<string>>(new Set());
   // expandedGroups: key = "pieza:group", value = boolean
@@ -247,7 +249,7 @@ export function RulesTab({ onToast }: Props) {
       <div className="rules-empty-fullscreen">
         <div className="rules-empty-glyph">↑</div>
         <div className="rules-empty-title">SIN JUGADORES CARGADOS</div>
-        <div className="rules-empty-hint">Cargá un Excel en el paso anterior para configurar las reglas por talla.</div>
+        <div className="rules-empty-hint">Cargá un Excel en el paso anterior para configurar las reglas de camisetas.</div>
         <button className="btn btn-primary btn-sm" onClick={() => useTeamStore.getState().setScreen('upload')}>
           CARGAR EXCEL
         </button>
@@ -256,7 +258,7 @@ export function RulesTab({ onToast }: Props) {
   }
 
   return (
-    <div className="rules-layout">
+    <div className={`rules-layout${showPreviewPanel && activeTalla ? ' with-preview' : ''}`}>
       {/* ── Sidebar tallas ── */}
       <div className="tallas-sidebar">
         <div className="sidebar-label">TALLAS</div>
@@ -394,9 +396,9 @@ export function RulesTab({ onToast }: Props) {
           <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
           {activeTalla && (
             <button
-              className="rules-preview-trigger"
-              title={`Ver preview de ${SCHEMA[activePieza]?.label} — ${activeTalla}`}
-              onClick={() => setPreviewOpen(true)}
+              className={`rules-preview-trigger${showPreviewPanel ? ' active' : ''}`}
+              title={`${showPreviewPanel ? 'Cerrar' : 'Abrir'} preview de ${SCHEMA[activePieza]?.label} — ${activeTalla}`}
+              onClick={() => setShowPreviewPanel(v => !v)}
             >
               <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
                 <circle cx="8.5" cy="8.5" r="5" stroke="currentColor" strokeWidth="2"/>
@@ -408,15 +410,6 @@ export function RulesTab({ onToast }: Props) {
             </button>
           )}
         </div>
-
-        {previewOpen && activeTalla && (
-          <PiezaPreviewModal
-            pieza={activePieza}
-            talla={activeTalla}
-            rules={rules}
-            onClose={() => setPreviewOpen(false)}
-          />
-        )}
 
         {!activeTalla ? (
           <div className="rules-empty-state">
@@ -468,6 +461,27 @@ export function RulesTab({ onToast }: Props) {
           </>
         )}
       </div>
+
+      {/* ── Preview panel (3rd column) ── */}
+      {showPreviewPanel && activeTalla && (
+        <PiezaPreviewPanel
+          pieza={activePieza}
+          talla={activeTalla}
+          rules={rules}
+          onClose={() => setShowPreviewPanel(false)}
+          onExpand={() => setPreviewOpen(true)}
+        />
+      )}
+
+      {/* ── Preview modal (fullscreen) ── */}
+      {previewOpen && activeTalla && (
+        <PiezaPreviewModal
+          pieza={activePieza}
+          talla={activeTalla}
+          rules={rules}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -70,8 +70,14 @@ function bodyPath(W: number, H: number) {
     `L ${W.toFixed(2)} ${H.toFixed(2)}`,`L 0 ${H.toFixed(2)}`,`L 0 ${(H*.12).toFixed(2)}`,'Z'].join(' ');
 }
 function sleevePath(W: number, H: number) {
-  const ti = W * 0.1;
-  return [`M ${ti.toFixed(2)} 0`,`L ${(W-ti).toFixed(2)} 0`,`L ${W.toFixed(2)} ${H.toFixed(2)}`,`L 0 ${H.toFixed(2)}`,'Z'].join(' ');
+  const dh = H * 0.2;
+  return [
+    `M 0 ${H.toFixed(2)}`,
+    `L ${W.toFixed(2)} ${H.toFixed(2)}`,
+    `L ${W.toFixed(2)} 0`,
+    `Q ${(W / 2).toFixed(2)} ${(-dh).toFixed(2)} 0 0`,
+    'Z'
+  ].join(' ');
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -116,6 +122,7 @@ export function PiezaPreviewModal({ pieza, talla, rules, onClose }: Props) {
   const isBody  = pieza === 'frente' || pieza === 'espalda';
   const svgW    = isBody ? (parseFloat(dims.ANCHO) || 50)       : (parseFloat(dims.MANGA_ANCHO) || 40);
   const svgH    = isBody ? (parseFloat(dims.ALTO) || 70)        : (parseFloat(dims.MANGA_ALTO) || 25);
+  const domeH   = isBody ? 0 : svgH * 0.21;
   const silPath = isBody ? bodyPath(svgW, svgH) : sleevePath(svgW, svgH);
 
   const piezaDef  = SCHEMA[pieza];
@@ -175,7 +182,7 @@ export function PiezaPreviewModal({ pieza, talla, rules, onClose }: Props) {
         <div className="rp-canvas-wrap" style={{ overflowY: zoom > 100 ? 'auto' : 'hidden' }}>
           <svg
             className="rp-svg"
-            viewBox={`-2 -2 ${svgW + 4} ${svgH + 4}`}
+            viewBox={`-2 ${(-(domeH+2)).toFixed(2)} ${svgW + 4} ${svgH + domeH + 4}`}
             preserveAspectRatio="xMidYMid meet"
             style={{ width: `${zoom}%`, height: 'auto', minWidth: `${zoom}%` }}
           >

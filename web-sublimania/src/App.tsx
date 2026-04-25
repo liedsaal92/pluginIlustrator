@@ -24,8 +24,18 @@ export default function App() {
   const checkSession = useAuthStore(s => s.checkSession);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
+    localStorage.getItem('sidebar_collapsed') === 'true'
+  );
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+  const toggleSidebarCollapse = useCallback(() => {
+    setSidebarCollapsed(v => {
+      const next = !v;
+      localStorage.setItem('sidebar_collapsed', String(next));
+      return next;
+    });
+  }, []);
 
   function showToast(msg: string, type: 'ok' | 'error') {
     setToast({ msg, type, key: Date.now() });
@@ -73,7 +83,7 @@ export default function App() {
         onClick={closeSidebar}
       />
 
-      <Sidebar onToast={showToast} isOpen={sidebarOpen} onClose={closeSidebar} />
+      <Sidebar onToast={showToast} isOpen={sidebarOpen} onClose={closeSidebar} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
 
       <main className="app-main" id="app">
         {/* Mobile top bar with hamburger */}

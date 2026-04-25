@@ -14,9 +14,11 @@ interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
   isOpen?: boolean;
   onClose?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function Sidebar({ onToast, isOpen, onClose }: Props) {
+export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse }: Props) {
   const screen    = useTeamStore(s => s.screen);
   const setScreen = useTeamStore(s => s.setScreen);
   const players   = useTeamStore(s => s.players);
@@ -66,17 +68,28 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
   }
 
   return (
-    <nav className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+    <nav className={`sidebar ${isOpen ? 'sidebar-open' : ''} ${collapsed ? 'sidebar-collapsed' : ''}`}>
 
       {/* ── BRAND ────────────────────────────────────────────── */}
-      <div
-        className="sidebar-brand"
-        onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
-        role="button"
-        tabIndex={0}
-      >
-        <div className="sidebar-logo-name">SUBLI<span>FLOW</span></div>
-        <div className="sidebar-logo-tag">// PRODUCCIÓN DEPORTIVA v1.0</div>
+      <div className="sidebar-brand-wrap">
+        <div
+          className="sidebar-brand"
+          onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="sidebar-logo-name">S<span className="sidebar-brand-text">UBLI<span>FLOW</span></span></div>
+          <div className="sidebar-logo-tag sidebar-brand-text">// PRODUCCIÓN DEPORTIVA v1.0</div>
+        </div>
+        {onToggleCollapse && (
+          <button
+            className="sidebar-collapse-btn"
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+          >
+            {collapsed ? '›' : '‹'}
+          </button>
+        )}
       </div>
 
       {/* ── NAV ──────────────────────────────────────────────── */}
@@ -87,55 +100,60 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
           <button
             className={`sidebar-nav-item ${screen === 'teams' ? 'active' : ''}`}
             onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
+            title="Mis Equipos"
           >
             <span className="sidebar-nav-item-icon">☰</span>
-            MIS EQUIPOS
+            <span className="sidebar-nav-text">MIS EQUIPOS</span>
             {teams.length > 0 && (
-              <span className="sidebar-count-badge">{teams.length}</span>
+              <span className="sidebar-count-badge sidebar-nav-text">{teams.length}</span>
             )}
           </button>
         </div>
 
         {/* Workspace (equipo activo) */}
         <div className="sidebar-section">
-          <div className="sidebar-section-label">EQUIPO ACTIVO</div>
+          <div className="sidebar-section-label sidebar-nav-text">EQUIPO ACTIVO</div>
           {activeTeam ? (
             <>
-              <div className="sidebar-active-team-name">{activeTeam.nombre || '— sin nombre'}</div>
+              <div className="sidebar-active-team-name sidebar-nav-text">{activeTeam.nombre || '— sin nombre'}</div>
 
               <button
                 className={`sidebar-nav-item sub ${screen === 'upload' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => setScreen('upload'))}
+                title="Cargar Excel"
               >
                 <span className="sidebar-nav-item-icon">↑</span>
-                CARGAR EXCEL
+                <span className="sidebar-nav-text">CARGAR EXCEL</span>
                 <span className={`sidebar-step-dot ${stepStatus('upload')}`} />
               </button>
 
               <button
                 className={`sidebar-nav-item sub ${screen === 'configure' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('configure'); })}
+                title="Configurar"
               >
                 <span className="sidebar-nav-item-icon">⚙</span>
-                CONFIGURAR
+                <span className="sidebar-nav-text">CONFIGURAR</span>
                 <span className={`sidebar-step-dot ${stepStatus('configure')}`} />
               </button>
 
               <button
                 className={`sidebar-export-btn ${screen === 'export' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('export'); })}
+                title="Exportar CSV"
               >
                 <span className="sidebar-nav-item-icon">↗</span>
-                EXPORTAR CSV
+                <span className="sidebar-nav-text">EXPORTAR CSV</span>
                 <span className={`sidebar-step-dot ${stepStatus('export')}`} />
               </button>
 
               <button
                 className={`sidebar-nav-item sub ${screen === 'preview' ? 'active' : ''}`}
                 onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('preview'); })}
+                title="Preview"
               >
                 <span className="sidebar-nav-item-icon">◫</span>
-                PREVIEW
+                <span className="sidebar-nav-text">PREVIEW</span>
               </button>
             </>
           ) : (
@@ -161,9 +179,10 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
             <button
               className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
               onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
+              title="Ajustes"
             >
               <span className="sidebar-nav-item-icon">◈</span>
-              AJUSTES
+              <span className="sidebar-nav-text">AJUSTES</span>
             </button>
           </div>
         )}
@@ -175,7 +194,7 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
 
         {/* Config backup — admin only */}
         {canManageSettings && (
-          <div className="sidebar-backup">
+          <div className="sidebar-backup sidebar-nav-text">
             <div className="sidebar-backup-label">// BACKUP</div>
             <div className="sidebar-backup-actions">
               <button
@@ -208,7 +227,7 @@ export function Sidebar({ onToast, isOpen, onClose }: Props) {
 
         {/* User info + logout */}
         {session && (
-          <div className="sidebar-user-section">
+          <div className="sidebar-user-section sidebar-nav-text">
             <div className="sidebar-user-info">
               <div className="sidebar-user-name">{session.user.nombre}</div>
               <div className="sidebar-user-org">{session.user.orgName}</div>

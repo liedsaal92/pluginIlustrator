@@ -80,7 +80,7 @@ export function ConfigureScreen({ onToast }: Props) {
           className={`tab-btn ${configTab === 'rules' ? 'active' : ''}`}
           onClick={() => setConfigTab('rules')}
         >
-          ⚙ REGLAS POR TALLA
+          ⚙ REGLAS DE CAMISETAS
         </button>
         <button
           className={`tab-btn ${configTab === 'players' ? 'active' : ''}`}
