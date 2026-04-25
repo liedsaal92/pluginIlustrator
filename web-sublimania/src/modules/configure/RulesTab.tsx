@@ -117,6 +117,9 @@ export function RulesTab({ onToast }: Props) {
   // expandedGroups: key = "pieza:group", value = boolean
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  // Accordion state for tallas sidebar and copy section
+  const [tallaAccordion, setTallaAccordion] = useState<Record<string, boolean>>({ H: true, M: true, O: true });
+  const [copyAccordion, setCopyAccordion] = useState<Record<string, boolean>>({ H: true, M: true, O: true });
   // Undo stack: {talla, key, prevVal}
   const [undoStack, setUndoStack] = useState<Array<{ talla: string; key: string; prevVal: string }>>([]);
   const [undoFlash, setUndoFlash] = useState(false);
@@ -205,6 +208,13 @@ export function RulesTab({ onToast }: Props) {
 
   useEffect(() => { setCopyToSet(new Set()); }, [activeTalla]);
 
+  // Auto-expand the talla group containing the active talla
+  useEffect(() => {
+    if (!activeTalla) return;
+    const g = activeTalla.toUpperCase().endsWith('H') ? 'H' : activeTalla.toUpperCase().endsWith('M') ? 'M' : 'O';
+    setTallaAccordion(prev => prev[g] ? prev : { ...prev, [g]: true });
+  }, [activeTalla]);
+
   const copyOptions = sortTallas(todasLasTallas.filter(t => t !== activeTalla));
   const copyH = copyOptions.filter(t => getGeneroTalla(t) === 'H');
   const copyM = copyOptions.filter(t => getGeneroTalla(t) === 'M');
@@ -252,20 +262,44 @@ export function RulesTab({ onToast }: Props) {
         <div className="tallas-list">
           {hombres.length > 0 && (
             <>
-              <div className="sidebar-genero-label">HOMBRES</div>
-              {hombres.map(t => <TallaBtn key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              <button
+                className={`sidebar-genero-accordion ${tallaAccordion.H ? 'open' : ''}`}
+                onClick={() => setTallaAccordion(p => ({ ...p, H: !p.H }))}
+              >
+                <span>HOMBRES</span>
+                <span className="sidebar-accordion-meta">
+                  {hombres.length} · {tallaAccordion.H ? '▾' : '▸'}
+                </span>
+              </button>
+              {tallaAccordion.H && hombres.map(t => <TallaBtn key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
           {mujeres.length > 0 && (
             <>
-              <div className="sidebar-genero-label genero-mujer-label">MUJERES</div>
-              {mujeres.map(t => <TallaBtn key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              <button
+                className={`sidebar-genero-accordion genero-mujer-label ${tallaAccordion.M ? 'open' : ''}`}
+                onClick={() => setTallaAccordion(p => ({ ...p, M: !p.M }))}
+              >
+                <span>MUJERES</span>
+                <span className="sidebar-accordion-meta">
+                  {mujeres.length} · {tallaAccordion.M ? '▾' : '▸'}
+                </span>
+              </button>
+              {tallaAccordion.M && mujeres.map(t => <TallaBtn key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
           {otros.length > 0 && (
             <>
-              <div className="sidebar-genero-label">OTROS</div>
-              {otros.map(t => <TallaBtn key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              <button
+                className={`sidebar-genero-accordion ${tallaAccordion.O ? 'open' : ''}`}
+                onClick={() => setTallaAccordion(p => ({ ...p, O: !p.O }))}
+              >
+                <span>OTROS</span>
+                <span className="sidebar-accordion-meta">
+                  {otros.length} · {tallaAccordion.O ? '▾' : '▸'}
+                </span>
+              </button>
+              {tallaAccordion.O && otros.map(t => <TallaBtn key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
             </>
           )}
         </div>
@@ -304,20 +338,38 @@ export function RulesTab({ onToast }: Props) {
                 <>
                   {copyH.length > 0 && (
                     <div className="copy-group">
-                      <div className="copy-group-header copy-group-header--h">♂ HOMBRES</div>
-                      {copyH.map(t => <CopyItem key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      <button
+                        className={`copy-group-header copy-group-header--h copy-group-accordion ${copyAccordion.H ? 'open' : ''}`}
+                        onClick={() => setCopyAccordion(p => ({ ...p, H: !p.H }))}
+                      >
+                        <span>♂ HOMBRES</span>
+                        <span>{copyH.filter(t => copyToSet.has(t)).length}/{copyH.length} {copyAccordion.H ? '▾' : '▸'}</span>
+                      </button>
+                      {copyAccordion.H && copyH.map(t => <CopyItem key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyM.length > 0 && (
                     <div className="copy-group">
-                      <div className="copy-group-header copy-group-header--m">♀ MUJERES</div>
-                      {copyM.map(t => <CopyItem key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      <button
+                        className={`copy-group-header copy-group-header--m copy-group-accordion ${copyAccordion.M ? 'open' : ''}`}
+                        onClick={() => setCopyAccordion(p => ({ ...p, M: !p.M }))}
+                      >
+                        <span>♀ MUJERES</span>
+                        <span>{copyM.filter(t => copyToSet.has(t)).length}/{copyM.length} {copyAccordion.M ? '▾' : '▸'}</span>
+                      </button>
+                      {copyAccordion.M && copyM.map(t => <CopyItem key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyO.length > 0 && (
                     <div className="copy-group">
-                      <div className="copy-group-header">OTROS</div>
-                      {copyO.map(t => <CopyItem key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      <button
+                        className={`copy-group-header copy-group-accordion ${copyAccordion.O ? 'open' : ''}`}
+                        onClick={() => setCopyAccordion(p => ({ ...p, O: !p.O }))}
+                      >
+                        <span>OTROS</span>
+                        <span>{copyO.filter(t => copyToSet.has(t)).length}/{copyO.length} {copyAccordion.O ? '▾' : '▸'}</span>
+                      </button>
+                      {copyAccordion.O && copyO.map(t => <CopyItem key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                 </>

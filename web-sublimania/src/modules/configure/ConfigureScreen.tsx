@@ -29,10 +29,11 @@ export function ConfigureScreen({ onToast }: Props) {
 
   return (
     <div className="screen configure-screen">
+      <div className="config-sticky-top">
       <div className="config-header">
 
-        {/* ── Row 1: team name + stats + actions ─────────── */}
-        <div className="config-header-main">
+        {/* ── Single row: equipo · notas · save · stats ──── */}
+        <div className="config-header-row">
           {primaryField && (
             <div className="config-primary-field">
               <label className="config-field-label">{primaryField.label.toUpperCase()}</label>
@@ -45,34 +46,31 @@ export function ConfigureScreen({ onToast }: Props) {
               />
             </div>
           )}
-          <div className="config-header-right">
-            <div className="config-stats">
-              <span className="stat-badge stat-players">{players.length} JUG.</span>
-              <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
-              {configTab === 'rules' && activeTalla && (
-                <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* ── Row 2: secondary fields + save status ──────── */}
-        <div className="config-header-secondary">
-          <div className="config-secondary-fields">
-            {secondaryFields.map(f => (
-              <div key={f.key} className="config-secondary-field">
-                <label className="config-field-label">{f.label.toUpperCase()}</label>
-                <input
-                  type="text"
-                  className="config-notas-input"
-                  value={globalConfig[f.key]}
-                  placeholder={f.placeholder}
-                  onChange={e => setGlobalConfig(f.key, e.target.value)}
-                />
-              </div>
-            ))}
+          <div className="config-divider" />
+
+          {secondaryFields.map(f => (
+            <div key={f.key} className="config-secondary-field">
+              <label className="config-field-label">{f.label.toUpperCase()}</label>
+              <input
+                type="text"
+                className="config-notas-input"
+                value={globalConfig[f.key]}
+                placeholder={f.placeholder}
+                onChange={e => setGlobalConfig(f.key, e.target.value)}
+              />
+            </div>
+          ))}
+
+          <div className={statusClass} style={{ marginLeft: 'auto', flexShrink: 0 }}>{statusContent}</div>
+
+          <div className="config-stats">
+            <span className="stat-badge stat-players">{players.length} JUG.</span>
+            <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
+            {configTab === 'rules' && activeTalla && (
+              <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
+            )}
           </div>
-          <div className={statusClass}>{statusContent}</div>
         </div>
 
       </div>
@@ -91,6 +89,7 @@ export function ConfigureScreen({ onToast }: Props) {
           👤 JUGADORES ({players.length})
         </button>
       </div>
+      </div> {/* end config-sticky-top */}
 
       <div className="config-body">
         {configTab === 'rules' && <RulesTab onToast={onToast} />}
