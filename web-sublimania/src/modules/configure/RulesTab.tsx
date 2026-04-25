@@ -398,10 +398,11 @@ export function RulesTab({ onToast }: Props) {
               title={`Ver preview de ${SCHEMA[activePieza]?.label} — ${activeTalla}`}
               onClick={() => setPreviewOpen(true)}
             >
-              <svg viewBox="0 0 20 20" fill="none" width="15" height="15" aria-hidden="true">
-                <rect x="2" y="4" width="16" height="12" rx="1" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="10" cy="10" r="1" fill="currentColor"/>
+              <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
+                <circle cx="8.5" cy="8.5" r="5" stroke="currentColor" strokeWidth="2"/>
+                <line x1="12.5" y1="12.5" x2="17" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="6.5" y1="8.5" x2="10.5" y2="8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="8.5" y1="6.5" x2="8.5" y2="10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               PREVIEW
             </button>
