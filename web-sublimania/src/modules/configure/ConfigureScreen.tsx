@@ -96,6 +96,22 @@ export function ConfigureScreen({ onToast }: Props) {
         {configTab === 'players' && (
           <div className="players-layout">
             <AddPlayerForm />
+            {players.length === 0 && (
+              <div className="players-empty-hint">
+                <span className="players-empty-hint-icon">↑</span>
+                <div className="players-empty-hint-body">
+                  <div className="players-empty-hint-title">SIN JUGADORES CARGADOS</div>
+                  <div className="players-empty-hint-text">Agregá jugadores uno por uno con el formulario de arriba, o importá la lista completa desde un Excel.</div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ marginTop: '0.6rem' }}
+                    onClick={() => useTeamStore.getState().setScreen('upload')}
+                  >
+                    ↑ CARGAR DESDE EXCEL
+                  </button>
+                </div>
+              </div>
+            )}
             {(() => {
               const sorted = [...players.keys()].sort((a, b) => {
                 const ga = getGeneroTalla(players[a].TALLA);

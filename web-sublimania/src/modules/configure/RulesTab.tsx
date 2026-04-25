@@ -244,19 +244,6 @@ export function RulesTab({ onToast }: Props) {
     setCopyToSet(new Set());
   }
 
-  if (tallas.length === 0) {
-    return (
-      <div className="rules-empty-fullscreen">
-        <div className="rules-empty-glyph">↑</div>
-        <div className="rules-empty-title">SIN JUGADORES CARGADOS</div>
-        <div className="rules-empty-hint">Cargá un Excel en el paso anterior para configurar las reglas de camisetas.</div>
-        <button className="btn btn-primary btn-sm" onClick={() => useTeamStore.getState().setScreen('upload')}>
-          CARGAR EXCEL
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className={`rules-layout${showPreviewPanel && activeTalla ? ' with-preview' : ''}`}>
       {/* ── Sidebar tallas ── */}
@@ -418,6 +405,25 @@ export function RulesTab({ onToast }: Props) {
           </div>
         ) : (
           <>
+            {/* Onboarding hint — solo visible si nada está activo en esta pieza/talla */}
+            {schema && !schema.elements.some(el => el.toggleKey && rules[el.toggleKey] === 'SI') && !searchQuery && (
+              <div className="rules-onboarding-hint">
+                <div className="rules-onboarding-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.8"/>
+                    <line x1="12" y1="8" x2="12" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="12" cy="16.5" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div className="rules-onboarding-body">
+                  <div className="rules-onboarding-title">TALLA SIN CONFIGURAR</div>
+                  <div className="rules-onboarding-text">
+                    Activá elementos con el toggle <span className="rules-onboarding-badge">SI</span> y completá sus medidas. El preview se actualiza en tiempo real.
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="rules-search-bar">
               <input
                 className="rules-search-input"

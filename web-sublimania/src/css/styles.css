@@ -963,6 +963,27 @@ body {
   background: var(--yellow);
   color: var(--black);
 }
+.sidebar-no-players-hint {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: #888;
+  padding: 7px 12px;
+  border-bottom: 1px solid #e8e8e8;
+  line-height: 1.5;
+}
+.sidebar-hint-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--black);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sidebar-hint-link:hover { opacity: 0.6; }
+
 .sidebar-genero-label {
   font-family: var(--mono);
   font-size: 0.55rem;
@@ -1441,6 +1462,43 @@ body {
   transition: transform 0.15s;
 }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+/* ── PLAYERS EMPTY HINT ───────────────────────────────────────── */
+.players-empty-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0.5rem;
+}
+.players-empty-hint-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.players-empty-hint-icon {
+  font-size: 1.4rem;
+  color: #bbb;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.players-empty-hint-title {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+.players-empty-hint-text {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: #777;
+  line-height: 1.55;
+}
 
 /* ── PLAYERS TAB ─────────────────────────────────────────────── */
 .players-layout {
@@ -4195,6 +4253,53 @@ body {
 .pp-el-warn {
   font-size: 0.65rem;
   color: #ff3b3b;
+}
+
+/* ── RulesTab onboarding hint ──────────────────────────────── */
+.rules-onboarding-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--white);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--accent);
+  animation: fade-in 0.25s ease-out both;
+}
+.rules-onboarding-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.rules-onboarding-body {
+  min-width: 0;
+}
+.rules-onboarding-title {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+.rules-onboarding-text {
+  font-family: var(--mono);
+  font-size: 0.63rem;
+  color: #555;
+  line-height: 1.55;
+}
+.rules-onboarding-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  background: var(--black);
+  color: var(--white);
+  padding: 1px 5px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
 }
 
 /* ── RulesTab search ───────────────────────────────────────── */
