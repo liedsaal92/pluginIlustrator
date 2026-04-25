@@ -18,7 +18,8 @@ export function UploadScreen({ onToast }: Props) {
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const { setPlayers, setScreen, players } = useTeamStore();
-  const { teams, replaceAll } = useTeamsStore();
+  const { teams, replaceAll, activeTeamId } = useTeamsStore();
+  const isFirstTeam = teams.length === 0 || (teams.length === 1 && !activeTeamId);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   function handleExportBackup() {
@@ -113,6 +114,26 @@ export function UploadScreen({ onToast }: Props) {
       <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
         ← EQUIPOS
       </button>
+
+      {isFirstTeam && (
+        <div className="onboarding-flow">
+          <div className="onboarding-step onboarding-step--active">
+            <div className="onboarding-step-num">1</div>
+            <div className="onboarding-step-label">CARGÁ EXCEL</div>
+          </div>
+          <div className="onboarding-arrow">→</div>
+          <div className="onboarding-step">
+            <div className="onboarding-step-num">2</div>
+            <div className="onboarding-step-label">CONFIGURÁ REGLAS</div>
+          </div>
+          <div className="onboarding-arrow">→</div>
+          <div className="onboarding-step">
+            <div className="onboarding-step-num">3</div>
+            <div className="onboarding-step-label">EXPORTÁ CSV</div>
+          </div>
+        </div>
+      )}
+
       <div className="upload-box">
         <div className="upload-badge">PASO 01</div>
         <h2 className="upload-title">CARGÁ TU EXCEL</h2>

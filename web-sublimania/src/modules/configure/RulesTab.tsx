@@ -1,7 +1,7 @@
 // ============================================================
 //  modules/configure/RulesTab.tsx — Tab de reglas por talla
 // ============================================================
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { SCHEMA, ELEMENT_GROUPS, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
@@ -116,6 +116,11 @@ export function RulesTab({ onToast }: Props) {
   const [copyToSet, setCopyToSet] = useState<Set<string>>(new Set());
   // expandedGroups: key = "pieza:group", value = boolean
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  // Undo stack: {talla, key, prevVal}
+  const [undoStack, setUndoStack] = useState<Array<{ talla: string; key: string; prevVal: string }>>([]);
+  const [undoFlash, setUndoFlash] = useState(false);
+  const undoFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const rules = activeTalla ? (tallaRules[activeTalla] ?? {}) : {};
   const schema = SCHEMA[activePieza];
@@ -154,6 +159,39 @@ export function RulesTab({ onToast }: Props) {
     const stateKey = `${activePieza}:${groupKey}`;
     return expandedGroups[stateKey] !== false; // default true
   }
+
+  function handleRuleChange(talla: string, key: string, val: string) {
+    const prevVal = (tallaRules[talla] ?? {})[key] ?? '';
+    setUndoStack(prev => [...prev.slice(-49), { talla, key, prevVal }]);
+    setTallaRule(talla, key, val);
+  }
+
+  const handleUndo = useCallback(() => {
+    setUndoStack(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      setTallaRule(last.talla, last.key, last.prevVal);
+      if (undoFlashTimer.current) clearTimeout(undoFlashTimer.current);
+      setUndoFlash(true);
+      undoFlashTimer.current = setTimeout(() => setUndoFlash(false), 600);
+      return prev.slice(0, -1);
+    });
+  }, [setTallaRule]);
+
+  // Ctrl+Z keyboard shortcut
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [handleUndo]);
+
+  // Clear undo stack when talla changes
+  useEffect(() => { setUndoStack([]); }, [activeTalla]);
 
   // Talla lists
   const tallasExtras = tallas.filter(t => !TALLAS_ESTANDAR.includes(t));
@@ -233,6 +271,16 @@ export function RulesTab({ onToast }: Props) {
         </div>
 
         <div className="sidebar-actions">
+          <div className="sidebar-undo-row">
+            <button
+              className={`btn btn-ghost btn-sm btn-full ${undoFlash ? 'undo-flash' : ''}`}
+              title="Deshacer último cambio (Ctrl+Z)"
+              disabled={undoStack.length === 0}
+              onClick={handleUndo}
+            >
+              ↩ DESHACER {undoStack.length > 0 ? `(${undoStack.length})` : ''}
+            </button>
+          </div>
           <button
             className="btn btn-ghost btn-sm btn-full"
             title="Elimina overrides individuales de esta talla"
@@ -296,21 +344,48 @@ export function RulesTab({ onToast }: Props) {
             <p>Seleccioná una talla para configurar sus reglas</p>
           </div>
         ) : (
-          <div className="element-groups-stack">
-            {groupedElements.map(({ groupKey, elements }) => (
-              <ElementGroup
-                key={groupKey}
-                groupKey={groupKey}
-                elements={elements}
-                rules={rules}
-                piezaColor={schema?.color ?? '#999'}
-                expanded={isGroupExpanded(groupKey)}
-                onToggle={() => toggleGroup(groupKey)}
-                activeTalla={activeTalla}
-                onChange={(key, val) => setTallaRule(activeTalla, key, val)}
+          <>
+            <div className="rules-search-bar">
+              <input
+                className="rules-search-input"
+                type="search"
+                placeholder="Buscar elemento… (NOMBRE, LOGO, PATRON…)"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
               />
-            ))}
-          </div>
+              {searchQuery && (
+                <button className="rules-search-clear" onClick={() => setSearchQuery('')}>×</button>
+              )}
+            </div>
+            <div className="element-groups-stack">
+              {(() => {
+                const q = searchQuery.toLowerCase().trim();
+                const visibleGroups = groupedElements
+                  .map(({ groupKey, elements }) => ({
+                    groupKey,
+                    elements: q ? elements.filter(el => el.label.toLowerCase().includes(q) || el.id.toLowerCase().includes(q)) : elements,
+                  }))
+                  .filter(({ elements }) => elements.length > 0);
+
+                if (visibleGroups.length === 0) {
+                  return <div className="rules-search-empty">Sin resultados para "{searchQuery}"</div>;
+                }
+                return visibleGroups.map(({ groupKey, elements }) => (
+                  <ElementGroup
+                    key={groupKey}
+                    groupKey={groupKey}
+                    elements={elements}
+                    rules={rules}
+                    piezaColor={schema?.color ?? '#999'}
+                    expanded={q ? true : isGroupExpanded(groupKey)}
+                    onToggle={() => toggleGroup(groupKey)}
+                    activeTalla={activeTalla}
+                    onChange={(key, val) => handleRuleChange(activeTalla, key, val)}
+                  />
+                ));
+              })()}
+            </div>
+          </>
         )}
       </div>
     </div>

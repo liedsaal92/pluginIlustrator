@@ -58,6 +58,9 @@ export function ExportScreen({ onToast }: Props) {
 
   const [clienteId, setClienteId] = useState<string>('');
   const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
+  const [exportConfirm, setExportConfirm] = useState<{
+    filename: string; tallas: string[]; jugadores: number; at: string;
+  } | null>(null);
 
   const activeTeam = getActiveTeam();
   const teamHistory = activeTeam?.exportHistory ?? {};
@@ -153,6 +156,7 @@ export function ExportScreen({ onToast }: Props) {
     }
 
     onToast('CSV descargado — ' + tallasSeleccionadasArr.join(', '), 'ok');
+    setExportConfirm({ filename, tallas: tallasSeleccionadasArr, jugadores: jugadoresFiltrados.length, at: new Date().toISOString() });
     setSeleccionadas(new Set());
   }
 
@@ -368,6 +372,21 @@ export function ExportScreen({ onToast }: Props) {
               )}
             </div>
           </div>
+
+          {/* Export confirm banner */}
+          {exportConfirm && (
+            <div className="export-confirm-banner">
+              <div className="export-confirm-check">✓</div>
+              <div className="export-confirm-body">
+                <div className="export-confirm-title">EXPORTADO CORRECTAMENTE</div>
+                <div className="export-confirm-file">{exportConfirm.filename}</div>
+                <div className="export-confirm-meta">
+                  {exportConfirm.jugadores} jugadores · {exportConfirm.tallas.join(' · ')}
+                </div>
+              </div>
+              <button className="export-confirm-close" onClick={() => setExportConfirm(null)}>×</button>
+            </div>
+          )}
 
           {/* Download CTA */}
           <button

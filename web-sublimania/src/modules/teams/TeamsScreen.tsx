@@ -1,7 +1,7 @@
 // ============================================================
 //  modules/teams/TeamsScreen.tsx — Lista y gestión de equipos
 // ============================================================
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTeamStore } from '../../store/useTeamStore';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
@@ -31,6 +31,14 @@ function formatRelative(iso: string): string {
   return `hace ${Math.floor(days / 30)} mes${Math.floor(days / 30) > 1 ? 'es' : ''}`;
 }
 
+function getConfiguredCount(entry: TeamEntry): number {
+  return entry.tallas.filter(t => {
+    const rules = entry.tallaRules[t];
+    if (!rules) return false;
+    return Object.values(rules).some(v => v === 'SI');
+  }).length;
+}
+
 function lastExportInfo(entry: TeamEntry): { relative: string; full: string; tallas: string } | null {
   const entries = Object.entries(entry.exportHistory);
   if (entries.length === 0) return null;
@@ -52,7 +60,7 @@ export function TeamsScreen({ onToast }: Props) {
   const canManageSettings = usePermission('settings:manage');
 
   // Paginación — active team shown as featured, paginate the rest
-  const PAGE_SIZE = 8;
+  const PAGE_SIZE = 16;
   const [page, setPage] = useState(1);
   const otherTeams = teams.filter(t => t.id !== activeTeamId);
   const totalPages = Math.ceil(otherTeams.length / PAGE_SIZE);
@@ -183,6 +191,16 @@ export function TeamsScreen({ onToast }: Props) {
                       : <span>Sin exportaciones</span>;
                   })()}
                 </div>
+                {featured.tallas.length > 0 && (() => {
+                  const configured = getConfiguredCount(featured);
+                  const pct = Math.round((configured / featured.tallas.length) * 100);
+                  return (
+                    <div className="team-card-progress">
+                      <div className="team-card-progress-bar" style={{ width: `${pct}%` }} />
+                      <span className="team-card-progress-label">{configured}/{featured.tallas.length} tallas configuradas</span>
+                    </div>
+                  );
+                })()}
                 <div className="team-card-featured-dates">
                   Modificado: {formatDate(featured.updatedAt)}
                 </div>
@@ -225,10 +243,15 @@ export function TeamsScreen({ onToast }: Props) {
         {/* ── Rest of teams ──────────────────────────────────── */}
         {pagedTeams.length > 0 && (
         <div className="teams-grid">
-          {pagedTeams.map(entry => {
+          {pagedTeams.map((entry, idx) => {
             const isEmpty = entry.players.length === 0;
+            const configured = getConfiguredCount(entry);
             return (
-              <div key={entry.id} className={`team-card ${isEmpty ? 'empty' : ''}`}>
+              <div
+                key={entry.id}
+                className={`team-card stagger-item ${isEmpty ? 'empty' : ''}`}
+                style={{ '--i': idx } as CSSProperties}
+              >
                 <div className="team-card-header">
                   <div className="team-card-name">{entry.nombre || 'Sin nombre'}</div>
                   <div style={{ display: 'flex', gap: '0.3rem' }}>
@@ -239,6 +262,12 @@ export function TeamsScreen({ onToast }: Props) {
                   <span>{entry.players.length} jugadores</span>
                   {!isEmpty && <span>{entry.tallas.length} tallas: {entry.tallas.join(', ')}</span>}
                 </div>
+                {entry.tallas.length > 0 && (
+                  <div className="team-card-progress">
+                    <div className="team-card-progress-bar" style={{ width: `${Math.round((configured / entry.tallas.length) * 100)}%` }} />
+                    <span className="team-card-progress-label">{configured}/{entry.tallas.length} tallas configuradas</span>
+                  </div>
+                )}
                 {!isEmpty && (() => {
                   const exp = lastExportInfo(entry);
                   return <div className="team-card-export">{exp ? `✓ ${exp.relative} · ${exp.tallas}` : 'Sin exportaciones'}</div>;
