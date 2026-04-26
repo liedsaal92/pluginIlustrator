@@ -27,6 +27,14 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     localStorage.getItem('sidebar_collapsed') === 'true'
   );
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    (localStorage.getItem('theme') as 'light' | 'dark') ?? 'light'
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const toggleSidebarCollapse = useCallback(() => {
@@ -36,6 +44,7 @@ export default function App() {
       return next;
     });
   }, []);
+  const toggleTheme = useCallback(() => setTheme(t => t === 'light' ? 'dark' : 'light'), []);
 
   function showToast(msg: string, type: 'ok' | 'error') {
     setToast({ msg, type, key: Date.now() });
@@ -83,7 +92,7 @@ export default function App() {
         onClick={closeSidebar}
       />
 
-      <Sidebar onToast={showToast} isOpen={sidebarOpen} onClose={closeSidebar} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
+      <Sidebar onToast={showToast} isOpen={sidebarOpen} onClose={closeSidebar} collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} theme={theme} onToggleTheme={toggleTheme} />
 
       <main className="app-main" id="app">
         {/* Mobile top bar with hamburger */}

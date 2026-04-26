@@ -170,7 +170,6 @@ export function ExportScreen({ onToast }: Props) {
   return (
     <div className="screen export-screen">
       <div className="export-header">
-        <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('configure'); }}>← VOLVER</button>
         <div className="export-title">
           <div className="export-title-main">EXPORTAR CSV</div>
           {equipo && <div className="export-title-team">// {equipo}</div>}

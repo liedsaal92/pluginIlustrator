@@ -333,15 +333,6 @@ export function TeamsScreen({ onToast }: Props) {
       )}
 
       <div className="teams-footer">
-        {teams.length > 0 && (
-          <button className="btn btn-ghost btn-sm" onClick={() => {
-            const active = useTeamsStore.getState().getActiveTeam();
-            if (active && active.players.length > 0) { saveActiveTeam(); setScreen('configure'); }
-            else onToast('No hay equipo activo con jugadores', 'error');
-          }}>
-            ← VOLVER AL EQUIPO ACTIVO
-          </button>
-        )}
       </div>
 
       {/* ── Modal nuevo equipo ─────────────────────────────── */}

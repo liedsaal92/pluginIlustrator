@@ -15,12 +15,8 @@ interface Props {
 }
 
 export function SettingsScreen({ onToast }: Props) {
-  const { screen: prevScreen, setScreen } = useTeamStore();
   const canManageUsers = usePermission('users:manage');
   const [tab, setTab] = useState<SettingsTab>('clientes');
-
-  // Volver a la pantalla anterior (no siempre configure)
-  const [returnScreen] = useState(prevScreen);
 
   return (
     <div className="screen settings-screen">
@@ -29,12 +25,6 @@ export function SettingsScreen({ onToast }: Props) {
           <div className="settings-title">◈ AJUSTES</div>
           <div className="settings-subtitle">// Administración del sistema</div>
         </div>
-        <button
-          className="btn btn-ghost btn-sm"
-          onClick={() => setScreen(returnScreen === 'settings' ? 'teams' : returnScreen)}
-        >
-          ← VOLVER
-        </button>
       </div>
 
       <div className="settings-body">

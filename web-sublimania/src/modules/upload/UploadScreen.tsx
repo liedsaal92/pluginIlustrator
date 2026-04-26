@@ -17,7 +17,7 @@ interface Props {
 export function UploadScreen({ onToast }: Props) {
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { setPlayers, setScreen, players } = useTeamStore();
+  const { setPlayers, players } = useTeamStore();
   const { teams, replaceAll, activeTeamId } = useTeamsStore();
   const isFirstTeam = teams.length === 0 || (teams.length === 1 && !activeTeamId);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -111,10 +111,6 @@ export function UploadScreen({ onToast }: Props) {
 
   return (
     <div className="screen upload-screen">
-      <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
-        ← EQUIPOS
-      </button>
-
       {isFirstTeam && (
         <div className="onboarding-flow">
           <div className="onboarding-step onboarding-step--active">

@@ -16,9 +16,11 @@ interface Props {
   onClose?: () => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
-export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse }: Props) {
+export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse, theme, onToggleTheme }: Props) {
   const screen    = useTeamStore(s => s.screen);
   const setScreen = useTeamStore(s => s.setScreen);
   const players   = useTeamStore(s => s.players);
@@ -74,9 +76,13 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse 
       <div className="sidebar-brand-wrap">
         <div
           className="sidebar-brand"
-          onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })}
+          onClick={collapsed && onToggleCollapse
+            ? onToggleCollapse
+            : () => handleNavClick(() => { saveActiveTeam(); setScreen('teams'); })
+          }
           role="button"
           tabIndex={0}
+          title={collapsed ? 'Expandir sidebar' : undefined}
         >
           <div className="sidebar-logo-name">S<span className="sidebar-brand-text">UBLI<span>FLOW</span></span></div>
           <div className="sidebar-logo-tag sidebar-brand-text">// PRODUCCIÓN DEPORTIVA v1.0</div>
@@ -225,17 +231,50 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse 
           </div>
         )}
 
+        {/* Theme toggle */}
+        {onToggleTheme && (
+          <button
+            className="sidebar-theme-toggle sidebar-nav-text"
+            onClick={onToggleTheme}
+            title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          >
+            {theme === 'dark' ? (
+              <>
+                <svg viewBox="0 0 20 20" fill="none" width="14" height="14" aria-hidden="true">
+                  <circle cx="10" cy="10" r="4" stroke="currentColor" strokeWidth="1.8"/>
+                  <line x1="10" y1="1" x2="10" y2="3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="10" y1="16.5" x2="10" y2="19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="1" y1="10" x2="3.5" y2="10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="16.5" y1="10" x2="19" y2="10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="3.2" y1="3.2" x2="5" y2="5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="15" y1="15" x2="16.8" y2="16.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="3.2" y1="16.8" x2="5" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <line x1="15" y1="5" x2="16.8" y2="3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span>MODO CLARO</span>
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 20 20" fill="none" width="14" height="14" aria-hidden="true">
+                  <path d="M17 11.5A7 7 0 1 1 8.5 3a5 5 0 0 0 8.5 8.5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                </svg>
+                <span>MODO OSCURO</span>
+              </>
+            )}
+          </button>
+        )}
+
         {/* User info + logout */}
         {session && (
           <div className="sidebar-user-section sidebar-nav-text">
-            <div className="sidebar-user-info">
+            <div className="sidebar-user-top">
               <div className="sidebar-user-name">{session.user.nombre}</div>
-              <div className="sidebar-user-org">{session.user.orgName}</div>
               <span className={`sidebar-role-badge role-${session.user.role}`}>
                 {session.user.role.toUpperCase()}
               </span>
             </div>
-            <button className="sidebar-footer-btn btn-logout" onClick={() => logout()}>
+            <div className="sidebar-user-org">{session.user.orgName}</div>
+            <button className="sidebar-logout-btn" onClick={() => logout()}>
               SALIR
             </button>
           </div>
