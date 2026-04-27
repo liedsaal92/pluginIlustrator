@@ -442,7 +442,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
         // 3. Posicionar verticalmente y centrar horizontalmente (independiente por elemento)
         var estaticManga = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
-        var mangaBounds  = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
+        var mangaBounds  = getEstaticoRefBounds(estaticManga, grupoCopia.geometricBounds);
         var mangaBottom  = mangaBounds[3];
         var mangaLeft    = mangaBounds[0];
         var mangaRight   = mangaBounds[2];
@@ -450,9 +450,12 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
         Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
             ": DIAG MANGA ref=" + (estaticManga ? "ESTATICO" : "grupoCopia") +
-            " mangaTop=" + ptToCm(mangaBounds[1]).toFixed(4) + "cm" +
-            " mangaBot=" + ptToCm(mangaBottom).toFixed(4) + "cm" +
-            " mangaAlto=" + ptToCm(Math.abs(mangaBounds[1]-mangaBottom)).toFixed(4) + "cm");
+            " L=" + ptToCm(mangaLeft).toFixed(4) + "cm" +
+            " T=" + ptToCm(mangaBounds[1]).toFixed(4) + "cm" +
+            " R=" + ptToCm(mangaRight).toFixed(4) + "cm" +
+            " B=" + ptToCm(mangaBottom).toFixed(4) + "cm" +
+            " W=" + ptToCm(Math.abs(mangaRight-mangaLeft)).toFixed(4) + "cm" +
+            " H=" + ptToCm(Math.abs(mangaBounds[1]-mangaBottom)).toFixed(4) + "cm");
 
         if (itemSponsorSecundarioManga) {
             var ssmMarginInf = parseFloat(jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_MARGIN_INF"]);
@@ -791,7 +794,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaInfAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_INF_ALTO"]);
             var lineaInfRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
             procesarLineaMangaInf(grupoLineaInf, lineaInfAncho, lineaInfAlto, lineaInfRef,
-                                  jugador.NOMBRE, nombrePieza, factorPieza);
+                                  jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
         // ── LINEAS ADIDAS (manga ranglan) ─────────────────────
@@ -811,6 +814,46 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     grupoCopia, jugador.NOMBRE, nombrePieza
                 );
             }
+        }
+
+        // ── POST MANGA: dump final positions of all line items ──
+        var _pIzq = findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ");
+        var _pDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
+        var _pInf = findItemByNameRecursivo(dinamico, "MANGA_LINEA_INF");
+        if (_pIzq) {
+            var _bIzq = _pIzq.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_IZQ L=" + ptToCm(_bIzq[0]).toFixed(3) +
+                " T=" + ptToCm(_bIzq[1]).toFixed(3) +
+                " R=" + ptToCm(_bIzq[2]).toFixed(3) +
+                " B=" + ptToCm(_bIzq[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bIzq[2]-_bIzq[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bIzq[1]-_bIzq[3])).toFixed(3) +
+                " clipped=" + (typeof _pIzq.clipped !== "undefined" ? (_pIzq.clipped ? "SI" : "NO") : "n/a") +
+                " hidden=" + (_pIzq.hidden ? "SI" : "NO"));
+        }
+        if (_pDer) {
+            var _bDer = _pDer.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_DER L=" + ptToCm(_bDer[0]).toFixed(3) +
+                " T=" + ptToCm(_bDer[1]).toFixed(3) +
+                " R=" + ptToCm(_bDer[2]).toFixed(3) +
+                " B=" + ptToCm(_bDer[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bDer[2]-_bDer[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bDer[1]-_bDer[3])).toFixed(3) +
+                " clipped=" + (typeof _pDer.clipped !== "undefined" ? (_pDer.clipped ? "SI" : "NO") : "n/a") +
+                " hidden=" + (_pDer.hidden ? "SI" : "NO"));
+        }
+        if (_pInf) {
+            var _bInf = _pInf.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_INF L=" + ptToCm(_bInf[0]).toFixed(3) +
+                " T=" + ptToCm(_bInf[1]).toFixed(3) +
+                " R=" + ptToCm(_bInf[2]).toFixed(3) +
+                " B=" + ptToCm(_bInf[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bInf[2]-_bInf[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bInf[1]-_bInf[3])).toFixed(3) +
+                " hidden=" + (_pInf.hidden ? "SI" : "NO"));
         }
     }
 }

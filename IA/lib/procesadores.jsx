@@ -94,7 +94,7 @@ function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, gru
             _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
         }
         var _estSrc    = _estRef ? ("ESTATICO(" + _estRef.typename + ")") : "grupoPieza(fallback)";
-        var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
+        var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds);
         var _estBot    = _estBounds[3];
         var _estTop    = _estBounds[1];
 
@@ -133,6 +133,18 @@ function procesarCostilla(grupoCostilla, lado, targetAncho, targetAlto, ref, gru
 // REF=AMBOS → fija ancho Y alto exactos al valor del CSV
 // REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
 // Después del resize el borde inferior de la línea se ancla al borde inferior de ESTATICO.
+// Devuelve geometricBounds del clip path interno de un grupo con clipped=true.
+// Usa buscarClipBounds (mismo patrón que getEstaticoRefBounds en posicionamiento.jsx):
+// busca el pageItem con clipping===true dentro del grupo.
+function getLineaClipBounds(item) {
+    try {
+        if (typeof item.clipped !== "undefined" && item.clipped) {
+            return buscarClipBounds(item);
+        }
+    } catch(e) {}
+    return null;
+}
+
 function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza) {
     if (!item) {
         Log.info(nombrePieza + " | " + nombreJugador +
@@ -140,9 +152,23 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
         return;
     }
 
+    // Detectar si el item es contenido dentro de un clip group sin nombre
+    // (caso MANGA_DER: <Recortar grupo> contiene MANGA_LINEA_*).
+    // En este caso:
+    //   - Escalar el item (contenido) directo usando sus propios bounds como referencia
+    //     → el elemento nombrado queda exactamente al tamaño del CSV
+    //   - Para posicionar (translate/snap) usar el clip group padre
+    //     → clip path y contenido se mueven juntos
+    var clipGroupParent = null;
+    if (item.parent && item.parent.typename === "GroupItem" &&
+        typeof item.parent.clipped !== "undefined" && item.parent.clipped) {
+        clipGroupParent = item.parent;
+    }
+
     Log.info(nombrePieza + " | " + nombreJugador +
              ": MANGA_LINEA_" + lado + " CSV → ANCHO=" + targetAncho +
-             " ALTO=" + targetAlto + " REF=" + ref);
+             " ALTO=" + targetAlto + " REF=" + ref +
+             (clipGroupParent ? " [en clip group]" : ""));
 
     if (ref === "PROPORCIONAL") {
         Log.ok(nombrePieza + " | " + nombreJugador +
@@ -155,14 +181,34 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
         var leftAntes   = boundsAntes[0];
         var rightAntes  = boundsAntes[2];
 
+        // refBounds para calcular factores de escala:
+        // - MANGA_IZQ (item.clipped=true, item ES el clip group):
+        //     usar clip path bounds (sleeve outline) como referencia.
+        //     Escalar el clip group completo → contenido y clip path escalan juntos.
+        // - MANGA_DER (item es contenido dentro de clip group padre):
+        //     usar bounds del item (contenido) directamente → el elemento
+        //     nombrado queda exactamente al tamaño CSV. El clip path (sleeve)
+        //     es más grande y no restringe la visibilidad del contenido escalado.
+        var _clipBounds0 = null;
+        if (!clipGroupParent && typeof item.clipped !== "undefined" && item.clipped) {
+            _clipBounds0 = buscarClipBounds(item);
+        }
+        var refBounds = _clipBounds0 || boundsAntes;
+        if (_clipBounds0) {
+            Log._linea("-----", nombrePieza + " | " + nombreJugador +
+                ": LINEA_" + lado + " clipped=SI → refBounds desde clipPath" +
+                " W=" + ptToCm(Math.abs(_clipBounds0[2]-_clipBounds0[0])).toFixed(3) +
+                "cm H=" + ptToCm(Math.abs(_clipBounds0[1]-_clipBounds0[3])).toFixed(3) + "cm");
+        }
+
         if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
-            var anchoRealCm = ptToCm(Math.abs(rightAntes - leftAntes));
+            var anchoRealCm = ptToCm(Math.abs(refBounds[2] - refBounds[0]));
             if (anchoRealCm <= 0) return;
             var factorAncho = (targetAncho / anchoRealCm) * 100;
 
             Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_" + lado + " anchoActual=" + anchoRealCm.toFixed(4) +
-                     "cm target=" + targetAncho.toFixed(1) + "cm factor=" + factorAncho.toFixed(2) + "%");
+                     ": MANGA_LINEA_" + lado + " refAncho=" + anchoRealCm.toFixed(4) +
+                     "cm factor=" + factorAncho.toFixed(2) + "% → target=" + targetAncho.toFixed(1) + "cm");
 
             item.resize(factorAncho, 100, true, true, true, true, 100, Transformation.TOPLEFT);
 
@@ -174,13 +220,13 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                    ": MANGA_LINEA_" + lado + " → ancho " + targetAncho.toFixed(1) + "cm");
 
         } else if (ref === "ALTO" && !isNaN(targetAlto) && targetAlto > 0) {
-            var altoRealCm = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            var altoRealCm = ptToCm(Math.abs(refBounds[1] - refBounds[3]));
             if (altoRealCm <= 0) return;
             var factorAlto = (targetAlto / altoRealCm) * 100;
 
             Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_" + lado + " altoActual=" + altoRealCm.toFixed(4) +
-                     "cm target=" + targetAlto.toFixed(1) + "cm factor=" + factorAlto.toFixed(2) + "%");
+                     ": MANGA_LINEA_" + lado + " refAlto=" + altoRealCm.toFixed(4) +
+                     "cm factor=" + factorAlto.toFixed(2) + "% → target=" + targetAlto.toFixed(1) + "cm");
 
             item.resize(100, factorAlto, true, true, true, true, 100, Transformation.TOPLEFT);
             item.left = boundsAntes[0];
@@ -189,17 +235,18 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                    ": MANGA_LINEA_" + lado + " → alto " + targetAlto.toFixed(1) + "cm");
 
         } else if (ref === "AMBOS" && !isNaN(targetAncho) && targetAncho > 0 && !isNaN(targetAlto) && targetAlto > 0) {
-            var anchoRealCmA = ptToCm(Math.abs(rightAntes - leftAntes));
-            var altoRealCmA  = ptToCm(Math.abs(boundsAntes[1] - boundsAntes[3]));
+            var anchoRealCmA = ptToCm(Math.abs(refBounds[2] - refBounds[0]));
+            var altoRealCmA  = ptToCm(Math.abs(refBounds[1] - refBounds[3]));
             if (anchoRealCmA <= 0 || altoRealCmA <= 0) return;
             var factorAnchoA = (targetAncho / anchoRealCmA) * 100;
             var factorAltoA  = (targetAlto  / altoRealCmA)  * 100;
 
             Log.info(nombrePieza + " | " + nombreJugador +
-                     ": MANGA_LINEA_" + lado + " anchoActual=" + anchoRealCmA.toFixed(4) +
-                     "cm altoActual=" + altoRealCmA.toFixed(4) +
+                     ": MANGA_LINEA_" + lado + " refAncho=" + anchoRealCmA.toFixed(4) +
+                     "cm refAlto=" + altoRealCmA.toFixed(4) +
                      "cm factorAncho=" + factorAnchoA.toFixed(2) +
-                     "% factorAlto=" + factorAltoA.toFixed(2) + "%");
+                     "% factorAlto=" + factorAltoA.toFixed(2) + "% → target=" +
+                     targetAncho.toFixed(1) + "x" + targetAlto.toFixed(1) + "cm");
 
             item.resize(factorAnchoA, factorAltoA, true, true, true, true, 100, Transformation.TOPLEFT);
 
@@ -224,25 +271,47 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             if (!_estRef) {
                 _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
             }
-            var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
+            var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds);
             var _estBot    = _estBounds[3];
             var _estLeft   = _estBounds[0];
             var _estRight  = _estBounds[2];
 
-            // Snap vertical: borde inferior de la línea = borde inferior de ESTATICO
-            var _itmB    = item.geometricBounds;
-            var _itmH    = Math.abs(_itmB[1] - _itmB[3]);
-            var _itmW    = Math.abs(_itmB[2] - _itmB[0]);
-            var _targetT = _estBot + _itmH;
-            var _deltaY  = _targetT - _itmB[1];
-            item.translate(0, _deltaY);
+            Log._linea("-----", nombrePieza + " | " + nombreJugador +
+                ": LINEA_" + lado + " ANCHOR estL=" + ptToCm(_estLeft).toFixed(3) +
+                "cm estT=" + ptToCm(_estBounds[1]).toFixed(3) +
+                "cm estR=" + ptToCm(_estRight).toFixed(3) +
+                "cm estB=" + ptToCm(_estBot).toFixed(3) + "cm");
 
-            // Snap horizontal: borde lateral de la línea = borde lateral de ESTATICO
-            var _itmBV = item.geometricBounds;
+            // snapItem: el objeto a trasladar.
+            //   MANGA_IZQ: item (el clip group); snap ref = clip path bounds del item
+            //   MANGA_DER: clipGroupParent (mueve clip path + contenido juntos);
+            //              snap ref = bounds del contenido (item, ya escalado al target)
+            var snapItem = clipGroupParent || item;
+            var _posRef  = clipGroupParent
+                           ? item.geometricBounds
+                           : (getLineaClipBounds(item) || item.geometricBounds);
+
+            var _posH    = Math.abs(_posRef[1] - _posRef[3]);
+            var _targetT = _estBot + _posH;
+            var _deltaY  = _targetT - _posRef[1];
+
+            Log._linea("-----", nombrePieza + " | " + nombreJugador +
+                ": LINEA_" + lado + " ANTES L=" + ptToCm(_posRef[0]).toFixed(3) +
+                "cm T=" + ptToCm(_posRef[1]).toFixed(3) +
+                "cm R=" + ptToCm(_posRef[2]).toFixed(3) +
+                "cm B=" + ptToCm(_posRef[3]).toFixed(3) +
+                "cm targetT=" + ptToCm(_targetT).toFixed(3) + "cm deltaY=" + ptToCm(_deltaY).toFixed(3) + "cm");
+
+            snapItem.translate(0, _deltaY);
+
+            // Snap horizontal (re-evaluar bounds post-translate vertical)
+            var _posRefX = clipGroupParent
+                           ? item.geometricBounds
+                           : (getLineaClipBounds(snapItem) || snapItem.geometricBounds);
             if (lado === "IZQ") {
-                item.translate(_estLeft - _itmBV[0], 0);
+                snapItem.translate(_estLeft - _posRefX[0], 0);
             } else {
-                item.translate((_estRight - _itmW) - _itmBV[0], 0);
+                snapItem.translate(_estRight - _posRefX[2], 0);
             }
 
             var _itmBPost = item.geometricBounds;
@@ -283,7 +352,7 @@ function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan,
         // ── Obtener bounds del ESTATICO ──────────────────────
         var _estRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!_estRef) _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-        var _estBounds = _estRef ? _estRef.geometricBounds : grupoPieza.geometricBounds;
+        var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds);
         var estTop    = _estBounds[1]; // borde superior (mayor Y en coordenadas AI)
         var estBottom = _estBounds[3]; // borde inferior (menor Y)
         var estLeft   = _estBounds[0];
@@ -354,7 +423,7 @@ function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan,
 // REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga (comportamiento original)
 // REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga
 // REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza) {
+function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza) {
     if (!grupoLinea) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_INF no encontrada — omitida");
@@ -384,11 +453,28 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
 
             var boundsDespues = grupoLinea.geometricBounds;
             var nuevoAlto     = Math.abs(boundsDespues[1] - boundsDespues[3]);
-            grupoLinea.left = leftAntes;
-            grupoLinea.top  = bottomAntes + nuevoAlto;
 
+            // Anclar borde inferior al borde inferior del clip (ESTATICO)
+            if (grupoPieza) {
+                var _infEstRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+                if (!_infEstRef) _infEstRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
+                var _infClipB  = getEstaticoRefBounds(_infEstRef, grupoPieza.geometricBounds);
+                var _infBot    = _infClipB[3];
+                grupoLinea.translate(0, _infBot - boundsDespues[3]);
+                grupoLinea.left = _infClipB[0]; // snap horizontal al borde izq de ESTATICO
+            } else {
+                grupoLinea.left = leftAntes;
+                grupoLinea.top  = bottomAntes + nuevoAlto;
+            }
+
+            var _postInf = grupoLinea.geometricBounds;
             Log.ok(nombrePieza + " | " + nombreJugador +
-                   ": MANGA_LINEA_INF → alto " + ptToCm(nuevoAlto).toFixed(4) + "cm (target " + targetAlto.toFixed(1) + "cm)");
+                   ": MANGA_LINEA_INF → alto " + ptToCm(nuevoAlto).toFixed(4) + "cm (target " + targetAlto.toFixed(1) + "cm)" +
+                   " POST L=" + ptToCm(_postInf[0]).toFixed(3) +
+                   " T=" + ptToCm(_postInf[1]).toFixed(3) +
+                   " R=" + ptToCm(_postInf[2]).toFixed(3) +
+                   " B=" + ptToCm(_postInf[3]).toFixed(3) +
+                   " W=" + ptToCm(Math.abs(_postInf[2]-_postInf[0])).toFixed(3));
 
         } else if (ref === "ANCHO" && !isNaN(targetAncho) && targetAncho > 0) {
             var anchoActualCm = ptToCm(Math.abs(boundsAntes[2] - boundsAntes[0]));
@@ -396,8 +482,17 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
             var factorAncho2  = (targetAncho / anchoActualCm) * 100;
 
             grupoLinea.resize(factorAncho2, 100, true, true, true, true, 100, Transformation.BOTTOMLEFT);
-            grupoLinea.left = leftAntes;
-            grupoLinea.top  = bottomAntes + Math.abs(grupoLinea.geometricBounds[1] - grupoLinea.geometricBounds[3]);
+            var _infBotA = grupoLinea.geometricBounds;
+            if (grupoPieza) {
+                var _infEstRefA = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
+                if (!_infEstRefA) _infEstRefA = findItemByNameRecursivo(grupoPieza, "ESTATICO");
+                var _infClipBA  = getEstaticoRefBounds(_infEstRefA, grupoPieza.geometricBounds);
+                grupoLinea.translate(0, _infClipBA[3] - _infBotA[3]);
+                grupoLinea.left = _infClipBA[0]; // snap horizontal al borde izq de ESTATICO
+            } else {
+                grupoLinea.left = leftAntes;
+                grupoLinea.top  = bottomAntes + Math.abs(_infBotA[1] - _infBotA[3]);
+            }
 
             Log.ok(nombrePieza + " | " + nombreJugador +
                    ": MANGA_LINEA_INF → ancho " + targetAncho.toFixed(1) + "cm");
