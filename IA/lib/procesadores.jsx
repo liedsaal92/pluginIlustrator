@@ -282,36 +282,49 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
                 "cm estR=" + ptToCm(_estRight).toFixed(3) +
                 "cm estB=" + ptToCm(_estBot).toFixed(3) + "cm");
 
-            // snapItem: el objeto a trasladar.
-            //   MANGA_IZQ: item (el clip group); snap ref = clip path bounds del item
-            //   MANGA_DER: clipGroupParent (mueve clip path + contenido juntos);
-            //              snap ref = bounds del contenido (item, ya escalado al target)
-            var snapItem = clipGroupParent || item;
-            var _posRef  = clipGroupParent
-                           ? item.geometricBounds
-                           : (getLineaClipBounds(item) || item.geometricBounds);
-
-            var _posH    = Math.abs(_posRef[1] - _posRef[3]);
-            var _targetT = _estBot + _posH;
-            var _deltaY  = _targetT - _posRef[1];
-
-            Log._linea("-----", nombrePieza + " | " + nombreJugador +
-                ": LINEA_" + lado + " ANTES L=" + ptToCm(_posRef[0]).toFixed(3) +
-                "cm T=" + ptToCm(_posRef[1]).toFixed(3) +
-                "cm R=" + ptToCm(_posRef[2]).toFixed(3) +
-                "cm B=" + ptToCm(_posRef[3]).toFixed(3) +
-                "cm targetT=" + ptToCm(_targetT).toFixed(3) + "cm deltaY=" + ptToCm(_deltaY).toFixed(3) + "cm");
-
-            snapItem.translate(0, _deltaY);
-
-            // Snap horizontal (re-evaluar bounds post-translate vertical)
-            var _posRefX = clipGroupParent
-                           ? item.geometricBounds
-                           : (getLineaClipBounds(snapItem) || snapItem.geometricBounds);
-            if (lado === "IZQ") {
-                snapItem.translate(_estLeft - _posRefX[0], 0);
+            if (clipGroupParent) {
+                // MANGA_DER: dos pasos independientes
+                // Paso 1: mover clipGroupParent para que el clip PATH quede en ESTATICO
+                var _cpBounds = buscarClipBounds(clipGroupParent);
+                if (_cpBounds) {
+                    var _cpH     = Math.abs(_cpBounds[1] - _cpBounds[3]);
+                    var _cpDeltaY = (_estBot + _cpH) - _cpBounds[1];
+                    var _cpDeltaX = (lado === "IZQ") ? _estLeft - _cpBounds[0] : _estRight - _cpBounds[2];
+                    Log._linea("-----", nombrePieza + " | " + nombreJugador +
+                        ": LINEA_" + lado + " clipPath ANTES L=" + ptToCm(_cpBounds[0]).toFixed(3) +
+                        "cm T=" + ptToCm(_cpBounds[1]).toFixed(3) +
+                        "cm R=" + ptToCm(_cpBounds[2]).toFixed(3) +
+                        "cm B=" + ptToCm(_cpBounds[3]).toFixed(3) +
+                        "cm → dX=" + ptToCm(_cpDeltaX).toFixed(3) + "cm dY=" + ptToCm(_cpDeltaY).toFixed(3) + "cm");
+                    clipGroupParent.translate(_cpDeltaX, _cpDeltaY);
+                }
+                // Paso 2: mover contenido (item) independientemente para que quede en borde ESTATICO
+                var _cB      = item.geometricBounds;
+                var _cH      = Math.abs(_cB[1] - _cB[3]);
+                var _cDeltaY = (_estBot + _cH) - _cB[1];
+                var _cDeltaX = (lado === "IZQ") ? _estLeft - _cB[0] : _estRight - _cB[2];
+                item.translate(_cDeltaX, _cDeltaY);
             } else {
-                snapItem.translate(_estRight - _posRefX[2], 0);
+                // MANGA_IZQ: item es el clip group; snap ref = clip path bounds
+                var _posRef  = getLineaClipBounds(item) || item.geometricBounds;
+                var _posH    = Math.abs(_posRef[1] - _posRef[3]);
+                var _targetT = _estBot + _posH;
+                var _deltaY  = _targetT - _posRef[1];
+
+                Log._linea("-----", nombrePieza + " | " + nombreJugador +
+                    ": LINEA_" + lado + " ANTES L=" + ptToCm(_posRef[0]).toFixed(3) +
+                    "cm T=" + ptToCm(_posRef[1]).toFixed(3) +
+                    "cm R=" + ptToCm(_posRef[2]).toFixed(3) +
+                    "cm B=" + ptToCm(_posRef[3]).toFixed(3) +
+                    "cm targetT=" + ptToCm(_targetT).toFixed(3) + "cm deltaY=" + ptToCm(_deltaY).toFixed(3) + "cm");
+
+                item.translate(0, _deltaY);
+                var _posRefX = getLineaClipBounds(item) || item.geometricBounds;
+                if (lado === "IZQ") {
+                    item.translate(_estLeft - _posRefX[0], 0);
+                } else {
+                    item.translate(_estRight - _posRefX[2], 0);
+                }
             }
 
             var _itmBPost = item.geometricBounds;
