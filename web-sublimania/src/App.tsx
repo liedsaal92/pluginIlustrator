@@ -12,16 +12,22 @@ import { supabase } from './utils/supabase';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
 import { AuthScreen } from './modules/auth/AuthScreen';
+import { PortalScreen } from './modules/portal/PortalScreen';
 import { TeamsScreen } from './modules/teams/TeamsScreen';
 import { UploadScreen } from './modules/upload/UploadScreen';
 import { ConfigureScreen } from './modules/configure/ConfigureScreen';
 import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
 import { PreviewScreen } from './modules/preview/PreviewScreen';
+import { ClienteScreen } from './modules/cliente/ClienteScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
+// Detectar ruta pública /portal/TOKEN antes de cualquier auth
+const portalMatch = window.location.pathname.match(/^\/portal\/([^/]+)/);
+
 export default function App() {
+  if (portalMatch) return <PortalScreen token={portalMatch[1]} />;
   const screen  = useTeamStore(s => s.screen);
   const session = useAuthStore(s => s.session);
   const checkSession = useAuthStore(s => s.checkSession);
@@ -91,6 +97,27 @@ export default function App() {
 
   // Sin sesión → pantalla de auth
   if (!session) return <AuthScreen />;
+
+  // Cliente → dashboard propio (sin sidebar normal)
+  if (session.user.role === 'cliente') {
+    return (
+      <>
+        <div className="app-layout cliente-layout">
+          <main className="app-main cliente-main" id="app">
+            <div className="mobile-topbar">
+              <div className="mobile-topbar-logo">SUBLI<span>FLOW</span></div>
+              <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', fontSize: '0.75rem' }}
+                onClick={() => useAuthStore.getState().logout()}>
+                Salir
+              </button>
+            </div>
+            <ClienteScreen onToast={showToast} />
+          </main>
+        </div>
+        {toast && <Toast key={toast.key} message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
+      </>
+    );
+  }
 
   return (
     <div className="app-layout">

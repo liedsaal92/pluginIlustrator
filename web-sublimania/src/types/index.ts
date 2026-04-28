@@ -56,15 +56,19 @@ export type Schema = Record<string, SchemaPieza>;
 // ── TEAM ENTRY (registro completo de un equipo) ───────────────
 export interface TeamEntry {
   id: string;
-  nombre: string;         // display name (= globalConfig.EQUIPO al crear)
-  createdAt: string;      // ISO
-  updatedAt: string;      // ISO
+  nombre: string;
+  createdAt: string;
+  updatedAt: string;
   players: Player[];
   tallas: string[];
   tallaRules: Record<string, Rules>;
   overrides: Overrides;
   globalConfig: GlobalConfig;
-  exportHistory: Record<string, { exportedAt: string }>; // talla → fecha
+  exportHistory: Record<string, { exportedAt: string }>;
+  portalStatus: PortalStatus;
+  createdBy:    string | null;
+  portalToken:  string | null;
+  portalExpiry: string | null;
 }
 
 // ── TALLAS ESTÁNDAR (dimensiones globales por talla) ──────────
@@ -86,6 +90,26 @@ export interface Cliente {
 export interface Molde {
   id: string;
   nombre: string;
+}
+
+// ── PORTAL ────────────────────────────────────────────────────
+export type PortalStatus = 'none' | 'collecting' | 'approved';
+export type PlayerStatus = 'confirmed' | 'pending' | 'additional';
+
+export interface PortalLink {
+  token:     string;
+  teamId:    string;
+  orgId:     string;
+  status:    'open' | 'approved' | 'closed';
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface PortalInfo {
+  teamNombre:  string;
+  expiresAt:   string | null;
+  status:      'open' | 'approved' | 'closed';
+  playerCount: number;
 }
 
 // ── PANTALLAS ─────────────────────────────────────────────────

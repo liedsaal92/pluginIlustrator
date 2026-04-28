@@ -3,7 +3,7 @@
 //  Diseñado para Supabase — compatible con mock local
 // ============================================================
 
-export type UserRole = 'admin' | 'employee';
+export type UserRole = 'admin' | 'employee' | 'cliente';
 
 // ── Sesión activa ─────────────────────────────────────────────
 export interface AuthUser {
@@ -91,8 +91,9 @@ export type Permission =
   | 'billing:manage';
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  admin:    ['teams:read', 'teams:write', 'settings:manage', 'users:manage', 'export:run', 'billing:manage'],
-  employee: ['teams:read', 'teams:write', 'export:run'],
+  admin:     ['teams:read', 'teams:write', 'settings:manage', 'users:manage', 'export:run', 'billing:manage'],
+  employee:  ['teams:read', 'teams:write', 'export:run'],
+  cliente: [],  // acceso controlado por ClienteScreen, no por permisos granulares
 };
 
 export function hasPermission(role: UserRole, permission: Permission): boolean {

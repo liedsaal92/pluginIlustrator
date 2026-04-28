@@ -76,6 +76,10 @@ export function UploadScreen({ onToast }: Props) {
           players, tallas, tallaRules,
           overrides: {}, globalConfig,
           exportHistory: current?.exportHistory ?? {},
+          portalStatus: current?.portalStatus ?? 'none',
+          createdBy:    current?.createdBy    ?? null,
+          portalToken:  current?.portalToken  ?? null,
+          portalExpiry: current?.portalExpiry ?? null,
         });
       } else {
         // Equipo nuevo
@@ -84,6 +88,7 @@ export function UploadScreen({ onToast }: Props) {
           players, tallas, tallaRules,
           overrides: {}, globalConfig,
           exportHistory: {},
+          portalStatus: 'none', createdBy: null, portalToken: null, portalExpiry: null,
         });
       }
 
