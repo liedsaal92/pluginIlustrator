@@ -8,15 +8,17 @@ type AuthTab  = 'login' | 'register';
 type AuthMode = 'tabs' | 'forgot' | 'sent' | 'reset';
 
 export function AuthScreen() {
-  const { login, register, acceptInvite, requestPasswordReset, updatePassword, loading, error, clearError } = useAuthStore();
+  const { login, register, acceptInvite, requestPasswordReset, updatePassword, loading, error, clearError, recoveryMode } = useAuthStore();
 
   // Detectar invite token en URL
   const inviteToken = new URLSearchParams(window.location.search).get('invite');
 
-  // Detectar recovery hash (Supabase: #type=recovery&access_token=...)
-  const [mode, setMode] = useState<AuthMode>(() =>
-    window.location.hash.includes('type=recovery') ? 'reset' : 'tabs'
-  );
+  const [mode, setMode] = useState<AuthMode>('tabs');
+
+  // Cuando Supabase dispara PASSWORD_RECOVERY → mostrar form de reset
+  useEffect(() => {
+    if (recoveryMode) setMode('reset');
+  }, [recoveryMode]);
 
   const [tab, setTab] = useState<AuthTab>('login');
 
@@ -98,6 +100,7 @@ export function AuthScreen() {
     if (nPass !== nPass2) { setLocalErr('Las contraseñas no coinciden'); return; }
     await updatePassword(nPass);
     if (!useAuthStore.getState().error) {
+      useAuthStore.setState({ recoveryMode: false });
       window.history.replaceState({}, '', window.location.pathname);
       setMode('tabs');
     }

@@ -7,9 +7,10 @@ import type { AuthSession } from '../types/auth';
 import { authService } from '../utils/authService';
 
 interface AuthState {
-  session:  AuthSession | null;
-  loading:  boolean;
-  error:    string | null;
+  session:      AuthSession | null;
+  loading:      boolean;
+  error:        string | null;
+  recoveryMode: boolean;
 
   login:                 (email: string, password: string) => Promise<void>;
   register:              (email: string, password: string, nombre: string, orgName: string) => Promise<void>;
@@ -24,9 +25,10 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      session:  null,
-      loading:  false,
-      error:    null,
+      session:      null,
+      loading:      false,
+      error:        null,
+      recoveryMode: false,
 
       login: async (email, password) => {
         set({ loading: true, error: null });

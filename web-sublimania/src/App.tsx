@@ -8,6 +8,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { useClientesStore } from './store/useClientesStore';
 import { useMoldesStore } from './store/useMoldesStore';
 import { useTallasStore } from './store/useTallasStore';
+import { supabase } from './utils/supabase';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
 import { AuthScreen } from './modules/auth/AuthScreen';
@@ -54,6 +55,16 @@ export default function App() {
 
   // Validar sesión al arrancar
   useEffect(() => { checkSession(); }, [checkSession]);
+
+  // Detectar recovery session de Supabase (password reset desde email)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        useAuthStore.setState({ recoveryMode: true });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Cargar datos desde Supabase cuando hay sesión
   useEffect(() => {
