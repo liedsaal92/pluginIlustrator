@@ -10,4 +10,6 @@ if (!url || !anonKey) {
   throw new Error('Faltan variables VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en .env.local');
 }
 
-export const supabase = createClient(url, anonKey);
+export const supabase = createClient(url, anonKey, {
+  auth: { flowType: 'implicit' },
+});
