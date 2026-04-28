@@ -91,7 +91,8 @@ export function TeamsScreen({ onToast }: Props) {
 
   function openNewModal() {
     setNewNombre('');
-    setSourceTeamId(baseTeamId ?? '');
+    const validBase = teamsWithRules.find(t => t.id === baseTeamId);
+    setSourceTeamId(validBase?.id ?? '');
     setShowNewModal(true);
   }
 
@@ -339,6 +340,27 @@ export function TeamsScreen({ onToast }: Props) {
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-title">NUEVO EQUIPO</div>
 
+            {teamsWithRules.length > 0 && (
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div className="modal-option-title" style={{ marginBottom: '0.4rem' }}>
+                  COPIAR REGLAS DE (OPCIONAL)
+                </div>
+                <select
+                  className="input-global"
+                  style={{ width: '100%' }}
+                  value={sourceTeamId}
+                  onChange={e => setSourceTeamId(e.target.value)}
+                >
+                  <option value="">— Sin copiar —</option>
+                  {teamsWithRules.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.nombre}{baseTeamId === t.id ? ' ★' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="modal-option" onClick={handleCreateWithExcel}>
               <div className="modal-option-icon">📊</div>
               <div className="modal-option-text">
@@ -364,26 +386,6 @@ export function TeamsScreen({ onToast }: Props) {
                 onKeyDown={e => e.key === 'Enter' && handleCreateEmpty()}
                 autoFocus
               />
-              {teamsWithRules.length > 0 && (
-                <>
-                  <div className="modal-option-title" style={{ marginBottom: '0.4rem' }}>
-                    COPIAR REGLAS DE (OPCIONAL)
-                  </div>
-                  <select
-                    className="input-global"
-                    style={{ width: '100%', marginBottom: '0.5rem' }}
-                    value={sourceTeamId}
-                    onChange={e => setSourceTeamId(e.target.value)}
-                  >
-                    <option value="">— Sin copiar —</option>
-                    {teamsWithRules.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.nombre} ({t.tallas.join(', ')})
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
               <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={handleCreateEmpty}>
                 CREAR
               </button>
