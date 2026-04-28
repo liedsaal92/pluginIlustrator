@@ -5,7 +5,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTeamStore } from './store/useTeamStore';
 import { useTeamsStore } from './store/useTeamsStore';
 import { useAuthStore } from './store/useAuthStore';
-import { hasPermission } from './types/auth';
+import { useClientesStore } from './store/useClientesStore';
+import { useMoldesStore } from './store/useMoldesStore';
+import { useTallasStore } from './store/useTallasStore';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
 import { AuthScreen } from './modules/auth/AuthScreen';
@@ -53,33 +55,28 @@ export default function App() {
   // Validar sesión al arrancar
   useEffect(() => { checkSession(); }, [checkSession]);
 
-  // Al arrancar con sesión: determinar pantalla inicial
+  // Cargar datos desde Supabase cuando hay sesión
   useEffect(() => {
     if (!session) return;
-    const { teams, activeTeamId } = useTeamsStore.getState();
-    const workingStore = useTeamStore.getState();
-
-    if (teams.length === 0) {
-      workingStore.setScreen('upload');
-      return;
-    }
-    const activeTeam = teams.find(t => t.id === activeTeamId) ?? teams[0];
-    if (activeTeam) {
-      workingStore.loadFromEntry(activeTeam, 'teams');
-      useTeamsStore.setState({ activeTeamId: activeTeam.id });
-    } else {
-      workingStore.setScreen('teams');
-    }
+    useClientesStore.getState().init();
+    useMoldesStore.getState().init();
+    useTallasStore.getState().init();
+    useTeamsStore.getState().init().then(() => {
+      const { teams, activeTeamId } = useTeamsStore.getState();
+      const workingStore = useTeamStore.getState();
+      if (teams.length === 0) { workingStore.setScreen('upload'); return; }
+      const activeTeam = teams.find(t => t.id === activeTeamId) ?? teams[0];
+      if (activeTeam) {
+        workingStore.loadFromEntry(activeTeam, 'teams');
+        useTeamsStore.setState({ activeTeamId: activeTeam.id });
+      } else {
+        workingStore.setScreen('teams');
+      }
+    });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!session]);
 
-  // Guard: employee sin permiso a settings → redirect
-  useEffect(() => {
-    if (!session) return;
-    if (screen === 'settings' && !hasPermission(session.user.role, 'settings:manage')) {
-      useTeamStore.getState().setScreen('teams');
-    }
-  }, [screen, session]);
+
 
   // Sin sesión → pantalla de auth
   if (!session) return <AuthScreen />;
@@ -111,9 +108,7 @@ export default function App() {
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
           {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
-          {screen === 'settings'  && hasPermission(session.user.role, 'settings:manage') && (
-            <SettingsScreen onToast={showToast} />
-          )}
+          {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
         </div>
       </main>
 

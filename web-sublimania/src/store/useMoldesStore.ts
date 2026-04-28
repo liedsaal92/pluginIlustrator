@@ -1,9 +1,11 @@
 // ============================================================
 //  store/useMoldesStore.ts — Tipos de molde (prenda)
-//  Persiste en localStorage como "sublimania_moldes_v1"
+//  Backed by Supabase. Optimistic updates.
+//  Llamar init() después de que la sesión esté disponible.
 // ============================================================
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from '../utils/supabase';
+import { useAuthStore } from './useAuthStore';
 import type { Molde } from '../types';
 
 export const MOLDE_DEFAULT_ID = 'camiseta';
@@ -12,35 +14,84 @@ export const MOLDES_DEFAULT: Molde[] = [
   { id: 'camiseta', nombre: 'CAMISETA' },
 ];
 
+function getOrgId(): string {
+  const orgId = useAuthStore.getState().session?.user.orgId;
+  if (!orgId) throw new Error('No org_id — usuario no autenticado');
+  return orgId;
+}
+
 interface MoldesState {
-  moldes: Molde[];
-  addMolde:    (nombre: string) => string;   // returns new id
+  moldes:  Molde[];
+  loading: boolean;
+  init:        () => Promise<void>;
+  addMolde:    (nombre: string) => string;
   renameMolde: (id: string, nombre: string) => void;
   removeMolde: (id: string) => void;
 }
 
-export const useMoldesStore = create<MoldesState>()(
-  persist(
-    (set, get) => ({
-      moldes: MOLDES_DEFAULT,
+export const useMoldesStore = create<MoldesState>()((set, get) => ({
+  moldes:  MOLDES_DEFAULT,
+  loading: false,
 
-      addMolde: (nombre) => {
-        const id = nombre.trim().toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
-        set(s => ({ moldes: [...s.moldes, { id, nombre: nombre.trim().toUpperCase() }] }));
-        return id;
-      },
+  // ── Carga inicial desde Supabase ─────────────────────────────
+  init: async () => {
+    const orgId = getOrgId();
+    set({ loading: true });
+    const { data, error } = await supabase
+      .from('moldes')
+      .select('id, nombre')
+      .eq('org_id', orgId)
+      .order('created_at');
+    set({ loading: false });
+    if (error) { console.error('moldes.init:', error); return; }
 
-      renameMolde: (id, nombre) => {
-        set(s => ({
-          moldes: s.moldes.map(m => m.id === id ? { ...m, nombre: nombre.trim().toUpperCase() } : m),
-        }));
-      },
+    // Org nueva sin moldes → insertar el default
+    if (!data || data.length === 0) {
+      await supabase.from('moldes').insert({
+        id:     MOLDE_DEFAULT_ID,
+        org_id: orgId,
+        nombre: 'CAMISETA',
+      });
+      set({ moldes: MOLDES_DEFAULT });
+      return;
+    }
 
-      removeMolde: (id) => {
-        if (get().moldes.length <= 1) return; // always keep at least one
-        set(s => ({ moldes: s.moldes.filter(m => m.id !== id) }));
-      },
-    }),
-    { name: 'sublimania_moldes_v1' }
-  )
-);
+    set({ moldes: data.map(r => ({ id: r.id, nombre: r.nombre })) });
+  },
+
+  // ── Mutations — optimistic ────────────────────────────────────
+  addMolde: (nombre) => {
+    const id    = nombre.trim().toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
+    const orgId = getOrgId();
+    const entry: Molde = { id, nombre: nombre.trim().toUpperCase() };
+    set(s => ({ moldes: [...s.moldes, entry] }));
+    supabase.from('moldes').insert({ id, org_id: orgId, nombre: entry.nombre })
+      .then(({ error }) => {
+        if (error) {
+          console.error('moldes.add:', error);
+          set(s => ({ moldes: s.moldes.filter(m => m.id !== id) }));
+        }
+      });
+    return id;
+  },
+
+  renameMolde: (id, nombre) => {
+    const prev = get().moldes;
+    const nombre_up = nombre.trim().toUpperCase();
+    set(s => ({ moldes: s.moldes.map(m => m.id === id ? { ...m, nombre: nombre_up } : m) }));
+    supabase.from('moldes').update({ nombre: nombre_up }).eq('id', id)
+      .then(({ error }) => {
+        if (error) { console.error('moldes.rename:', error); set({ moldes: prev }); }
+      });
+  },
+
+  removeMolde: (id) => {
+    if (get().moldes.length <= 1) return;
+    const prev = get().moldes;
+    set(s => ({ moldes: s.moldes.filter(m => m.id !== id) }));
+    supabase.from('moldes').delete().eq('id', id)
+      .then(({ error }) => {
+        if (error) { console.error('moldes.remove:', error); set({ moldes: prev }); }
+      });
+  },
+}));

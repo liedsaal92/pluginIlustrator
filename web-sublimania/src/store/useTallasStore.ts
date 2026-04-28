@@ -1,13 +1,13 @@
 // ============================================================
 //  store/useTallasStore.ts — Dimensiones de tallas
 //  Estructura: clienteId → moldeId → tallaNombre → TallaDims
-//  Persiste en localStorage como "sublimania_tallas_v3"
-//  Migra automáticamente datos de v2 (sin molde) al molde default
+//  Backed by Supabase (tabla tallas_config).
 // ============================================================
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from '../utils/supabase';
+import { useAuthStore } from './useAuthStore';
 import type { TallaDims } from '../types';
-import { MOLDE_DEFAULT_ID } from './useMoldesStore';
+export { MOLDE_DEFAULT_ID } from './useMoldesStore';
 
 export const TALLAS_DEFAULT: Record<string, TallaDims> = {
   // ── Hombres ──────────────────────────────────────────────
@@ -38,12 +38,19 @@ export const TALLAS_DEFAULT: Record<string, TallaDims> = {
   '44M': { ALTO: '80.5',  ANCHO: '62.5',  MANGA_ANCHO: '51',   MANGA_ALTO: '28'   },
 };
 
-// Tallas base con valores vacíos — se usan cuando un molde no tiene dims configuradas
 export const TALLAS_BASE_EMPTY: Record<string, TallaDims> = Object.fromEntries(
   Object.keys(TALLAS_DEFAULT).map(t => [t, { ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '' }])
 );
 
 const EMPTY_DIMS: TallaDims = { ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '' };
+
+// Mapeo de keys TypeScript → columnas SQL
+const DIM_COL: Record<keyof TallaDims, string> = {
+  ALTO:        'alto',
+  ANCHO:       'ancho',
+  MANGA_ANCHO: 'manga_ancho',
+  MANGA_ALTO:  'manga_alto',
+};
 
 function normalizeDims(d: Partial<TallaDims>): TallaDims {
   return {
@@ -54,29 +61,19 @@ function normalizeDims(d: Partial<TallaDims>): TallaDims {
   };
 }
 
-// ── Migration from v2 ─────────────────────────────────────────
-function migrateFromV2(): Record<string, Record<string, Record<string, TallaDims>>> {
-  try {
-    const raw = localStorage.getItem('sublimania_tallas_v2');
-    if (!raw) return {};
-    const v2 = JSON.parse(raw)?.state?.tallasPorCliente as Record<string, Record<string, TallaDims>> | undefined;
-    if (!v2 || typeof v2 !== 'object') return {};
-    const result: Record<string, Record<string, Record<string, TallaDims>>> = {};
-    for (const [clienteId, tallas] of Object.entries(v2)) {
-      result[clienteId] = { [MOLDE_DEFAULT_ID]: tallas };
-    }
-    return result;
-  } catch {
-    return {};
-  }
+function getOrgId(): string {
+  const orgId = useAuthStore.getState().session?.user.orgId;
+  if (!orgId) throw new Error('No org_id — usuario no autenticado');
+  return orgId;
 }
 
-// clienteId → moldeId → tallaNombre → TallaDims
 type TallasPorCliente = Record<string, Record<string, Record<string, TallaDims>>>;
 
 interface TallasState {
   tallasPorCliente: TallasPorCliente;
+  loading: boolean;
 
+  init:                   () => Promise<void>;
   getTallas:              (clienteId: string, moldeId: string) => Record<string, TallaDims>;
   setDim:                 (clienteId: string, moldeId: string, talla: string, field: keyof TallaDims, value: string) => void;
   addTalla:               (clienteId: string, moldeId: string, talla: string) => void;
@@ -86,89 +83,152 @@ interface TallasState {
   removeMoldeData:        (moldeId: string) => void;
 }
 
-export const useTallasStore = create<TallasState>()(
-  persist(
-    (set, get) => ({
-      tallasPorCliente: migrateFromV2(),
+export const useTallasStore = create<TallasState>()((set, get) => ({
+  tallasPorCliente: {},
+  loading: false,
 
-      getTallas: (clienteId, moldeId) => {
-        const raw = get().tallasPorCliente[clienteId]?.[moldeId] ?? {};
-        // Merge: base keys always present (empty), overridden by stored values
-        const merged: Record<string, TallaDims> = { ...TALLAS_BASE_EMPTY };
-        for (const [t, d] of Object.entries(raw)) {
-          merged[t] = normalizeDims(d);
-        }
-        return merged;
-      },
+  // ── Carga inicial desde Supabase ─────────────────────────────
+  init: async () => {
+    const orgId = getOrgId();
+    set({ loading: true });
+    const { data, error } = await supabase
+      .from('tallas_config')
+      .select('cliente_id, molde_id, talla, alto, ancho, manga_ancho, manga_alto')
+      .eq('org_id', orgId);
+    set({ loading: false });
+    if (error) { console.error('tallas.init:', error); return; }
 
-      setDim: (clienteId, moldeId, talla, field, value) => {
-        const prev = get().tallasPorCliente;
-        const byMolde = prev[clienteId] ?? {};
-        const byTalla = byMolde[moldeId] ?? {};
-        set({
-          tallasPorCliente: {
-            ...prev,
-            [clienteId]: {
-              ...byMolde,
-              [moldeId]: {
-                ...byTalla,
-                [talla]: { ...(byTalla[talla] ?? EMPTY_DIMS), [field]: value },
-              },
-            },
-          },
-        });
-      },
+    const result: TallasPorCliente = {};
+    for (const row of data ?? []) {
+      if (!result[row.cliente_id]) result[row.cliente_id] = {};
+      if (!result[row.cliente_id][row.molde_id]) result[row.cliente_id][row.molde_id] = {};
+      result[row.cliente_id][row.molde_id][row.talla] = {
+        ALTO:        row.alto,
+        ANCHO:       row.ancho,
+        MANGA_ANCHO: row.manga_ancho,
+        MANGA_ALTO:  row.manga_alto,
+      };
+    }
+    set({ tallasPorCliente: result });
+  },
 
-      addTalla: (clienteId, moldeId, talla) => {
-        const t = talla.trim().toUpperCase();
-        if (!t) return;
-        const prev = get().tallasPorCliente;
-        const byMolde = prev[clienteId] ?? {};
-        const byTalla = byMolde[moldeId] ?? {};
-        if (byTalla[t]) return;
-        set({
-          tallasPorCliente: {
-            ...prev,
-            [clienteId]: { ...byMolde, [moldeId]: { ...byTalla, [t]: { ...EMPTY_DIMS } } },
-          },
-        });
-      },
+  // ── Lectura ───────────────────────────────────────────────────
+  getTallas: (clienteId, moldeId) => {
+    const raw = get().tallasPorCliente[clienteId]?.[moldeId] ?? {};
+    const merged: Record<string, TallaDims> = { ...TALLAS_BASE_EMPTY };
+    for (const [t, d] of Object.entries(raw)) {
+      merged[t] = normalizeDims(d);
+    }
+    return merged;
+  },
 
-      removeTalla: (clienteId, moldeId, talla) => {
-        const prev = get().tallasPorCliente;
-        const byMolde = { ...(prev[clienteId] ?? {}) };
-        const byTalla = { ...(byMolde[moldeId] ?? {}) };
-        delete byTalla[talla];
-        set({ tallasPorCliente: { ...prev, [clienteId]: { ...byMolde, [moldeId]: byTalla } } });
+  // ── Mutations — optimistic ────────────────────────────────────
+  setDim: (clienteId, moldeId, talla, field, value) => {
+    const orgId  = getOrgId();
+    const prev   = get().tallasPorCliente;
+    const byMolde = prev[clienteId] ?? {};
+    const byTalla = byMolde[moldeId] ?? {};
+    const updated = { ...(byTalla[talla] ?? EMPTY_DIMS), [field]: value };
+    set({
+      tallasPorCliente: {
+        ...prev,
+        [clienteId]: { ...byMolde, [moldeId]: { ...byTalla, [talla]: updated } },
       },
+    });
+    supabase.from('tallas_config').upsert({
+      org_id:      orgId,
+      cliente_id:  clienteId,
+      molde_id:    moldeId,
+      talla,
+      alto:        updated.ALTO,
+      ancho:       updated.ANCHO,
+      manga_ancho: updated.MANGA_ANCHO,
+      manga_alto:  updated.MANGA_ALTO,
+    }, { onConflict: 'org_id,cliente_id,molde_id,talla' })
+      .then(({ error }) => {
+        if (error) console.error('tallas.setDim:', error);
+      });
+    void DIM_COL; // usado por el tipo, evita lint warning
+  },
 
-      initClienteFromDefault: (clienteId, moldeId) => {
-        const prev = get().tallasPorCliente;
-        const byMolde = prev[clienteId] ?? {};
-        set({
-          tallasPorCliente: {
-            ...prev,
-            [clienteId]: { ...byMolde, [moldeId]: { ...TALLAS_DEFAULT } },
-          },
-        });
+  addTalla: (clienteId, moldeId, talla) => {
+    const orgId = getOrgId();
+    const t = talla.trim().toUpperCase();
+    if (!t) return;
+    const prev    = get().tallasPorCliente;
+    const byMolde = prev[clienteId] ?? {};
+    const byTalla = byMolde[moldeId] ?? {};
+    if (byTalla[t]) return;
+    set({
+      tallasPorCliente: {
+        ...prev,
+        [clienteId]: { ...byMolde, [moldeId]: { ...byTalla, [t]: { ...EMPTY_DIMS } } },
       },
+    });
+    supabase.from('tallas_config').insert({
+      org_id: orgId, cliente_id: clienteId, molde_id: moldeId, talla: t,
+      alto: '', ancho: '', manga_ancho: '', manga_alto: '',
+    }).then(({ error }) => {
+      if (error) console.error('tallas.addTalla:', error);
+    });
+  },
 
-      removeCliente: (clienteId) => {
-        const next = { ...get().tallasPorCliente };
-        delete next[clienteId];
-        set({ tallasPorCliente: next });
-      },
+  removeTalla: (clienteId, moldeId, talla) => {
+    const orgId  = getOrgId();
+    const prev   = get().tallasPorCliente;
+    const byMolde = { ...(prev[clienteId] ?? {}) };
+    const byTalla = { ...(byMolde[moldeId] ?? {}) };
+    delete byTalla[talla];
+    set({ tallasPorCliente: { ...prev, [clienteId]: { ...byMolde, [moldeId]: byTalla } } });
+    supabase.from('tallas_config')
+      .delete()
+      .eq('org_id', orgId)
+      .eq('cliente_id', clienteId)
+      .eq('molde_id', moldeId)
+      .eq('talla', talla)
+      .then(({ error }) => { if (error) console.error('tallas.removeTalla:', error); });
+  },
 
-      removeMoldeData: (moldeId) => {
-        const prev = get().tallasPorCliente;
-        const next: TallasPorCliente = {};
-        for (const [clienteId, byMolde] of Object.entries(prev)) {
-          const { [moldeId]: _removed, ...rest } = byMolde;
-          next[clienteId] = rest;
-        }
-        set({ tallasPorCliente: next });
+  initClienteFromDefault: (clienteId, moldeId) => {
+    const orgId  = getOrgId();
+    const prev   = get().tallasPorCliente;
+    const byMolde = prev[clienteId] ?? {};
+    set({
+      tallasPorCliente: {
+        ...prev,
+        [clienteId]: { ...byMolde, [moldeId]: { ...TALLAS_DEFAULT } },
       },
-    }),
-    { name: 'sublimania_tallas_v3' }
-  )
-);
+    });
+    const rows = Object.entries(TALLAS_DEFAULT).map(([talla, dims]) => ({
+      org_id: orgId, cliente_id: clienteId, molde_id: moldeId, talla,
+      alto: dims.ALTO, ancho: dims.ANCHO, manga_ancho: dims.MANGA_ANCHO, manga_alto: dims.MANGA_ALTO,
+    }));
+    supabase.from('tallas_config')
+      .upsert(rows, { onConflict: 'org_id,cliente_id,molde_id,talla' })
+      .then(({ error }) => { if (error) console.error('tallas.initDefault:', error); });
+  },
+
+  removeCliente: (clienteId) => {
+    const orgId = getOrgId();
+    const next  = { ...get().tallasPorCliente };
+    delete next[clienteId];
+    set({ tallasPorCliente: next });
+    supabase.from('tallas_config')
+      .delete().eq('org_id', orgId).eq('cliente_id', clienteId)
+      .then(({ error }) => { if (error) console.error('tallas.removeCliente:', error); });
+  },
+
+  removeMoldeData: (moldeId) => {
+    const orgId = getOrgId();
+    const prev  = get().tallasPorCliente;
+    const next: TallasPorCliente = {};
+    for (const [cid, byMolde] of Object.entries(prev)) {
+      const { [moldeId]: _removed, ...rest } = byMolde;
+      next[cid] = rest;
+    }
+    set({ tallasPorCliente: next });
+    supabase.from('tallas_config')
+      .delete().eq('org_id', orgId).eq('molde_id', moldeId)
+      .then(({ error }) => { if (error) console.error('tallas.removeMolde:', error); });
+  },
+}));
