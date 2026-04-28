@@ -12,6 +12,7 @@ import { supabase } from './utils/supabase';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
 import { AuthScreen } from './modules/auth/AuthScreen';
+import { PortalScreen } from './modules/portal/PortalScreen';
 import { TeamsScreen } from './modules/teams/TeamsScreen';
 import { UploadScreen } from './modules/upload/UploadScreen';
 import { ConfigureScreen } from './modules/configure/ConfigureScreen';
@@ -21,7 +22,11 @@ import { PreviewScreen } from './modules/preview/PreviewScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
+// Detectar ruta pública /portal/TOKEN antes de cualquier auth
+const portalMatch = window.location.pathname.match(/^\/portal\/([^/]+)/);
+
 export default function App() {
+  if (portalMatch) return <PortalScreen token={portalMatch[1]} />;
   const screen  = useTeamStore(s => s.screen);
   const session = useAuthStore(s => s.session);
   const checkSession = useAuthStore(s => s.checkSession);

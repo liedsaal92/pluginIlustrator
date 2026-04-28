@@ -81,14 +81,16 @@ async function persistTeam(id: string, orgId: string, entry: TeamEntry): Promise
 
 // Reconstruye TeamEntry[] desde las 4 tablas
 function buildTeams(
-  teamsData:     { id: string; nombre: string; notas: string; base_team_id: string | null; created_at: string; updated_at: string }[],
+  teamsData:     { id: string; nombre: string; notas: string; base_team_id: string | null; created_at: string; updated_at: string; portal_status: string | null; created_by: string | null }[],
   playersData:   { team_id: string; position: number; nombre: string; nombre_camiseta: string; numero: string; talla: string }[],
   rulesData:     { team_id: string; talla: string; rules: Rules }[],
   overridesData: { team_id: string; player_position: number; overrides: Overrides[number] }[],
+  portalLinksData: { team_id: string; token: string; expires_at: string | null; status: string }[],
 ): TeamEntry[] {
-  const playersByTeam  = groupBy(playersData,   'team_id');
-  const rulesByTeam    = groupBy(rulesData,     'team_id');
-  const overridesByTeam = groupBy(overridesData, 'team_id');
+  const playersByTeam   = groupBy(playersData,    'team_id');
+  const rulesByTeam     = groupBy(rulesData,      'team_id');
+  const overridesByTeam = groupBy(overridesData,  'team_id');
+  const portalByTeam    = groupBy(portalLinksData,'team_id');
 
   return teamsData.map(t => {
     const players = (playersByTeam[t.id] ?? [])
@@ -101,7 +103,8 @@ function buildTeams(
     const overrides: Overrides = {};
     (overridesByTeam[t.id] ?? []).forEach(o => { overrides[o.player_position] = o.overrides; });
 
-    const tallas = [...new Set(players.map(p => p.TALLA))];
+    const tallas   = [...new Set(players.map(p => p.TALLA))];
+    const portal   = (portalByTeam[t.id] ?? [])[0] ?? null;
 
     return {
       id:           t.id,
@@ -112,8 +115,12 @@ function buildTeams(
       tallas,
       tallaRules,
       overrides,
-      globalConfig: { EQUIPO: t.nombre, NOTAS: t.notas ?? '' },
+      globalConfig:  { EQUIPO: t.nombre, NOTAS: t.notas ?? '' },
       exportHistory: {},
+      portalStatus:  (t.portal_status ?? 'none') as TeamEntry['portalStatus'],
+      createdBy:     t.created_by,
+      portalToken:   portal?.token ?? null,
+      portalExpiry:  portal?.expires_at ?? null,
     };
   });
 }
@@ -156,11 +163,12 @@ export const useTeamsStore = create<TeamsState>()((set, get) => ({
     const orgId = getOrgId();
     set({ loading: true });
 
-    const [teamsRes, playersRes, rulesRes, overridesRes] = await Promise.all([
-      supabase.from('teams').select('id,nombre,notas,base_team_id,created_at,updated_at').eq('org_id', orgId).order('updated_at', { ascending: false }),
-      supabase.from('players').select('team_id,position,nombre,nombre_camiseta,numero,talla').eq('org_id', orgId).order('position'),
+    const [teamsRes, playersRes, rulesRes, overridesRes, portalRes] = await Promise.all([
+      supabase.from('teams').select('id,nombre,notas,base_team_id,created_at,updated_at,portal_status,created_by').eq('org_id', orgId).order('updated_at', { ascending: false }),
+      supabase.from('players').select('team_id,position,nombre,nombre_camiseta,numero,talla').eq('org_id', orgId).eq('player_status', 'confirmed').order('position'),
       supabase.from('talla_rules').select('team_id,talla,rules').eq('org_id', orgId),
       supabase.from('player_overrides').select('team_id,player_position,overrides').eq('org_id', orgId),
+      supabase.from('portal_links').select('team_id,token,expires_at,status').eq('org_id', orgId),
     ]);
 
     set({ loading: false });
@@ -171,10 +179,11 @@ export const useTeamsStore = create<TeamsState>()((set, get) => ({
     }
 
     const teams = buildTeams(
-      teamsRes.data    ?? [],
-      playersRes.data  ?? [],
-      rulesRes.data    ?? [],
+      teamsRes.data     ?? [],
+      playersRes.data   ?? [],
+      rulesRes.data     ?? [],
       overridesRes.data ?? [],
+      portalRes.data    ?? [],
     );
     set({ teams });
   },

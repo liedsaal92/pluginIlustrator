@@ -228,6 +228,10 @@ export function buildTeamEntryFromWorkingStore(): Omit<TeamEntry, 'id' | 'create
     tallaRules:    s.tallaRules,
     overrides:     s.overrides,
     globalConfig:  s.globalConfig,
-    exportHistory: {},   // lo preserva el caller desde useTeamsStore
+    exportHistory: {},
+    portalStatus:  'none',
+    createdBy:     null,
+    portalToken:   null,
+    portalExpiry:  null,
   };
 }

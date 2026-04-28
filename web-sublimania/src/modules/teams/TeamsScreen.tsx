@@ -52,6 +52,7 @@ const EMPTY_ENTRY: TeamEntry = {
   id: '', nombre: '', createdAt: '', updatedAt: '',
   players: [], tallas: [], tallaRules: {}, overrides: {},
   globalConfig: { EQUIPO: '', NOTAS: '' }, exportHistory: {},
+  portalStatus: 'none', createdBy: null, portalToken: null, portalExpiry: null,
 };
 
 export function TeamsScreen({ onToast }: Props) {
@@ -125,15 +126,16 @@ export function TeamsScreen({ onToast }: Props) {
     const globalConfig = { ...getDefaultGlobal(), EQUIPO: nombre };
     const tallaRules = source ? source.tallaRules : {};
     const tallas = source ? source.tallas : [];
+    const portalDefaults = { portalStatus: 'none' as const, createdBy: null, portalToken: null, portalExpiry: null };
     const id = createTeam({
       nombre,
       players: [], tallas, tallaRules, overrides: {},
-      globalConfig, exportHistory: {},
+      globalConfig, exportHistory: {}, ...portalDefaults,
     });
     useTeamStore.getState().loadFromEntry({
       id, nombre, createdAt: '', updatedAt: '',
       players: [], tallas, tallaRules, overrides: {},
-      globalConfig, exportHistory: {},
+      globalConfig, exportHistory: {}, ...portalDefaults,
     }, 'configure');
     setShowNewModal(false);
     const suffix = source ? ` (reglas copiadas de "${teams.find(t => t.id === sourceTeamId)?.nombre}")` : '';
