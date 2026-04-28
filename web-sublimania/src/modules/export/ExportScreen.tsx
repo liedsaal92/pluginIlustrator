@@ -8,7 +8,6 @@ import { useTallasStore } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useMoldesStore } from '../../store/useMoldesStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
-import { saveActiveTeam } from '../../store/useTeamsStore';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
 
 // Columnas visibles en el preview de tabla
@@ -50,7 +49,7 @@ function formatRelative(iso: string): string {
 }
 
 export function ExportScreen({ onToast }: Props) {
-  const { players, tallas, tallaRules, overrides, globalConfig, setScreen } = useTeamStore();
+  const { players, tallas, tallaRules, overrides, globalConfig } = useTeamStore();
   const { activeTeamId, getActiveTeam, markExported, saveTeam } = useTeamsStore();
   const { getTallas } = useTallasStore();
   const clientes = useClientesStore(s => s.clientes);

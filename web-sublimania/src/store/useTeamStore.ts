@@ -111,7 +111,7 @@ export const useTeamStore = create<TeamState>()(
       },
 
       updatePlayer: (idx, fields) => {
-        const { players, tallas, tallaRules } = get();
+        const { players, tallaRules } = get();
         const newPlayers = players.map((p, i) => i === idx ? { ...p, ...fields } : p);
         const newTallas = [...new Set(newPlayers.map(p => p.TALLA))];
         const newRules = { ...tallaRules };

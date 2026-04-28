@@ -2,106 +2,139 @@
 
 > Documento de arquitectura y roadmap completo para escalar `web-sublimania` a producto SaaS.
 > Producto: **SubliFlow** | Empresa: Sublimania Studio
-> Última actualización: 2026-04-11
+> Última actualización: 2026-04-27
 
 ---
 
-## Lo que existe hoy
+## Estado actual (2026-04-27)
 
 | Qué | Estado |
 |---|---|
 | Lógica de reglas por talla y jugador | ✅ Funciona |
 | Exportación de CSV para Illustrator | ✅ Funciona |
-| Gestión de equipos, clientes, tallas | ✅ Funciona |
-| Persistencia de datos | ⚠️ Solo localStorage (se pierde si limpian caché) |
-| Acceso desde otro dispositivo/browser | ❌ No existe |
-| Cuentas de usuario / login | ❌ No existe |
-| Landing page / cara pública | ✅ Construida (pendiente deploy + dominio) |
+| Gestión de equipos, clientes, tallas, moldes | ✅ Funciona |
+| Auth (registro, login, logout, invites multi-tenant) | ✅ Implementado con Supabase |
+| Schema DB auth/orgs en Supabase | ✅ Ejecutado (organizations, users, roles, RLS) |
+| Trigger auto-crea org al registrar | ✅ Implementado (`trigger_register_org.sql`) |
+| Persistencia datos de app | ⚠️ Solo localStorage (teams, players, tallas, clientes) |
+| Acceso desde otro dispositivo/browser | ❌ No funciona — datos atrapados en el browser |
+| Landing page | ✅ Construida y deployada en Vercel |
+| App deployada | ❌ Solo corre local, no está en Vercel |
 | Pagos / suscripciones | ❌ No existe |
 | Emails transaccionales | ❌ No existe |
 
 ---
 
+## Análisis: los 15 pilares de un SaaS real
+
+Aplicado específicamente a SubliFlow (generador de uniformes deportivos):
+
+| Pilar | Relevante | Estado | Notas |
+|---|---|---|---|
+| **1. Auth** | ✅ Crítico | ✅ Listo | Registro + login + logout + invites + multi-tenant |
+| **2. Database** | ✅ Crítico | ⚠️ Parcial | Schema auth en Supabase ✅; datos de app aún en localStorage ❌ |
+| **3. Payments** | ✅ Crítico | ❌ Pendiente | Stripe — sin esto no hay ingresos reales |
+| **4. Security** | ✅ Crítico | ⚠️ Parcial | RLS en tablas auth ✅; tablas de app aún no existen en DB |
+| **5. Frontend** | ✅ Crítico | ✅ Listo | React + TypeScript + Bootstrap, UI completa |
+| **6. Backend** | ✅ Crítico | ✅ Listo | Supabase maneja todo — no se necesita backend custom |
+| **7. Notifications** | ⚠️ Importante | ❌ Pendiente | Resend para welcome email; reset ya lo maneja Supabase |
+| **8. Analytics** | ⚠️ Nice-to-have | ❌ No es MVP | PostHog free tier — agregar después del lanzamiento |
+| **9. Error handling** | ⚠️ Importante | ⚠️ Básico | Toasts en auth; falta error boundary global |
+| **10. Logging** | ⬇️ Bajo | ✅ Suficiente | Supabase logs + Vercel logs bastan para el MVP |
+| **11. File storage** | ❌ No aplica | — | SubliFlow exporta CSVs al disco local — no hay uploads |
+| **12. Settings** | ✅ Crítico | ✅ Listo | SettingsScreen con tabs: Usuarios, Clientes, Tallas, Moldes |
+| **13. Onboarding** | ⚠️ Importante | ❌ Pendiente | No hay flujo de primera vez; la app es suficientemente simple por ahora |
+| **14. Performance** | ⚠️ Importante | ✅ Listo | Vite build + Vercel CDN — no hay problema aquí |
+| **15. Landing page** | ✅ Crítico | ✅ Listo | Construida en Astro, deployada en Vercel |
+
+> **File Storage (punto 11): NO se necesita.** SubliFlow genera CSVs que se descargan al disco del usuario. No hay imágenes ni uploads de archivos. Supabase Storage queda fuera del stack por ahora.
+
+---
+
 ## Stack Definido
 
-| Capa | Tecnología | Rol |
+| Capa | Tecnología | Estado |
 |---|---|---|
-| **App principal** | React 19 + Vite + TypeScript | Ya existe — no se reescribe |
-| **Estado UI** | Zustand | Solo estado local (tabs, pantalla activa) |
-| **Sincronización API** | TanStack Query | Cache y fetching de datos del servidor |
-| **Base de datos + Auth + API** | Supabase | PostgreSQL + Auth + Storage — reemplaza localStorage |
-| **Pagos** | Stripe | Suscripciones, checkout, webhooks |
-| **Emails** | Resend | Bienvenida, verificación, reset, avisos de pago |
-| **Landing page** | Astro | Sitio estático de marketing (rápido, SEO-friendly) |
-| **Hosting app** | Vercel | Deploy automático desde GitHub |
-| **Hosting landing** | Vercel | Mismo account, dominio principal |
-| **Backend custom** | Node.js + Fastify *(futuro)* | Solo si Supabase no alcanza |
+| **App principal** | React 19 + Vite + TypeScript | ✅ Existe |
+| **Estado UI** | Zustand | ✅ Existe (pendiente migrar datos a DB) |
+| **Base de datos + Auth** | Supabase (PostgreSQL + Auth) | ✅ Proyecto creado, schema auth ejecutado |
+| **Pagos** | Stripe | ❌ Pendiente |
+| **Emails** | Resend | ❌ Pendiente |
+| **Landing page** | Astro | ✅ Deployada en Vercel |
+| **Hosting app** | Vercel | ❌ Pendiente conectar |
+| **Backend custom** | — | No necesario, Supabase alcanza |
 
 ---
 
 ## Costos Estimados
 
-| Etapa | Vercel | Supabase | Resend | Total |
-|---|---|---|---|---|
-| Desarrollo / MVP | Free | Free | Free | **$0/mes** |
-| Primeros clientes | Free | Free | Free | **$0/mes** |
-| Creciendo (>500 usuarios) | $20/mes | $25/mes | $20/mes | **~$65/mes** |
-
-> Supabase Free: 50,000 rows, 500MB storage, 50MB DB.
-> Resend Free: 3,000 emails/mes.
-> Vercel Free: suficiente para tráfico moderado.
+| Etapa | Vercel | Supabase | Resend | Stripe | Total |
+|---|---|---|---|---|---|
+| MVP / primeros clientes | Free | Free | Free | 2.9% + $0.30/tx | **$0/mes fijo** |
+| Creciendo (>500 usuarios) | $20/mes | $25/mes | $20/mes | variable | **~$65/mes + % ventas** |
 
 ---
 
-## Arquitectura Completa
+## Arquitectura
 
 ```
-                    ┌─────────────────────────────┐
-                    │     sublimania.com           │
-                    │     (Landing Page - Astro)   │
-                    │  Hero / Features / Pricing   │
-                    │       CTA → Registro         │
-                    └────────────┬────────────────┘
-                                 ↓
-                    ┌─────────────────────────────┐
-                    │     app.sublimania.com       │
-                    │     (App React - Vercel)     │
-                    │  Login → App → Dashboard     │
-                    └────────────┬────────────────┘
-                                 ↓ ↑  supabase-js
-                    ┌─────────────────────────────┐
-                    │         Supabase             │
-                    │  ├── PostgreSQL (datos)      │
-                    │  ├── Auth (sesiones)         │
-                    │  └── Storage (backups)       │
-                    └────────────┬────────────────┘
-                                 ↓
-                    ┌─────────────────────────────┐
-                    │    Stripe + Resend           │
-                    │  Pagos / Emails              │
-                    └─────────────────────────────┘
+┌──────────────────────────────┐
+│   sublimania.com / landing   │
+│   (Astro — Vercel) ✅        │
+│   CTA → app.sublimania.com   │
+└──────────────┬───────────────┘
+               ↓
+┌──────────────────────────────┐
+│   app.sublimania.com         │
+│   (React — Vercel) ❌ deploy │
+│   Auth → Teams → Export      │
+└──────────────┬───────────────┘
+               ↓ ↑ supabase-js
+┌──────────────────────────────┐
+│   Supabase                   │
+│   ├── Auth (sesiones) ✅     │
+│   ├── PostgreSQL (datos) ⚠️  │
+│   │     auth/orgs: ✅        │
+│   │     teams/players: ❌    │
+│   └── RLS (aislamiento) ⚠️  │
+└──────────────┬───────────────┘
+               ↓
+┌──────────────────────────────┐
+│   Stripe + Resend            │
+│   Pagos ❌ / Emails ❌       │
+└──────────────────────────────┘
 ```
 
 ---
 
 ## Schema de Base de Datos
 
+### Auth + Multi-tenant (ejecutado ✅)
 ```sql
-users              (id, email, name, plan, stripe_customer_id, created_at)
+organizations  (id, name, slug, plan, plan_status, trial_ends_at)
+users          (id, email, nombre, org_id → organizations)
+roles          (id, name)
+permissions    (id, name)
+user_roles     (user_id, role_id)
+role_permissions (role_id, permission_id)
+invites        (id, org_id, email, role_id, token, accepted_at, expires_at)
+```
 
-  ├── clientes     (id, user_id, nombre, casa_costurera)
-  │    └── tallas_config (id, cliente_id, talla, alto, ancho, manga_alto, manga_ancho)
-  │
-  ├── teams        (id, user_id, nombre, notas, base_team_id, created_at, updated_at)
-  │    ├── players         (id, team_id, nombre, nombre_camiseta, numero, talla)
-  │    ├── talla_rules     (id, team_id, talla, rules JSONB)
-  │    └── player_overrides (id, team_id, player_id, overrides JSONB)
-  │
-  └── export_history (id, team_id, talla, exported_at, cliente_id)
+### Datos de app (pendiente migrar ❌)
+```sql
+clientes       (id, org_id, nombre, casa_costurera)
+tallas_config  (id, cliente_id, org_id, talla, alto, ancho, manga_alto, manga_ancho)
+
+teams          (id, org_id, nombre, notas, base_team_id, created_at, updated_at)
+players        (id, team_id, nombre, nombre_camiseta, numero, talla)
+talla_rules    (id, team_id, talla, rules JSONB)
+player_overrides (id, team_id, player_id, overrides JSONB)
+
+export_history (id, team_id, talla, exported_at, cliente_id)
 ```
 
 > `rules JSONB` y `overrides JSONB` guardan exactamente la estructura que hoy
-> vive en `localStorage` — sin necesidad de 175 columnas separadas.
+> vive en `localStorage`. Sin cambios en la UI — solo cambia de dónde vienen los datos.
 
 ---
 
@@ -113,139 +146,93 @@ users              (id, email, name, plan, stripe_customer_id, created_at)
 | Jugadores por equipo | 20 | Ilimitados |
 | Clientes (costureras) | 1 | Ilimitados |
 | Exportaciones / mes | 10 | Ilimitadas |
-| Backups en la nube | ❌ | ✅ |
-| Acceso multi-dispositivo | ✅ | ✅ |
+| Datos en la nube | ✅ (ambos) | ✅ (ambos) |
+| Usuarios en la org | 1 | Ilimitados |
 | Soporte prioritario | ❌ | ✅ |
 
-> Los límites exactos se definen al validar con primeros usuarios reales.
+> Los límites exactos se ajustan con los primeros usuarios reales.
 
 ---
 
-## Roadmap de Construcción
+## Roadmap
 
-### Fase 0 — Landing Page ⚠️ Construida — pendiente deploy
-> Objetivo: tener presencia pública antes de lanzar. Que alguien pueda llegar y entender qué es esto.
-
-- [x] Crear proyecto Astro en `landing/`
+### Fase 0 — Landing Page ✅ Completa
+- [x] Proyecto Astro en `landing/`
 - [x] Secciones: Hero, Problema/Solución, Features, Pricing, Early Access, Footer
 - [x] Páginas legales: `/terminos`, `/privacidad`
-- [x] Diseño y estilos completos
-- [ ] Instalar dependencias (`npm install` en `landing/`)
-- [ ] Dominio propio (`subliflow.com` o `sublimania.com`)
-- [ ] Deploy en Vercel → dominio principal
-- [ ] App React queda en `app.subliflow.com`
-- [ ] Conectar formulario de Early Access a un servicio real (Resend / Supabase)
-
-**Resultado:** cualquier persona puede llegar, entender el producto y dejar su email.
+- [x] Deploy en Vercel
+- [ ] Dominio propio conectado (`sublimania.com` o `subliflow.com`)
+- [ ] Formulario Early Access → guardar email en Supabase o Resend audience
 
 ---
 
-### Fase 1 — Auth + Cloud Persistence
-> Objetivo: datos en la nube, login funcional. UI de la app no cambia visualmente.
+### Fase 1 — Auth ✅ Completa (código listo, falta deploy)
+- [x] Proyecto Supabase creado
+- [x] Schema SQL ejecutado (organizations, users, roles, RLS)
+- [x] Trigger `handle_new_user` — crea org automáticamente al registrar
+- [x] `supabase.ts` + `authService.ts` + `useAuthStore.ts`
+- [x] `AuthScreen.tsx` — Login / Registro / Accept Invite
+- [x] `UsersTab.tsx` — admin puede invitar y cambiar roles
+- [ ] **Deploy app en Vercel** ← próximo paso inmediato
+- [ ] Verificar primer registro real con confirm email OFF en Supabase
 
-- [ ] Crear proyecto en [supabase.com](https://supabase.com)
-- [ ] Definir schema SQL completo
-- [ ] Instalar `@supabase/supabase-js` y `@tanstack/react-query`
-- [ ] Crear `src/lib/supabase.ts`
-- [ ] Pantalla de Login / Registro (antes de `TeamsScreen`)
-- [ ] Rutas protegidas (redirigir a login si no hay sesión)
-- [ ] Migrar `useTeamsStore` → tabla `teams`
-- [ ] Migrar `useTeamStore` → tablas `players`, `talla_rules`, `player_overrides`
-- [ ] Migrar `useClientesStore` → tabla `clientes`
-- [ ] Migrar `useTallasStore` → tabla `tallas_config`
+---
+
+### Fase 2 — Cloud Persistence ❌ Pendiente (bloque principal)
+> Objetivo: datos en la nube. Sin esto no hay SaaS real.
+
+- [ ] Crear tablas `clientes`, `tallas_config`, `teams`, `players`, `talla_rules`, `player_overrides`, `export_history` en Supabase
+- [ ] Agregar RLS con política `org_id = my_org_id()` a cada tabla
+- [ ] Instalar `@tanstack/react-query`
+- [ ] Migrar `useClientesStore` → queries/mutations contra `clientes`
+- [ ] Migrar `useTallasStore` → queries/mutations contra `tallas_config`
+- [ ] Migrar `useTeamsStore` → queries/mutations contra `teams`
+- [ ] Migrar `useTeamStore` (players, rules, overrides) → tablas correspondientes
 - [ ] Migrar `useExportHistoryStore` → tabla `export_history`
-- [ ] Conectar repo a Vercel → deploy en `app.sublimania.com`
-- [ ] Emails transaccionales con Resend: bienvenida + verificación + reset
+- [ ] Eliminar `persist(localStorage)` de todos los stores migrados
 
-**Resultado:** app funcional en la nube, datos persistentes por usuario, acceso desde cualquier dispositivo.
+**Resultado:** datos seguros en la nube, acceso desde cualquier dispositivo, aislamiento real por org.
 
 ---
 
-### Fase 2 — Billing + Planes
-> Objetivo: modelo de suscripción funcional, primeros ingresos reales.
+### Fase 3 — Billing ❌ Pendiente
+> Objetivo: primeros ingresos reales.
 
-- [ ] Cuenta Stripe + productos/precios configurados
-- [ ] Row Level Security en Supabase (cada usuario solo ve sus datos)
+- [ ] Cuenta Stripe + producto "SubliFlow Pro" configurado
+- [ ] Columna `stripe_customer_id` + `plan` en `organizations`
 - [ ] Límites por plan en la app (Free: 3 equipos, etc.)
-- [ ] Stripe Checkout integrado (botón "Upgrade a Pro")
-- [ ] Webhooks de Stripe → actualizar `users.plan` en Supabase
-- [ ] Página de cuenta / billing dentro de la app
+- [ ] Botón "Upgrade a Pro" → Stripe Checkout
+- [ ] Webhook Stripe → actualizar `organizations.plan` en Supabase
 - [ ] Email de aviso de pago fallido (Resend)
-- [ ] Indicador de uso visible ("3/3 equipos — Actualiza tu plan")
+- [ ] Indicador de uso: "3/3 equipos — Actualiza tu plan"
 
 **Resultado:** usuarios pueden pagar, ingresos reales.
 
 ---
 
-### Fase 3 — Dashboard + Pulido
-> Objetivo: producto terminado que retiene usuarios y genera referidos.
+### Fase 4 — Emails + Onboarding ❌ Pendiente
+- [ ] Resend configurado
+- [ ] Email de bienvenida post-registro
+- [ ] Email de invitación a empleados (hoy el link se copia manual)
+- [ ] Flujo de primer uso: pantalla/modal que guía al nuevo usuario
+- [ ] Landing → formulario Early Access guarda emails reales
 
-- [ ] Dashboard de usuario (plan actual, uso, historial de pagos)
+---
+
+### Fase 5 — Pulido ❌ Futuro
+- [ ] Error boundary global + mensajes de error amigables
+- [ ] Analytics con PostHog (free tier)
+- [ ] Dashboard: plan actual, uso, historial de exportaciones
 - [ ] Gestión de suscripción (cancelar, cambiar plan)
-- [ ] Historial de cambios por equipo
-- [ ] Plantillas públicas de equipos
-- [ ] API para conectar directamente con el plugin de Illustrator
-- [ ] Analytics de uso (PostHog o similar)
-- [ ] Multi-idioma si se apunta a otros mercados
+- [ ] Conectar landing CTA directamente a `app.sublimania.com/registro`
+- [ ] API directa plugin Illustrator ↔ Supabase (sin CSV manual)
 
 ---
 
-## Migración de localStorage → Supabase
+## Principios
 
-```typescript
-// ANTES — datos en el browser
-persist(set => ({ teams: [] }), { name: 'sublimania_teams_v1' })
-
-// DESPUÉS — datos en la DB, misma interfaz para la UI
-export function useTeams() {
-  return useQuery({
-    queryKey: ['teams'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('teams')
-        .select('*')
-        .order('updated_at', { ascending: false })
-      return data
-    }
-  })
-}
-
-export function useCreateTeam() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: async (team: NewTeam) => {
-      const { data } = await supabase.from('teams').insert(team).select().single()
-      return data
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teams'] })
-  })
-}
-```
-
----
-
-## Principios de este Stack
-
-1. **Simple primero** — Supabase evita escribir y hospedar un backend propio hasta que sea necesario
-2. **Escala progresiva** — Free tier aguanta el MVP; se paga solo cuando hay ingresos
-3. **Sin lock-in crítico** — PostgreSQL es estándar; se puede migrar si es necesario
-4. **TypeScript end-to-end** — Supabase genera tipos desde el schema
-5. **Deploy automático** — cada `git push` a `main` despliega en Vercel
-6. **Landing separada de la app** — Astro para marketing (SEO), React para la herramienta
-
----
-
-## Próximo Paso: Auth + Cloud Persistence (Fase 1)
-
-La landing está construida. El siguiente bloque de trabajo es **Fase 1: Auth + Supabase**, porque sin cuentas de usuario no hay forma de cobrar ni de guardar datos por persona.
-
-### Orden recomendado
-
-1. **Terminar y deployar la landing** — subir a Vercel, conectar dominio, enchufar Early Access a Resend o Supabase para capturar emails reales.
-2. **Crear proyecto Supabase** — definir schema SQL, habilitar Auth.
-3. **Login / Registro en la app** — pantalla de auth antes de acceder a la herramienta.
-4. **Migrar stores de localStorage → Supabase** — los datos persisten en la nube, el usuario puede entrar desde cualquier dispositivo.
-5. **Emails transaccionales con Resend** — bienvenida, verificación, reset.
-6. **Fase 2: Stripe** — solo tiene sentido integrarlo cuando ya hay usuarios reales y Auth funcionando.
-
-> La regla es: primero usuarios → después cobrarles. No al revés.
+1. **Simple primero** — Supabase evita backend custom; Stripe evita billing propio
+2. **Free hasta tener ingresos** — todo el stack es $0 hasta que haya clientes reales
+3. **Datos aislados por org** — RLS garantiza que ningún cliente ve datos de otro
+4. **Sin File Storage** — SubliFlow no necesita uploads; los CSVs van al disco local
+5. **Deploy automático** — `git push main` → Vercel redeploya sin intervención

@@ -2,7 +2,6 @@
 //  modules/settings/SettingsScreen.tsx
 // ============================================================
 import { useState } from 'react';
-import { useTeamStore } from '../../store/useTeamStore';
 import { usePermission } from '../../hooks/usePermission';
 import { ClientesTab } from './ClientesTab';
 import { TallasSettingsTab } from './TallasSettingsTab';

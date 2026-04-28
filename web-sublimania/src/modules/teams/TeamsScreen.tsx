@@ -56,7 +56,7 @@ const EMPTY_ENTRY: TeamEntry = {
 
 export function TeamsScreen({ onToast }: Props) {
   const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam } = useTeamsStore();
-  const { setScreen, loadFromEntry } = useTeamStore();
+  const { loadFromEntry } = useTeamStore();
   const canManageSettings = usePermission('settings:manage');
 
   // Paginación — active team shown as featured, paginate the rest
