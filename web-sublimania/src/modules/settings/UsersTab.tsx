@@ -13,8 +13,9 @@ interface Props {
 }
 
 const ROLE_LABELS: Record<UserRole, string> = {
-  admin:    'ADMINISTRADOR',
-  employee: 'EMPLEADO',
+  admin:     'ADMINISTRADOR',
+  employee:  'EMPLEADO',
+  cliente: 'CLIENTE',
 };
 
 export function UsersTab({ onToast }: Props) {
@@ -167,6 +168,7 @@ export function UsersTab({ onToast }: Props) {
           >
             <option value="employee">EMPLEADO</option>
             <option value="admin">ADMINISTRADOR</option>
+            <option value="cliente">CLIENTE</option>
           </select>
           <button className="btn btn-primary" type="submit" disabled={inviting || !inviteEmail.trim()}>
             {inviting ? 'GENERANDO...' : 'GENERAR LINK'}

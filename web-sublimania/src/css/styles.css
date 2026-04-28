@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    styles.css — Diseño Neobrutalist
    Sublimania — Generador de Equipos
    ============================================================ */
@@ -4993,6 +4993,158 @@ body {
   opacity: 0.4;
 }
 
+/* ── Cliente dashboard ───────────────────────────────────── */
+.cliente-layout { min-height: 100vh; background: var(--cream); }
+.cliente-main   { max-width: 900px; margin: 0 auto; padding: 0; }
+.cliente-screen { padding: 2rem; }
+
+.cliente-header {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  margin-bottom:   2rem;
+}
+.cliente-title { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.05em; margin: 0; }
+.cliente-sub   { font-size: 0.8rem; color: var(--text-muted); margin: 0.2rem 0 0; }
+
+.cliente-empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            0.75rem;
+  padding:        4rem 1rem;
+  text-align:     center;
+}
+.cliente-empty-icon  { font-size: 2.5rem; }
+.cliente-empty-title { font-size: 1rem; font-weight: 700; letter-spacing: 0.05em; }
+.cliente-empty-sub   { font-size: 0.8rem; color: var(--text-muted); }
+
+.cliente-list { display: flex; flex-direction: column; gap: 1rem; }
+
+.cliente-card {
+  background: var(--white);
+  border:     var(--border);
+  overflow:   hidden;
+  box-shadow: var(--shadow-sm);
+}
+.cliente-card-collecting { border-left: 4px solid #f5a623; }
+.cliente-card-approved   { border-left: 4px solid #2ecc71; }
+
+.cliente-card-top {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  padding:         1.25rem 1.25rem 1rem;
+  gap:             1rem;
+}
+
+.cliente-card-info { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+.cliente-card-name {
+  font-size:    1.05rem;
+  font-weight:  700;
+  letter-spacing: 0.04em;
+}
+
+.cliente-card-actions {
+  display:     flex;
+  flex-wrap:   wrap;
+  gap:         0.5rem;
+  align-items: flex-start;
+}
+
+.cliente-status-badge {
+  display:       inline-block;
+  font-size:     0.65rem;
+  font-weight:   700;
+  letter-spacing: 0.08em;
+  padding:       0.2rem 0.55rem;
+  border-radius: 2px;
+}
+.cliente-status-collecting { background: rgba(245,166,35,.15); color: #f5a623; }
+.cliente-status-approved   { background: rgba(46,204,113,.15); color: #2ecc71; }
+.cliente-status-none       { background: rgba(0,0,0,0.06);    color: var(--text-muted); }
+
+.cliente-countdown {
+  font-size: 0.78rem;
+  color:     var(--text-muted);
+}
+.cliente-countdown-urgent { color: #e74c3c; font-weight: 600; }
+
+/* Pending players panel */
+.cliente-pending-panel {
+  padding:    0 1.25rem 1.25rem;
+  border-top: var(--border);
+}
+.cliente-pending-loading {
+  padding:   1rem 1.25rem;
+  font-size: 0.8rem;
+  color:     var(--text-muted);
+}
+.cliente-pending-empty {
+  font-size: 0.82rem;
+  color:     var(--text-muted);
+  padding:   0.75rem 0;
+  margin:    0;
+}
+
+.cliente-pending-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       0.78rem;
+  margin:          0.75rem 0;
+}
+.cliente-pending-table th {
+  text-align:     left;
+  font-size:      0.65rem;
+  font-weight:    600;
+  letter-spacing: 0.06em;
+  color:          var(--text-muted);
+  padding:        0.4rem 0.5rem;
+  border-bottom:  var(--border);
+}
+.cliente-pending-table td {
+  padding:       0.45rem 0.5rem;
+  border-bottom: var(--border);
+}
+.cliente-row-additional td { background: rgba(245,166,35,.05); }
+
+.cliente-player-badge {
+  font-size:      0.6rem;
+  font-weight:    700;
+  letter-spacing: 0.06em;
+  padding:        0.15rem 0.4rem;
+  border-radius:  2px;
+}
+.cliente-player-pending    { background: rgba(52,152,219,.12); color: #3498db; }
+.cliente-player-additional { background: rgba(245,166,35,.15); color: #f5a623; }
+
+.cliente-del-btn { padding: 0.15rem 0.4rem; font-size: 0.7rem; color: var(--text-muted); }
+.cliente-del-btn:hover { color: #e74c3c; }
+
+.cliente-approve-btn { margin-top: 0.75rem; width: 100%; }
+
+/* Dark mode overrides */
+[data-theme="dark"] .cliente-layout  { background: var(--cream); }
+[data-theme="dark"] .cliente-sub     { color: rgba(226,228,244,0.45); }
+[data-theme="dark"] .cliente-empty-sub  { color: rgba(226,228,244,0.4); }
+[data-theme="dark"] .cliente-empty-title { color: #e2e4f4; }
+[data-theme="dark"] .cliente-card-name  { color: #e2e4f4; }
+[data-theme="dark"] .cliente-countdown  { color: rgba(226,228,244,0.45); }
+[data-theme="dark"] .cliente-status-none { background: rgba(226,228,244,0.07); color: rgba(226,228,244,0.45); }
+[data-theme="dark"] .cliente-pending-table th { color: rgba(226,228,244,0.4); }
+[data-theme="dark"] .cliente-pending-loading  { color: rgba(226,228,244,0.4); }
+[data-theme="dark"] .cliente-pending-empty    { color: rgba(226,228,244,0.4); }
+[data-theme="dark"] .cliente-del-btn { color: rgba(226,228,244,0.35); }
+
+.modal-label {
+  display:       block;
+  font-size:     0.72rem;
+  font-weight:   600;
+  letter-spacing: 0.07em;
+  color:         var(--fg-muted);
+  margin-bottom: 0.35rem;
+}
+
 /* ── Mobile responsive ─────────────────────────────────────── */
 @media (max-width: 900px) {
   .mobile-topbar { display: flex; }
@@ -5049,4 +5201,10 @@ body {
   /* General screen padding */
   .screen { padding: 1rem; }
   .export-screen, .configure-screen { padding: 0.75rem; }
+
+  /* Cliente */
+  .cliente-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .cliente-card-top { flex-direction: column; gap: 0.75rem; }
+  .cliente-card-actions { width: 100%; }
+  .cliente-pending-table { font-size: 0.7rem; }
 }
