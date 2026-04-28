@@ -143,18 +143,18 @@ export function PiezaPreviewPanel({ pieza, talla, rules, onClose, onExpand }: Pr
           preserveAspectRatio="xMidYMid meet"
           style={{ width: `${zoom}%`, height: 'auto', minWidth: `${zoom}%` }}
         >
+          {/* Silhouette — first so grid renders on top */}
+          <path d={silPath} style={{ fill: 'var(--pv-silhouette)', stroke: 'var(--pv-silhouette-stroke)' }} strokeWidth={sw}/>
           {/* Grid */}
           {Array.from({length:Math.floor(svgW)},(_,i)=>i+1).map(x=>(
-            <line key={`v${x}`} x1={x} y1={-(domeH+1)} x2={x} y2={svgH+1} stroke="#ffffff09" strokeWidth={0.12}/>
+            <line key={`v${x}`} x1={x} y1={-(domeH+1)} x2={x} y2={svgH+1} style={{ stroke: 'var(--pv-grid)' }} strokeWidth={0.12}/>
           ))}
           {Array.from({length:Math.floor(svgH)},(_,i)=>i+1).map(y=>(
-            <line key={`h${y}`} x1={-1} y1={y} x2={svgW+1} y2={y} stroke="#ffffff09" strokeWidth={0.12}/>
+            <line key={`h${y}`} x1={-1} y1={y} x2={svgW+1} y2={y} style={{ stroke: 'var(--pv-grid)' }} strokeWidth={0.12}/>
           ))}
           {/* Center axis */}
-          <line x1={svgW/2} y1={0} x2={svgW/2} y2={svgH} stroke="#ffffff15" strokeWidth={0.18}
+          <line x1={svgW/2} y1={0} x2={svgW/2} y2={svgH} style={{ stroke: 'var(--pv-axis)' }} strokeWidth={0.18}
             strokeDasharray={`${svgW*.02} ${svgW*.02}`}/>
-          {/* Silhouette */}
-          <path d={silPath} fill="#1a1e30" stroke="#343858" strokeWidth={sw}/>
 
           {/* Elements */}
           {activeEls.map(el => {
@@ -217,7 +217,7 @@ export function PiezaPreviewPanel({ pieza, talla, rules, onClose, onExpand }: Pr
               </g>
             );
           })}
-          <text x={svgW/2} y={svgH+1} textAnchor="middle" fill="#ffffff35" fontSize={fss*.85} fontFamily="monospace">{svgW.toFixed(0)}×{svgH.toFixed(0)} cm</text>
+          <text x={svgW/2} y={svgH+1} textAnchor="middle" style={{ fill: 'var(--pv-dim-label)' }} fontSize={fss*.85} fontFamily="monospace">{svgW.toFixed(0)}×{svgH.toFixed(0)} cm</text>
         </svg>
 
         {/* Hover tooltip */}

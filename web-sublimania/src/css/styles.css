@@ -35,6 +35,7 @@
 :root {
   --sb-bg:         var(--cream);
   --sb-logo:       rgba(0,0,0,0.85);
+  --sb-yellow-text: #7a6200;
   --sb-text:       rgba(0,0,0,0.65);
   --sb-text-sub:   rgba(0,0,0,0.45);
   --sb-text-dim:   rgba(0,0,0,0.32);
@@ -69,6 +70,7 @@
 [data-theme="dark"] {
   --sb-bg:         #080a14;
   --sb-logo:       #e2e4f4;
+  --sb-yellow-text: var(--yellow);
   --sb-text:       rgba(255,255,255,0.65);
   --sb-text-sub:   rgba(255,255,255,0.45);
   --sb-text-dim:   rgba(255,255,255,0.35);
@@ -492,7 +494,7 @@ body {
   letter-spacing: -0.02em;
   line-height: 1;
 }
-.sidebar-logo-name span { color: var(--yellow); }
+.sidebar-logo-name span { color: var(--sb-yellow-text); }
 
 .sidebar-logo-tag {
   font-family: var(--mono);
@@ -684,7 +686,7 @@ body {
   padding: 2px 6px;
   flex-shrink: 0;
 }
-.sidebar-role-badge.role-admin    { background: rgba(255,230,0,0.15); color: var(--yellow); }
+.sidebar-role-badge.role-admin    { background: rgba(122,98,0,0.12); color: var(--sb-yellow-text); }
 .sidebar-role-badge.role-employee { background: rgba(74,155,232,0.15); color: var(--blue); }
 
 .sidebar-footer-actions {
@@ -2390,7 +2392,7 @@ body {
 .player-num-col {
   width: 56px;
   flex-shrink: 0;
-  background: var(--black);
+  background: var(--sb-bg);
   border-right: var(--border);
   display: flex;
   align-items: center;
@@ -2400,13 +2402,13 @@ body {
   font-family: var(--mono);
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--yellow);
+  color: var(--sb-yellow-text);
   line-height: 1;
   letter-spacing: -0.02em;
 }
 .player-num-display.is-empty {
   font-size: 1rem;
-  color: #333;
+  color: var(--sb-text-dim);
 }
 
 /* Name block */
@@ -2572,7 +2574,7 @@ body {
   font-family: var(--mono);
   font-size: 0.5rem;
   letter-spacing: 0.15em;
-  color: var(--yellow);
+  color: var(--sb-yellow-text);
   font-weight: 700;
   margin-bottom: 0.4rem;
 }
@@ -2894,7 +2896,7 @@ body {
   display: flex;
   border: var(--border);
   box-shadow: var(--shadow-sm);
-  background: var(--black);
+  background: var(--white);
   overflow: hidden;
 }
 .export-stat-pill {
@@ -2903,21 +2905,21 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 14px 6px;
-  border-right: 1px solid #1e1e1e;
+  border-right: 1px solid var(--sb-border);
 }
 .export-stat-pill:last-child { border-right: none; }
 .export-stat-num {
   font-family: var(--mono);
   font-size: 1.65rem;
   font-weight: 800;
-  color: var(--yellow);
+  color: var(--sb-yellow-text);
   line-height: 1;
 }
 .export-stat-lbl {
   font-family: var(--mono);
   font-size: 0.42rem;
   letter-spacing: 0.18em;
-  color: rgba(255,255,255,0.4);
+  color: var(--sb-text-sub);
   margin-top: 5px;
   font-weight: 700;
 }
@@ -2985,14 +2987,14 @@ body {
   font-size: 0.6rem;
 }
 .preview-table th {
-  background: var(--black);
-  color: var(--yellow);
+  background: var(--white);
+  color: var(--sb-yellow-text);
   font-weight: 700;
   letter-spacing: 0.08em;
   padding: 6px 10px;
   text-align: left;
   white-space: nowrap;
-  border-right: 1px solid #2a2a2a;
+  border-right: 1px solid var(--sb-border);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -3459,7 +3461,7 @@ body {
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: var(--yellow);
+  color: var(--sb-yellow-text);
 }
 .invite-form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .invite-email {
@@ -4291,15 +4293,15 @@ body {
   animation: fade-in 0.15s ease-out both;
 }
 .rp-modal {
-  background: #0d1020;
-  border: 1px solid #2a3055;
+  background: var(--pv-surface);
+  border: 1px solid var(--pv-border);
   border-radius: 8px;
   width: min(820px, 95vw);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
   animation: stagger-in 0.2s cubic-bezier(0.16,1,0.3,1) both;
 }
 .rp-modal-header {
@@ -4308,7 +4310,7 @@ body {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.65rem 1rem;
-  border-bottom: 1px solid #1e2540;
+  border-bottom: 1px solid var(--pv-border);
   flex-shrink: 0;
 }
 .rp-modal-title {
@@ -4321,12 +4323,12 @@ body {
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #ccd6f6;
+  color: var(--pv-text);
 }
 .rp-modal-talla {
   font-family: var(--mono);
   font-size: 0.65rem;
-  color: #505878;
+  color: var(--pv-text-dim);
 }
 .rp-modal-overflow-badge {
   font-family: var(--mono);
@@ -4345,9 +4347,9 @@ body {
 .rp-select {
   font-family: var(--mono);
   font-size: 0.6rem;
-  background: #151b35;
-  color: #8899cc;
-  border: 1px solid #2a3055;
+  background: var(--pv-canvas);
+  color: var(--pv-text-mid);
+  border: 1px solid var(--pv-border);
   border-radius: 3px;
   padding: 3px 6px;
   outline: none;
@@ -4355,7 +4357,7 @@ body {
 .rp-zoom-label {
   font-family: var(--mono);
   font-size: 0.58rem;
-  color: #505878;
+  color: var(--pv-text-dim);
   width: 28px;
   text-align: right;
   flex-shrink: 0;
@@ -4368,19 +4370,19 @@ body {
 .rp-close {
   background: none;
   border: none;
-  color: #505878;
+  color: var(--pv-text-dim);
   font-size: 1.2rem;
   cursor: pointer;
   line-height: 1;
   padding: 0 2px;
   transition: color 0.1s;
 }
-.rp-close:hover { color: #ccd6f6; }
+.rp-close:hover { color: var(--pv-text); }
 
 .rp-canvas-wrap {
   flex: 1;
   overflow-x: hidden;
-  background: #090d1a;
+  background: var(--pv-canvas);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -4395,7 +4397,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 1rem;
-  border-top: 1px solid #1e2540;
+  border-top: 1px solid var(--pv-border);
   flex-shrink: 0;
 }
 .rp-legend {
@@ -4409,7 +4411,7 @@ body {
   gap: 0.3rem;
   font-family: var(--mono);
   font-size: 0.58rem;
-  color: #6677aa;
+  color: var(--pv-text-mid);
 }
 .rp-legend-dot {
   width: 8px;
@@ -4420,14 +4422,14 @@ body {
 .rp-active-count {
   font-family: var(--mono);
   font-size: 0.58rem;
-  color: #404870;
+  color: var(--pv-text-dim);
 }
 
 /* ── PiezaPreviewPanel (inline 3rd column) ──────────────────── */
 .pp-panel {
   display: flex;
   flex-direction: column;
-  background: #0d1020;
+  background: var(--pv-surface);
   border: var(--border);
   box-shadow: var(--shadow);
   border-radius: 6px;
@@ -4441,7 +4443,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #1e2540;
+  border-bottom: 1px solid var(--pv-border);
   flex-shrink: 0;
 }
 .pp-header-left {
@@ -4454,14 +4456,14 @@ body {
   font-family: var(--mono);
   font-size: 0.65rem;
   font-weight: 700;
-  color: var(--white);
+  color: var(--pv-text);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .pp-talla {
   font-family: var(--mono);
   font-size: 0.6rem;
-  color: #6677aa;
+  color: var(--pv-text-mid);
 }
 .pp-overflow-badge {
   font-family: var(--mono);
@@ -4482,7 +4484,7 @@ body {
 .pp-expand {
   background: none;
   border: none;
-  color: #6677aa;
+  color: var(--pv-text-mid);
   cursor: pointer;
   padding: 4px 5px;
   display: flex;
@@ -4490,11 +4492,11 @@ body {
   border-radius: 3px;
   transition: color 0.12s, background 0.12s;
 }
-.pp-expand:hover { color: var(--white); background: rgba(255,255,255,0.07); }
+.pp-expand:hover { color: var(--pv-text); background: var(--pv-hover-bg); }
 .pp-close {
   background: none;
   border: none;
-  color: #6677aa;
+  color: var(--pv-text-mid);
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
@@ -4503,22 +4505,22 @@ body {
   transition: color 0.12s;
   border-radius: 3px;
 }
-.pp-close:hover { color: var(--white); background: rgba(255,255,255,0.07); }
+.pp-close:hover { color: var(--pv-text); background: var(--pv-hover-bg); }
 
 .pp-selects {
   display: flex;
   gap: 0.4rem;
   padding: 0.4rem 0.75rem;
-  border-bottom: 1px solid #151b30;
+  border-bottom: 1px solid var(--pv-border);
   flex-shrink: 0;
 }
 .pp-select {
   flex: 1;
   font-family: var(--mono);
   font-size: 0.58rem;
-  background: #0a0d1a;
-  color: #99aabb;
-  border: 1px solid #1e2540;
+  background: var(--pv-canvas);
+  color: var(--pv-text-mid);
+  border: 1px solid var(--pv-border);
   border-radius: 3px;
   padding: 3px 6px;
   outline: none;
@@ -4543,8 +4545,8 @@ body {
   right: 6px;
   top: auto;
   min-width: 0;
-  background: #0a0d1a;
-  border: 1.5px solid #4a9be8;
+  background: var(--pv-surface);
+  border: 1.5px solid var(--pv-accent);
   border-radius: 5px;
   padding: 0.4rem 0.6rem;
   z-index: 10;
@@ -4557,13 +4559,13 @@ body {
   align-items: center;
   gap: 0.35rem;
   padding: 0.4rem 0.75rem;
-  border-top: 1px solid #151b30;
+  border-top: 1px solid var(--pv-border);
   flex-shrink: 0;
 }
 .pp-zoom-btn {
   background: none;
-  border: 1px solid #2a3050;
-  color: #8899bb;
+  border: 1px solid var(--pv-border);
+  color: var(--pv-text-mid);
   font-size: 0.9rem;
   line-height: 1;
   width: 20px;
@@ -4575,22 +4577,22 @@ body {
   justify-content: center;
   transition: color 0.1s, border-color 0.1s;
 }
-.pp-zoom-btn:hover { color: var(--white); border-color: #4a9be8; }
+.pp-zoom-btn:hover { color: var(--pv-text); border-color: var(--pv-accent); }
 .pp-zoom-val {
   font-family: var(--mono);
   font-size: 0.58rem;
-  color: #6677aa;
+  color: var(--pv-text-mid);
   min-width: 28px;
   text-align: center;
 }
 .rp-zoom-slider {
   flex: 1;
-  accent-color: #4a9be8;
+  accent-color: var(--pv-accent);
   cursor: pointer;
 }
 
 .pp-footer {
-  border-top: 1px solid #151b30;
+  border-top: 1px solid var(--pv-border);
   padding: 0.4rem 0.75rem;
   display: flex;
   flex-direction: column;
@@ -4602,7 +4604,7 @@ body {
 .pp-footer-empty {
   font-family: var(--mono);
   font-size: 0.58rem;
-  color: #404870;
+  color: var(--pv-text-dim);
 }
 .pp-el-row {
   display: flex;
@@ -4613,7 +4615,7 @@ body {
   cursor: default;
   transition: background 0.1s;
 }
-.pp-el-row.hovered { background: rgba(255,255,255,0.05); }
+.pp-el-row.hovered { background: var(--pv-hover-bg); }
 .pp-el-dot {
   width: 6px;
   height: 6px;
@@ -4623,7 +4625,7 @@ body {
 .pp-el-name {
   font-family: var(--mono);
   font-size: 0.6rem;
-  color: #8899bb;
+  color: var(--pv-text-mid);
   flex: 1;
   min-width: 0;
   overflow: hidden;

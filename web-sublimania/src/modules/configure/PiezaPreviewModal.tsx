@@ -186,19 +186,19 @@ export function PiezaPreviewModal({ pieza, talla, rules, onClose }: Props) {
             preserveAspectRatio="xMidYMid meet"
             style={{ width: `${zoom}%`, height: 'auto', minWidth: `${zoom}%` }}
           >
+            {/* Silhouette — first so grid renders on top */}
+            <path d={silPath} style={{ fill: 'var(--pv-silhouette)', stroke: 'var(--pv-silhouette-stroke)' }} strokeWidth={strokeW} />
             {/* Grid */}
             {Array.from({ length: Math.floor(svgW) }, (_, i) => i + 1).map(x => (
-              <line key={`vg${x}`} x1={x} y1={-2} x2={x} y2={svgH+2} stroke="#ffffff08" strokeWidth={0.1} />
+              <line key={`vg${x}`} x1={x} y1={-2} x2={x} y2={svgH+2} style={{ stroke: 'var(--pv-grid)' }} strokeWidth={0.1} />
             ))}
             {Array.from({ length: Math.floor(svgH) }, (_, i) => i + 1).map(y => (
-              <line key={`hg${y}`} x1={-2} y1={y} x2={svgW+2} y2={y} stroke="#ffffff08" strokeWidth={0.1} />
+              <line key={`hg${y}`} x1={-2} y1={y} x2={svgW+2} y2={y} style={{ stroke: 'var(--pv-grid)' }} strokeWidth={0.1} />
             ))}
             {/* Center axis */}
             <line x1={svgW/2} y1={0} x2={svgW/2} y2={svgH}
-              stroke="#ffffff18" strokeWidth={0.15}
+              style={{ stroke: 'var(--pv-axis)' }} strokeWidth={0.15}
               strokeDasharray={`${svgW*.02} ${svgW*.02}`} />
-            {/* Silhouette */}
-            <path d={silPath} fill="#1e2235" stroke="#3a4060" strokeWidth={strokeW} />
 
             {/* Elements */}
             {activeEls.map(el => {
@@ -283,9 +283,9 @@ export function PiezaPreviewModal({ pieza, talla, rules, onClose }: Props) {
 
             {/* Dimension labels */}
             <text x={svgW/2} y={svgH+1.5} textAnchor="middle"
-              fill="#ffffff40" fontSize={fontSizeSm*.9} fontFamily="monospace">{svgW.toFixed(1)} cm</text>
+              style={{ fill: 'var(--pv-dim-label)' }} fontSize={fontSizeSm*.9} fontFamily="monospace">{svgW.toFixed(1)} cm</text>
             <text x={-1.5} y={svgH/2} textAnchor="middle"
-              fill="#ffffff40" fontSize={fontSizeSm*.9} fontFamily="monospace"
+              style={{ fill: 'var(--pv-dim-label)' }} fontSize={fontSizeSm*.9} fontFamily="monospace"
               transform={`rotate(-90, -1.5, ${svgH/2})`}>{svgH.toFixed(1)} cm</text>
           </svg>
 
