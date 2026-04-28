@@ -156,6 +156,7 @@ export function TeamsScreen({ onToast }: Props) {
     <div className="screen teams-screen">
       <div className="teams-header">
         <h1 className="teams-title">EQUIPOS</h1>
+        <button className="btn btn-primary btn-sm" onClick={openNewModal}>+ NUEVO EQUIPO</button>
       </div>
 
       {teams.length === 0 ? (
