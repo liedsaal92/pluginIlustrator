@@ -7,24 +7,28 @@ import type { AuthSession } from '../types/auth';
 import { authService } from '../utils/authService';
 
 interface AuthState {
-  session:  AuthSession | null;
-  loading:  boolean;
-  error:    string | null;
+  session:      AuthSession | null;
+  loading:      boolean;
+  error:        string | null;
+  recoveryMode: boolean;
 
-  login:         (email: string, password: string) => Promise<void>;
-  register:      (email: string, password: string, nombre: string, orgName: string) => Promise<void>;
-  acceptInvite:  (token: string, nombre: string, password: string) => Promise<void>;
-  logout:        () => Promise<void>;
-  clearError:   () => void;
-  checkSession: () => void;
+  login:                 (email: string, password: string) => Promise<void>;
+  register:              (email: string, password: string, nombre: string, orgName: string) => Promise<void>;
+  acceptInvite:          (token: string, nombre: string, password: string) => Promise<void>;
+  logout:                () => Promise<void>;
+  clearError:            () => void;
+  checkSession:          () => void;
+  requestPasswordReset:  (email: string) => Promise<void>;
+  updatePassword:        (newPassword: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      session:  null,
-      loading:  false,
-      error:    null,
+      session:      null,
+      loading:      false,
+      error:        null,
+      recoveryMode: false,
 
       login: async (email, password) => {
         set({ loading: true, error: null });
@@ -62,6 +66,26 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      requestPasswordReset: async (email) => {
+        set({ loading: true, error: null });
+        try {
+          await authService.requestPasswordReset(email);
+          set({ loading: false });
+        } catch (e) {
+          set({ error: (e as Error).message, loading: false });
+        }
+      },
+
+      updatePassword: async (newPassword) => {
+        set({ loading: true, error: null });
+        try {
+          await authService.updatePassword(newPassword);
+          set({ loading: false });
+        } catch (e) {
+          set({ error: (e as Error).message, loading: false });
+        }
+      },
 
       // Llama al iniciar App — invalida sesiones expiradas
       checkSession: () => {

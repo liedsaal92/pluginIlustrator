@@ -136,6 +136,18 @@ export const authService = {
     if (error) throw new Error(error.message);
   },
 
+  async requestPasswordReset(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/`,
+    });
+    if (error) throw new Error(error.message);
+  },
+
+  async updatePassword(newPassword: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message);
+  },
+
   async deleteUser(userId: string): Promise<void> {
     // Por ahora solo borra perfil público.
     // Producción: Edge Function con service_role para auth.admin.deleteUser()
