@@ -179,19 +179,16 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
           )}
         </div>
 
-        {/* Ajustes — solo admin */}
-        {canManageSettings && (
-          <div className="sidebar-section">
-            <button
-              className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
-              onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
-              title="Ajustes"
-            >
-              <span className="sidebar-nav-item-icon">◈</span>
-              <span className="sidebar-nav-text">AJUSTES</span>
-            </button>
-          </div>
-        )}
+        <div className="sidebar-section">
+          <button
+            className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
+            title="Ajustes"
+          >
+            <span className="sidebar-nav-item-icon">◈</span>
+            <span className="sidebar-nav-text">AJUSTES</span>
+          </button>
+        </div>
 
       </div>
 

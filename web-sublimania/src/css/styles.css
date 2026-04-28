@@ -29,6 +29,10 @@
 
   --radius: 0px;
   --header-item-h: 32px;
+
+  --text-muted: rgba(0,0,0,0.45);
+  --accent:     #00C8B8;
+  --accent-rgb: 0,200,184;
 }
 
 /* ── SIDEBAR THEME TOKENS ────────────────────────────────────── */
@@ -104,6 +108,10 @@
   --shadow:    4px 4px 0 rgba(226, 228, 244, 0.1);
   --shadow-lg: 6px 6px 0 rgba(226, 228, 244, 0.1);
   --shadow-sm: 2px 2px 0 rgba(226, 228, 244, 0.09);
+
+  --text-muted: rgba(226,228,244,0.5);
+  --accent:     #00d4ff;
+  --accent-rgb: 0,212,255;
 }
 
 /* ── DARK: body ─────── */
@@ -206,6 +214,7 @@
 [data-theme="dark"] .team-card-featured .btn-ghost:hover { background: rgba(226,228,244,0.1); border-color: rgba(226,228,244,0.7); color: var(--black); }
 [data-theme="dark"] .team-card-featured .btn-base-team { color: rgba(226,228,244,0.45); border-color: rgba(226,228,244,0.25); }
 [data-theme="dark"] .team-card-featured .btn-base-team:hover { background: rgba(226,228,244,0.08); }
+[data-theme="dark"] .team-card-progress { background: rgba(226,228,244,0.12); }
 
 /* settings-sidenav dark — active text override kept in yellow/cyan block below */
 
@@ -4218,15 +4227,15 @@ body {
 /* ── Teams screen: progress bar ───────────────────────────── */
 .team-card-progress {
   position: relative;
-  height: 4px;
-  background: rgba(255,255,255,0.07);
+  height: 8px;
+  background: rgba(0,0,0,0.10);
   border-radius: 2px;
   overflow: visible;
   margin: 0.4rem 0 0.15rem;
 }
 .team-card-progress-bar {
   height: 100%;
-  border-radius: 2px;
+  border-radius: 4px;
   background: linear-gradient(90deg, var(--accent), #4cffe8);
   transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   min-width: 4px;

@@ -73,13 +73,6 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [!!session]);
 
-  // Guard: employee sin permiso a settings → redirect
-  useEffect(() => {
-    if (!session) return;
-    if (screen === 'settings' && !hasPermission(session.user.role, 'settings:manage')) {
-      useTeamStore.getState().setScreen('teams');
-    }
-  }, [screen, session]);
 
   // Sin sesión → pantalla de auth
   if (!session) return <AuthScreen />;
@@ -111,9 +104,7 @@ export default function App() {
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
           {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
-          {screen === 'settings'  && hasPermission(session.user.role, 'settings:manage') && (
-            <SettingsScreen onToast={showToast} />
-          )}
+          {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
         </div>
       </main>
 
