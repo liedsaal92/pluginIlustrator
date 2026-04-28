@@ -2,7 +2,6 @@
 //  store/useTeamStore.ts — Working store del equipo activo
 // ============================================================
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { Player, Rules, Overrides, GlobalConfig, Screen, ConfigTab, PiezaKey, TeamEntry } from '../types';
 import { buildEmptyRules, getDefaultGlobal } from '../utils/schema';
 
@@ -52,9 +51,7 @@ interface TeamState {
   loadFromEntry: (entry: TeamEntry, targetScreen?: Screen) => void;
 }
 
-export const useTeamStore = create<TeamState>()(
-  persist(
-    (set, get) => ({
+export const useTeamStore = create<TeamState>()((set, get) => ({
       // ── Estado inicial ──────────────────────────────────────
       players: [],
       tallas: [],
@@ -217,10 +214,7 @@ export const useTeamStore = create<TeamState>()(
           expandedPlayer: null,
         });
       },
-    }),
-    { name: 'sublimania_team_v1' }
-  )
-);
+}));
 
 // ── Helper: guarda el working store en useTeamsStore ──────────
 // Importar aquí causaría dependencia circular; se importa desde
