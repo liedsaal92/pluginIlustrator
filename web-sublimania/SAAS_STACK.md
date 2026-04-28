@@ -2,24 +2,26 @@
 
 > Documento de arquitectura y roadmap completo para escalar `web-sublimania` a producto SaaS.
 > Producto: **SubliFlow** | Empresa: Sublimania Studio
-> Última actualización: 2026-04-27
+> Última actualización: 2026-04-28
 
 ---
 
-## Estado actual (2026-04-27)
+## Estado actual (2026-04-28)
 
 | Qué | Estado |
 |---|---|
 | Lógica de reglas por talla y jugador | ✅ Funciona |
 | Exportación de CSV para Illustrator | ✅ Funciona |
 | Gestión de equipos, clientes, tallas, moldes | ✅ Funciona |
-| Auth (registro, login, logout, invites multi-tenant) | ✅ Implementado con Supabase |
-| Schema DB auth/orgs en Supabase | ✅ Ejecutado (organizations, users, roles, RLS) |
-| Trigger auto-crea org al registrar | ✅ Implementado (`trigger_register_org.sql`) |
-| Persistencia datos de app | ⚠️ Solo localStorage (teams, players, tallas, clientes) |
-| Acceso desde otro dispositivo/browser | ❌ No funciona — datos atrapados en el browser |
-| Landing page | ✅ Construida y deployada en Vercel |
-| App deployada | ❌ Solo corre local, no está en Vercel |
+| Auth (registro, login, logout, invites multi-tenant) | ✅ Supabase |
+| Password recovery (olvidé contraseña) | ✅ Implementado |
+| Schema DB auth/orgs en Supabase | ✅ Ejecutado |
+| Tablas de app en Supabase (8 tablas) | ✅ Ejecutado con RLS |
+| Persistencia datos en la nube | ✅ Todos los stores migrados a Supabase |
+| Acceso desde cualquier dispositivo | ✅ Funciona |
+| App deployada en Vercel | ✅ https://web-subliflow.vercel.app |
+| Landing page deployada | ✅ Vercel |
+| Migración datos existentes (JSON → Supabase) | ⚠️ Pendiente |
 | Pagos / suscripciones | ❌ No existe |
 | Emails transaccionales | ❌ No existe |
 
@@ -31,21 +33,21 @@ Aplicado específicamente a SubliFlow (generador de uniformes deportivos):
 
 | Pilar | Relevante | Estado | Notas |
 |---|---|---|---|
-| **1. Auth** | ✅ Crítico | ✅ Listo | Registro + login + logout + invites + multi-tenant |
-| **2. Database** | ✅ Crítico | ⚠️ Parcial | Schema auth en Supabase ✅; datos de app aún en localStorage ❌ |
+| **1. Auth** | ✅ Crítico | ✅ Listo | Login + registro + invites + recovery + multi-tenant |
+| **2. Database** | ✅ Crítico | ✅ Listo | 8 tablas en Supabase, RLS por org, todos los stores migrados |
 | **3. Payments** | ✅ Crítico | ❌ Pendiente | Stripe — sin esto no hay ingresos reales |
-| **4. Security** | ✅ Crítico | ⚠️ Parcial | RLS en tablas auth ✅; tablas de app aún no existen en DB |
-| **5. Frontend** | ✅ Crítico | ✅ Listo | React + TypeScript + Bootstrap, UI completa |
+| **4. Security** | ✅ Crítico | ✅ Listo | RLS en todas las tablas con `my_org_id()` |
+| **5. Frontend** | ✅ Crítico | ✅ Listo | React + TypeScript + Bootstrap, UI completa, en Vercel |
 | **6. Backend** | ✅ Crítico | ✅ Listo | Supabase maneja todo — no se necesita backend custom |
-| **7. Notifications** | ⚠️ Importante | ❌ Pendiente | Resend para welcome email; reset ya lo maneja Supabase |
-| **8. Analytics** | ⚠️ Nice-to-have | ❌ No es MVP | PostHog free tier — agregar después del lanzamiento |
+| **7. Notifications** | ⚠️ Importante | ❌ Pendiente | Resend para welcome email; recovery ya funciona vía Supabase |
+| **8. Analytics** | ⚠️ Nice-to-have | ❌ No es MVP | PostHog free tier — agregar post-lanzamiento |
 | **9. Error handling** | ⚠️ Importante | ⚠️ Básico | Toasts en auth; falta error boundary global |
-| **10. Logging** | ⬇️ Bajo | ✅ Suficiente | Supabase logs + Vercel logs bastan para el MVP |
+| **10. Logging** | ⬇️ Bajo | ✅ Suficiente | Supabase logs + Vercel logs bastan para MVP |
 | **11. File storage** | ❌ No aplica | — | SubliFlow exporta CSVs al disco local — no hay uploads |
-| **12. Settings** | ✅ Crítico | ✅ Listo | SettingsScreen con tabs: Usuarios, Clientes, Tallas, Moldes |
-| **13. Onboarding** | ⚠️ Importante | ❌ Pendiente | No hay flujo de primera vez; la app es suficientemente simple por ahora |
-| **14. Performance** | ⚠️ Importante | ✅ Listo | Vite build + Vercel CDN — no hay problema aquí |
-| **15. Landing page** | ✅ Crítico | ✅ Listo | Construida en Astro, deployada en Vercel |
+| **12. Settings** | ✅ Crítico | ✅ Listo | SettingsScreen: Usuarios, Clientes, Tallas, Moldes |
+| **13. Onboarding** | ⚠️ Importante | ❌ Pendiente | Sin flujo de primera vez; app es simple, no es urgente |
+| **14. Performance** | ⚠️ Importante | ✅ Listo | Vite build + Vercel CDN |
+| **15. Landing page** | ✅ Crítico | ✅ Listo | Astro, deployada en Vercel |
 
 > **File Storage (punto 11): NO se necesita.** SubliFlow genera CSVs que se descargan al disco del usuario. No hay imágenes ni uploads de archivos. Supabase Storage queda fuera del stack por ahora.
 
@@ -55,13 +57,13 @@ Aplicado específicamente a SubliFlow (generador de uniformes deportivos):
 
 | Capa | Tecnología | Estado |
 |---|---|---|
-| **App principal** | React 19 + Vite + TypeScript | ✅ Existe |
-| **Estado UI** | Zustand | ✅ Existe (pendiente migrar datos a DB) |
-| **Base de datos + Auth** | Supabase (PostgreSQL + Auth) | ✅ Proyecto creado, schema auth ejecutado |
+| **App principal** | React 19 + Vite + TypeScript | ✅ Deployada en Vercel |
+| **Estado UI** | Zustand | ✅ Stores migrados a Supabase, puro in-memory para navegación |
+| **Base de datos + Auth** | Supabase (PostgreSQL + Auth) | ✅ 8 tablas + RLS + auth completo |
 | **Pagos** | Stripe | ❌ Pendiente |
 | **Emails** | Resend | ❌ Pendiente |
 | **Landing page** | Astro | ✅ Deployada en Vercel |
-| **Hosting app** | Vercel | ❌ Pendiente conectar |
+| **Hosting app** | Vercel | ✅ https://web-subliflow.vercel.app |
 | **Backend custom** | — | No necesario, Supabase alcanza |
 
 ---
@@ -81,22 +83,27 @@ Aplicado específicamente a SubliFlow (generador de uniformes deportivos):
 ┌──────────────────────────────┐
 │   sublimania.com / landing   │
 │   (Astro — Vercel) ✅        │
-│   CTA → app.sublimania.com   │
+│   CTA → web-subliflow.vercel │
 └──────────────┬───────────────┘
                ↓
 ┌──────────────────────────────┐
-│   app.sublimania.com         │
-│   (React — Vercel) ❌ deploy │
+│   web-subliflow.vercel.app   │
+│   (React — Vercel) ✅        │
 │   Auth → Teams → Export      │
 └──────────────┬───────────────┘
                ↓ ↑ supabase-js
 ┌──────────────────────────────┐
 │   Supabase                   │
-│   ├── Auth (sesiones) ✅     │
-│   ├── PostgreSQL (datos) ⚠️  │
-│   │     auth/orgs: ✅        │
-│   │     teams/players: ❌    │
-│   └── RLS (aislamiento) ⚠️  │
+│   ├── Auth ✅                │
+│   ├── PostgreSQL ✅          │
+│   │     auth/orgs ✅         │
+│   │     clientes ✅          │
+│   │     moldes ✅            │
+│   │     tallas_config ✅     │
+│   │     teams/players ✅     │
+│   │     talla_rules ✅       │
+│   │     player_overrides ✅  │
+│   └── RLS por org ✅         │
 └──────────────┬───────────────┘
                ↓
 ┌──────────────────────────────┐
@@ -120,21 +127,21 @@ role_permissions (role_id, permission_id)
 invites        (id, org_id, email, role_id, token, accepted_at, expires_at)
 ```
 
-### Datos de app (pendiente migrar ❌)
+### Datos de app (ejecutado ✅ + stores migrados ✅)
 ```sql
-clientes       (id, org_id, nombre, casa_costurera)
-tallas_config  (id, cliente_id, org_id, talla, alto, ancho, manga_alto, manga_ancho)
+clientes       (id TEXT, org_id UUID, nombre, casa_costurera)
+moldes         (id TEXT, org_id UUID, nombre)
+tallas_config  (org_id, cliente_id, molde_id, talla, alto, ancho, manga_alto, manga_ancho)
 
-teams          (id, org_id, nombre, notas, base_team_id, created_at, updated_at)
-players        (id, team_id, nombre, nombre_camiseta, numero, talla)
-talla_rules    (id, team_id, talla, rules JSONB)
-player_overrides (id, team_id, player_id, overrides JSONB)
+teams          (id TEXT, org_id UUID, nombre, notas, base_team_id, created_at, updated_at)
+players        (team_id, org_id, position INT, nombre, nombre_camiseta, numero, talla)
+talla_rules    (team_id, org_id, talla, rules JSONB)
+player_overrides (team_id, org_id, player_position INT, overrides JSONB)
 
-export_history (id, team_id, talla, exported_at, cliente_id)
+export_history (MVP: solo local, no persistido en DB)
 ```
 
-> `rules JSONB` y `overrides JSONB` guardan exactamente la estructura que hoy
-> vive en `localStorage`. Sin cambios en la UI — solo cambia de dónde vienen los datos.
+> `rules JSONB` y `overrides JSONB` guardan la estructura existente sin cambios en la UI.
 
 ---
 
@@ -166,32 +173,29 @@ export_history (id, team_id, talla, exported_at, cliente_id)
 
 ---
 
-### Fase 1 — Auth ✅ Completa (código listo, falta deploy)
+### Fase 1 — Auth ✅ Completa
 - [x] Proyecto Supabase creado
 - [x] Schema SQL ejecutado (organizations, users, roles, RLS)
 - [x] Trigger `handle_new_user` — crea org automáticamente al registrar
 - [x] `supabase.ts` + `authService.ts` + `useAuthStore.ts`
-- [x] `AuthScreen.tsx` — Login / Registro / Accept Invite
+- [x] `AuthScreen.tsx` — Login / Registro / Accept Invite / **Password Recovery**
 - [x] `UsersTab.tsx` — admin puede invitar y cambiar roles
-- [ ] **Deploy app en Vercel** ← próximo paso inmediato
-- [ ] Verificar primer registro real con confirm email OFF en Supabase
+- [x] App deployada en Vercel → https://web-subliflow.vercel.app
 
 ---
 
-### Fase 2 — Cloud Persistence ❌ Pendiente (bloque principal)
-> Objetivo: datos en la nube. Sin esto no hay SaaS real.
+### Fase 2 — Cloud Persistence ✅ Completa
+- [x] 8 tablas creadas en Supabase con RLS por org
+- [x] `@tanstack/react-query` instalado
+- [x] `useClientesStore` → Supabase `clientes`
+- [x] `useMoldesStore` → Supabase `moldes`
+- [x] `useTallasStore` → Supabase `tallas_config`
+- [x] `useTeamsStore` → Supabase `teams + players + talla_rules + player_overrides`
+- [x] `useTeamStore` → puro in-memory (working store, no necesita DB)
+- [x] `persist(localStorage)` eliminado de todos los stores
+- [ ] **Migración datos existentes** (JSON backup → Supabase) ← pendiente del usuario
 
-- [ ] Crear tablas `clientes`, `tallas_config`, `teams`, `players`, `talla_rules`, `player_overrides`, `export_history` en Supabase
-- [ ] Agregar RLS con política `org_id = my_org_id()` a cada tabla
-- [ ] Instalar `@tanstack/react-query`
-- [ ] Migrar `useClientesStore` → queries/mutations contra `clientes`
-- [ ] Migrar `useTallasStore` → queries/mutations contra `tallas_config`
-- [ ] Migrar `useTeamsStore` → queries/mutations contra `teams`
-- [ ] Migrar `useTeamStore` (players, rules, overrides) → tablas correspondientes
-- [ ] Migrar `useExportHistoryStore` → tabla `export_history`
-- [ ] Eliminar `persist(localStorage)` de todos los stores migrados
-
-**Resultado:** datos seguros en la nube, acceso desde cualquier dispositivo, aislamiento real por org.
+**Resultado:** datos en la nube, acceso desde cualquier dispositivo, aislamiento real por org.
 
 ---
 
