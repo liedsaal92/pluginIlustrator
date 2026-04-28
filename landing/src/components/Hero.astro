@@ -5,31 +5,20 @@
 
   <!-- Top bar: label + decorative line -->
   <div class="hero-topbar">
-    <span class="tag tag-black">★ Generador de uniformes deportivos</span>
+    <span class="tag-black">★ Generador de uniformes deportivos</span>
     <div class="hero-topbar-line"></div>
     <span class="hero-topbar-note">Beta abierto — Sin tarjeta de crédito</span>
   </div>
 
-  <!-- Main headline block -->
-  <div class="hero-headline-block">
-    <h1 class="hero-h1">
-      <span class="line-cream">GENERA</span>
-      <span class="line-yellow">UNIFORMES</span>
-      <span class="line-cream">EN MINUTOS.</span>
-    </h1>
+  <!-- Main headline block: text left, mockup right -->
+  <div class="hero-body">
 
-    <div class="hero-right-col">
-      <div class="hero-stat-box">
-        <div class="stat-before">
-          <span class="stat-big">3 hrs</span>
-          <span class="stat-label">proceso manual</span>
-        </div>
-        <div class="stat-arrow">→</div>
-        <div class="stat-after">
-          <span class="stat-big yellow">5 min</span>
-          <span class="stat-label">con SubliFlow</span>
-        </div>
-      </div>
+    <div class="hero-left">
+      <h1 class="hero-h1">
+        <span class="line-cream">GENERA</span>
+        <span class="line-yellow">UNIFORMES</span>
+        <span class="line-cream">EN MINUTOS.</span>
+      </h1>
 
       <p class="hero-desc">
         Define las reglas de talla una sola vez.
@@ -57,22 +46,116 @@
         <span class="proof-text">+120 talleres ya en lista de espera</span>
       </div>
     </div>
+
+    <!-- App mockup -->
+    <div class="hero-right">
+      <div class="hero-deco-star s1">✦</div>
+      <div class="hero-deco-star s2">✦</div>
+      <div class="hero-deco-dot d1"></div>
+      <div class="hero-deco-dot d2"></div>
+
+      <div class="app-mockup">
+        <div class="mockup-bar">
+          <div class="mockup-dots">
+            <span class="mdot red"></span>
+            <span class="mdot yellow"></span>
+            <span class="mdot green"></span>
+          </div>
+          <span class="mockup-url">subliflow.app</span>
+        </div>
+
+        <div class="mockup-body">
+          <div class="mockup-header-row">
+            <div class="mockup-brand-chip">SF</div>
+            <span class="mockup-team">Tucumán FC — Temporada 2026</span>
+            <div class="mockup-status">● Live</div>
+          </div>
+
+          <div class="mockup-table">
+            <div class="mockup-thead">
+              <span>Jugador</span>
+              <span>Nro</span>
+              <span>Talla</span>
+              <span>Frente</span>
+              <span>Espalda</span>
+            </div>
+            <div class="mockup-row row-hi">
+              <span>García, L.</span>
+              <span class="num">10</span>
+              <span class="talla talla-l">L</span>
+              <span class="dim">52 cm</span>
+              <span class="dim">54 cm</span>
+            </div>
+            <div class="mockup-row">
+              <span>Rodríguez, M.</span>
+              <span class="num">7</span>
+              <span class="talla talla-xl">XL</span>
+              <span class="dim">56 cm</span>
+              <span class="dim">58 cm</span>
+            </div>
+            <div class="mockup-row row-cyan">
+              <span>Martínez, E.</span>
+              <span class="num">3</span>
+              <span class="talla talla-m">M</span>
+              <span class="dim">48 cm</span>
+              <span class="dim">50 cm</span>
+            </div>
+            <div class="mockup-row">
+              <span>López, A.</span>
+              <span class="num">22</span>
+              <span class="talla talla-s">S</span>
+              <span class="dim">44 cm</span>
+              <span class="dim">46 cm</span>
+            </div>
+            <div class="mockup-row row-muted">
+              <span>Pérez, C.</span>
+              <span class="num">9</span>
+              <span class="talla talla-xxl">XXL</span>
+              <span class="dim">60 cm</span>
+              <span class="dim">62 cm</span>
+            </div>
+          </div>
+
+          <div class="mockup-footer-row">
+            <div class="mockup-count-chip">
+              <span class="count-num">20</span>
+              <span class="count-label">jugadores</span>
+            </div>
+            <div class="mockup-count-chip chip-cyan">
+              <span class="count-num">0</span>
+              <span class="count-label">errores</span>
+            </div>
+            <div class="mockup-export-btn">
+              Exportar CSV →
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat badge floating -->
+      <div class="hero-stat-badge">
+        <div class="stat-badge-before">3 hrs</div>
+        <div class="stat-badge-arrow">→</div>
+        <div class="stat-badge-after">5 min</div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Bottom deco strip -->
   <div class="hero-deco-strip">
     <div class="deco-block deco-yellow">Adobe Illustrator</div>
     <div class="deco-block deco-black">Excel / .xlsx</div>
-    <div class="deco-block deco-green">CSV automático</div>
+    <div class="deco-block deco-cyan">CSV automático</div>
     <div class="deco-block deco-white">4 piezas por uniforme</div>
-    <div class="deco-block deco-red">0 errores manuales</div>
+    <div class="deco-block deco-coral">0 errores manuales</div>
   </div>
 
 </section>
 
 <style>
   .hero {
-    padding-top: 64px; /* navbar height */
+    padding-top: 64px;
     border-bottom: 3px solid #0D0D0D;
     background: #0D0D0D;
   }
@@ -83,7 +166,7 @@
     align-items: center;
     gap: 20px;
     padding: 14px 32px;
-    border-bottom: 3px solid #333;
+    border-bottom: 3px solid #222;
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -106,39 +189,44 @@
   .hero-topbar-line {
     flex: 1;
     height: 2px;
-    background: #333;
+    background: #222;
   }
 
   .hero-topbar-note {
     font-family: 'DM Mono', monospace;
     font-size: 12px;
-    color: #666;
+    color: #555;
     white-space: nowrap;
     flex-shrink: 0;
   }
 
-  /* ─── Headline block ──────────────────── */
-  .hero-headline-block {
+  /* ─── Body: 2-col ─────────────────────── */
+  .hero-body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 32px;
-    gap: 0;
-    min-height: 520px;
+    gap: 48px;
+    min-height: 560px;
+    align-items: center;
+  }
+
+  /* ─── Left col ────────────────────────── */
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 56px 0;
   }
 
   .hero-h1 {
     display: flex;
     flex-direction: column;
-    font-size: clamp(64px, 8vw, 112px);
+    font-size: clamp(56px, 7vw, 96px);
     font-weight: 800;
     line-height: 0.95;
     letter-spacing: -3px;
-    padding: 56px 48px 56px 0;
-    border-right: 3px solid #333;
-    align-self: stretch;
-    justify-content: center;
   }
 
   .line-cream { color: #FFFCF0; }
@@ -151,63 +239,11 @@
     width: fit-content;
   }
 
-  /* ─── Right col ───────────────────────── */
-  .hero-right-col {
-    padding: 56px 0 56px 48px;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    justify-content: center;
-  }
-
-  .hero-stat-box {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 24px 28px;
-    border: 3px solid #333;
-    background: #111;
-    width: fit-content;
-  }
-
-  .stat-before, .stat-after {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .stat-big {
-    font-size: 40px;
-    font-weight: 800;
-    color: #555;
-    line-height: 1;
-    text-decoration: line-through;
-  }
-
-  .stat-big.yellow {
-    color: #FFE600;
-    text-decoration: none;
-  }
-
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #555;
-  }
-
-  .stat-arrow {
-    font-size: 32px;
-    font-weight: 800;
-    color: #FFE600;
-  }
-
   .hero-desc {
     font-size: 17px;
     color: #aaa;
     line-height: 1.7;
-    max-width: 440px;
+    max-width: 420px;
   }
 
   .hero-desc strong { color: #fff; }
@@ -236,14 +272,12 @@
     gap: 14px;
   }
 
-  .proof-avatars {
-    display: flex;
-  }
+  .proof-avatars { display: flex; }
 
   .avatar {
     width: 34px;
     height: 34px;
-    background: #333;
+    background: #222;
     border: 2px solid #FFE600;
     border-radius: 50%;
     display: flex;
@@ -255,19 +289,279 @@
     color: #FFE600;
     margin-left: -8px;
   }
-
   .avatar:first-child { margin-left: 0; }
 
   .proof-text {
     font-size: 13px;
-    color: #666;
+    color: #555;
     font-family: 'DM Mono', monospace;
+  }
+
+  /* ─── Right col ───────────────────────── */
+  .hero-right {
+    position: relative;
+    padding: 40px 0 40px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Decorative elements */
+  .hero-deco-star {
+    position: absolute;
+    font-size: 28px;
+    color: #FFE600;
+    animation: spin-slow 8s linear infinite;
+    z-index: 2;
+  }
+  .s1 { top: 32px; right: 20px; font-size: 36px; }
+  .s2 { bottom: 48px; left: 0; font-size: 20px; color: #00C8B8; animation-direction: reverse; }
+
+  .hero-deco-dot {
+    position: absolute;
+    border: 3px solid #333;
+    border-radius: 50%;
+  }
+  .d1 { width: 64px; height: 64px; top: 10px; left: -8px; }
+  .d2 { width: 32px; height: 32px; bottom: 24px; right: 8px; background: #FF5757; border-color: #FF5757; }
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  /* ─── App mockup ──────────────────────── */
+  .app-mockup {
+    border: 3px solid #333;
+    box-shadow: 10px 10px 0 #FFE600;
+    width: 100%;
+    max-width: 520px;
+    background: #111;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mockup-bar {
+    background: #1a1a1a;
+    border-bottom: 3px solid #333;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mockup-dots { display: flex; gap: 6px; }
+  .mdot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .mdot.red    { background: #FF5757; }
+  .mdot.yellow { background: #FFE600; }
+  .mdot.green  { background: #00C8B8; }
+
+  .mockup-url {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #444;
+    flex: 1;
+    text-align: center;
+  }
+
+  .mockup-body { padding: 16px; }
+
+  .mockup-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #222;
+  }
+
+  .mockup-brand-chip {
+    width: 28px;
+    height: 28px;
+    background: #FFE600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: #0D0D0D;
+    flex-shrink: 0;
+  }
+
+  .mockup-team {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #666;
+    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .mockup-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #00C8B8;
+  }
+
+  /* ─── Mockup table ────────────────────── */
+  .mockup-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 2px solid #222;
+    margin-bottom: 12px;
+  }
+
+  .mockup-thead {
+    display: grid;
+    grid-template-columns: 1fr 40px 52px 56px 56px;
+    padding: 7px 10px;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #555;
+    gap: 8px;
+  }
+
+  .mockup-row {
+    display: grid;
+    grid-template-columns: 1fr 40px 52px 56px 56px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #1e1e1e;
+    align-items: center;
+    gap: 8px;
+    background: #111;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #aaa;
+  }
+  .mockup-row:last-child { border-bottom: none; }
+
+  .mockup-row.row-hi { background: #1a1a00; }
+  .mockup-row.row-cyan { background: #001a19; }
+  .mockup-row.row-muted { opacity: 0.5; }
+
+  .mockup-row .num {
+    color: #FFE600;
+    font-weight: 500;
+  }
+
+  .talla {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 6px;
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
+  .talla-s   { background: #222; color: #aaa; border: 1px solid #333; }
+  .talla-m   { background: #002a29; color: #00C8B8; border: 1px solid #00C8B8; }
+  .talla-l   { background: #2a2600; color: #FFE600; border: 1px solid #FFE600; }
+  .talla-xl  { background: #2a0000; color: #FF5757; border: 1px solid #FF5757; }
+  .talla-xxl { background: #1a001a; color: #cc88ff; border: 1px solid #cc88ff; }
+
+  .mockup-row .dim {
+    font-size: 11px;
+    color: #666;
+  }
+
+  /* ─── Mockup footer row ───────────────── */
+  .mockup-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mockup-count-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 2px solid #222;
+    padding: 6px 12px;
+    background: #1a1a1a;
+  }
+
+  .mockup-count-chip.chip-cyan { border-color: #00C8B8; }
+
+  .count-num {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .chip-cyan .count-num { color: #00C8B8; }
+
+  .count-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .mockup-export-btn {
+    margin-left: auto;
+    background: #FFE600;
+    color: #0D0D0D;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    padding: 10px 16px;
+    border: 2px solid #FFE600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ─── Stat badge (floating below mockup) ─ */
+  .hero-stat-badge {
+    position: absolute;
+    bottom: 24px;
+    left: -16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #FFFCF0;
+    border: 3px solid #0D0D0D;
+    box-shadow: 5px 5px 0 #FFE600;
+    padding: 14px 20px;
+    z-index: 3;
+  }
+
+  .stat-badge-before {
+    font-size: 22px;
+    font-weight: 800;
+    color: #999;
+    text-decoration: line-through;
+    line-height: 1;
+  }
+
+  .stat-badge-arrow {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0D0D0D;
+  }
+
+  .stat-badge-after {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0D0D0D;
+    line-height: 1;
   }
 
   /* ─── Deco strip ──────────────────────── */
   .hero-deco-strip {
     display: flex;
-    border-top: 3px solid #333;
+    border-top: 3px solid #222;
+    margin-top: 0;
   }
 
   .deco-block {
@@ -279,40 +573,49 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     text-align: center;
-    border-right: 3px solid #333;
+    border-right: 3px solid #222;
   }
-
   .deco-block:last-child { border-right: none; }
 
   .deco-yellow { background: #FFE600; color: #0D0D0D; }
   .deco-black  { background: #1a1a1a; color: #fff; }
-  .deco-green  { background: #00CC88; color: #0D0D0D; }
+  .deco-cyan   { background: #00C8B8; color: #0D0D0D; }
   .deco-white  { background: #2a2a2a; color: #ccc; }
-  .deco-red    { background: #FF3B3B; color: #fff; }
+  .deco-coral  { background: #FF5757; color: #fff; }
 
   /* ─── Responsive ──────────────────────── */
-  @media (max-width: 900px) {
-    .hero-headline-block {
+  @media (max-width: 1000px) {
+    .hero-body {
       grid-template-columns: 1fr;
+      gap: 0;
     }
-    .hero-h1 {
-      border-right: none;
-      border-bottom: 3px solid #333;
+    .hero-left {
       padding: 48px 0 32px;
-      font-size: clamp(56px, 12vw, 96px);
+      border-bottom: 3px solid #222;
     }
-    .hero-right-col {
-      padding: 40px 0;
+    .hero-right {
+      padding: 40px 0 48px;
+      justify-content: flex-start;
     }
-    .hero-deco-strip { flex-wrap: wrap; }
-    .deco-block { flex: 1 0 33%; border-bottom: 3px solid #333; }
+    .hero-stat-badge {
+      position: static;
+      align-self: flex-start;
+      margin-top: 16px;
+    }
+    .hero-right { flex-direction: column; align-items: flex-start; }
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 700px) {
     .hero-topbar { padding: 12px 20px; }
     .hero-topbar-note { display: none; }
-    .hero-headline-block { padding: 0 20px; }
+    .hero-body { padding: 0 20px; }
     .hero-h1 { letter-spacing: -2px; }
     .hero-deco-strip { display: none; }
+    .mockup-thead span:nth-child(5),
+    .mockup-row  span:nth-child(5) { display: none; }
+    .mockup-thead,
+    .mockup-row {
+      grid-template-columns: 1fr 36px 48px 50px;
+    }
   }
 </style>

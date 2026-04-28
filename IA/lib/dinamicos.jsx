@@ -130,7 +130,9 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
     // ── ESCUDO ──────────────────────────────────────────────
     // Item genérico ESCUDO en piezas FRENTE o ESPALDA
-    var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+    var grupoEscudo = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo)
+                   || findItemByNameRecursivo(dinamico, CONFIG.itemEscudo);
+    var _ladoEscudoF = null; // se captura para que LOGO_MARCA vaya al lado opuesto
 
     if (grupoEscudo) {
         var sufEscudo    = (nombrePieza === "ESPALDA") ? "_E" : "_F";
@@ -157,7 +159,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 }
                 var escudoMarginLat = parseFloat(jugador.ESCUDO_F_MARGIN_LAT);
                 if (!isNaN(escudoMarginLat) && escudoMarginLat >= 0) {
-                    posicionarItemDesdeLatMasCercano(
+                    _ladoEscudoF = posicionarItemDesdeLatMasCercano(
                         grupoEscudo, grupoCopia,
                         escudoMarginLat,
                         jugador.NOMBRE, nombrePieza, "ESCUDO_F"
@@ -400,7 +402,8 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
     // ── ESCUDO + SPONSOR_SECUNDARIO en MANGA ─────────────────
     if (nombrePieza === "MANGA_IZQ" || nombrePieza === "MANGA_DER") {
         var sufManga = (nombrePieza === "MANGA_IZQ") ? "IZQ" : "DER";
-        var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo);
+        var grupoEscudoManga           = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo)
+                                       || findItemByNameRecursivo(dinamico, CONFIG.itemEscudo);
         var itemSponsorSecundarioManga = findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO");
 
         // 1. Escalar SPONSOR_SECUNDARIO
@@ -439,11 +442,20 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
 
         // 3. Posicionar verticalmente y centrar horizontalmente (independiente por elemento)
         var estaticManga = findGroupByNameRecursivo(grupoCopia, "ESTATICO");
-        var mangaBounds  = estaticManga ? estaticManga.geometricBounds : grupoCopia.geometricBounds;
+        var mangaBounds  = getEstaticoRefBounds(estaticManga, grupoCopia.geometricBounds);
         var mangaBottom  = mangaBounds[3];
         var mangaLeft    = mangaBounds[0];
         var mangaRight   = mangaBounds[2];
         var mangaCentroX = (mangaLeft + mangaRight) / 2;
+
+        Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+            ": DIAG MANGA ref=" + (estaticManga ? "ESTATICO" : "grupoCopia") +
+            " L=" + ptToCm(mangaLeft).toFixed(4) + "cm" +
+            " T=" + ptToCm(mangaBounds[1]).toFixed(4) + "cm" +
+            " R=" + ptToCm(mangaRight).toFixed(4) + "cm" +
+            " B=" + ptToCm(mangaBottom).toFixed(4) + "cm" +
+            " W=" + ptToCm(Math.abs(mangaRight-mangaLeft)).toFixed(4) + "cm" +
+            " H=" + ptToCm(Math.abs(mangaBounds[1]-mangaBottom)).toFixed(4) + "cm");
 
         if (itemSponsorSecundarioManga) {
             var ssmMarginInf = parseFloat(jugador["SPONSOR_SECUNDARIO_M_" + sufManga + "_MARGIN_INF"]);
@@ -472,14 +484,40 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
         }
 
         // 4. Posicionar NUMERO (manga) desde el borde inferior
+        // NUMERO es un Area TextFrame: el borde geométrico incluye espacio vacío debajo
+        // del glifo. Usamos visual bounds (outlines) para saber dónde está el glifo real
+        // y posicionamos con .top (documento-coords), no translate() — translate opera
+        // en coordenadas locales del grupo escalado (DINAMICO) y aplica factor incorrecto.
         if (itemNumero && jugador.TIENE_NUMERO !== "NO" && llevaNumeroEnEstaPieza) {
             var numMangaMarginInf = parseFloat(jugador["NUMERO_M_" + sufManga + "_MARGIN_INF"]);
             if (!isNaN(numMangaMarginInf) && numMangaMarginInf >= 0) {
-                var numMBounds = itemNumero.geometricBounds;
-                var numMAltura = Math.abs(numMBounds[1] - numMBounds[3]);
-                var numMAncho  = Math.abs(numMBounds[2] - numMBounds[0]);
-                itemNumero.top  = mangaBottom + cmToPt(numMangaMarginInf) + numMAltura;
+                var numMBounds     = itemNumero.geometricBounds;
+                var numMAncho      = Math.abs(numMBounds[2] - numMBounds[0]);
+                var numTargetBot   = mangaBottom + cmToPt(numMangaMarginInf);
+
+                // Obtener borde inferior VISUAL del glifo para alinear correctamente
+                var numVB = getTextVisualBounds(itemNumero);
+                var numVisualBot = numVB ? numVB[3] : numMBounds[3];
+
+                Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                    ": DIAG NUMERO geomTop=" + ptToCm(numMBounds[1]).toFixed(4) + "cm" +
+                    " geomBot=" + ptToCm(numMBounds[3]).toFixed(4) + "cm" +
+                    " visualBot=" + ptToCm(numVisualBot).toFixed(4) + "cm" +
+                    " targetBot=" + ptToCm(numTargetBot).toFixed(4) + "cm");
+
+                // .top es geomTop; queremos: visualBot + delta = targetBot
+                // → nuevo .top = geomTop + (targetBot - visualBot)
+                var numTopNuevo = numMBounds[1] + (numTargetBot - numVisualBot);
+                itemNumero.top  = numTopNuevo;
                 itemNumero.left = mangaCentroX - (numMAncho / 2);
+
+                var numMBoundsPost = itemNumero.geometricBounds;
+                Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                    ": DIAG NUMERO POST" +
+                    " geomTop=" + ptToCm(numMBoundsPost[1]).toFixed(4) + "cm" +
+                    " geomBot=" + ptToCm(numMBoundsPost[3]).toFixed(4) + "cm" +
+                    " distBotManga=" + ptToCm(numMBoundsPost[3] - mangaBottom).toFixed(4) + "cm");
+
                 Log.ok(nombrePieza + " | " + jugador.NOMBRE +
                        ": NUMERO (manga) posicionado (inf:" + numMangaMarginInf.toFixed(1) + "cm)");
             }
@@ -503,6 +541,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador["SPONSOR_PRINCIPAL" + spSufijo + "_REF"],
                 nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL"
             );
+            centrarHorizontalmente(itemSponsorPrincipal, grupoCopia);
             if (nombrePieza === "FRENTE") {
                 var spMarginSup = parseFloat(jugador.SPONSOR_PRINCIPAL_F_MARGIN_SUP);
                 if (!isNaN(spMarginSup) && spMarginSup >= 0) {
@@ -583,6 +622,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 jugador.ETIQUETA_TOP_REF,
                 nombrePieza + " | " + jugador.NOMBRE + ": ETIQUETA_TOP"
             );
+            centrarHorizontalmente(itemEtiquetaTop, grupoCopia);
             var etqTopMarginSup = parseFloat(jugador.ETIQUETA_TOP_MARGIN_SUP);
             if (!isNaN(etqTopMarginSup) && etqTopMarginSup >= 0) {
                 posicionarItemDesdeTop(
@@ -619,10 +659,19 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             }
             var logoMarginLat = parseFloat(jugador.LOGO_MARCA_MARGIN_LAT);
             if (!isNaN(logoMarginLat) && logoMarginLat >= 0) {
+                // LOGO_MARCA va al lado opuesto del ESCUDO (si ESCUDO fue posicionado).
+                // Si no hay ESCUDO, auto-detecta por posición del item.
+                var _logoLadoOpuesto = (_ladoEscudoF === "IZQ") ? "DER"
+                                     : (_ladoEscudoF === "DER") ? "IZQ"
+                                     : null;
+                if (_logoLadoOpuesto) {
+                    Log._linea("-----", "LOGO_MARCA: lado opuesto a ESCUDO (" + _ladoEscudoF + ") → forzando " + _logoLadoOpuesto);
+                }
                 posicionarItemDesdeLatMasCercano(
                     itemLogoMarca, grupoCopia,
                     logoMarginLat,
-                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
+                    jugador.NOMBRE, nombrePieza, "LOGO_MARCA",
+                    _logoLadoOpuesto
                 );
             }
         }
@@ -745,7 +794,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var lineaInfAlto  = parseFloat(jugador["MANGA_" + sufMangaL + "_LINEA_INF_ALTO"]);
             var lineaInfRef   = trim((jugador["MANGA_" + sufMangaL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
             procesarLineaMangaInf(grupoLineaInf, lineaInfAncho, lineaInfAlto, lineaInfRef,
-                                  jugador.NOMBRE, nombrePieza, factorPieza);
+                                  jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
         }
 
         // ── LINEAS ADIDAS (manga ranglan) ─────────────────────
@@ -765,6 +814,46 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                     grupoCopia, jugador.NOMBRE, nombrePieza
                 );
             }
+        }
+
+        // ── POST MANGA: dump final positions of all line items ──
+        var _pIzq = findItemByNameRecursivo(dinamico, "MANGA_LINEA_IZQ");
+        var _pDer = findItemByNameRecursivo(dinamico, "MANGA_LINEA_DER");
+        var _pInf = findItemByNameRecursivo(dinamico, "MANGA_LINEA_INF");
+        if (_pIzq) {
+            var _bIzq = _pIzq.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_IZQ L=" + ptToCm(_bIzq[0]).toFixed(3) +
+                " T=" + ptToCm(_bIzq[1]).toFixed(3) +
+                " R=" + ptToCm(_bIzq[2]).toFixed(3) +
+                " B=" + ptToCm(_bIzq[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bIzq[2]-_bIzq[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bIzq[1]-_bIzq[3])).toFixed(3) +
+                " clipped=" + (typeof _pIzq.clipped !== "undefined" ? (_pIzq.clipped ? "SI" : "NO") : "n/a") +
+                " hidden=" + (_pIzq.hidden ? "SI" : "NO"));
+        }
+        if (_pDer) {
+            var _bDer = _pDer.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_DER L=" + ptToCm(_bDer[0]).toFixed(3) +
+                " T=" + ptToCm(_bDer[1]).toFixed(3) +
+                " R=" + ptToCm(_bDer[2]).toFixed(3) +
+                " B=" + ptToCm(_bDer[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bDer[2]-_bDer[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bDer[1]-_bDer[3])).toFixed(3) +
+                " clipped=" + (typeof _pDer.clipped !== "undefined" ? (_pDer.clipped ? "SI" : "NO") : "n/a") +
+                " hidden=" + (_pDer.hidden ? "SI" : "NO"));
+        }
+        if (_pInf) {
+            var _bInf = _pInf.geometricBounds;
+            Log._linea("-----", nombrePieza + " | " + jugador.NOMBRE +
+                ": POST LINEA_INF L=" + ptToCm(_bInf[0]).toFixed(3) +
+                " T=" + ptToCm(_bInf[1]).toFixed(3) +
+                " R=" + ptToCm(_bInf[2]).toFixed(3) +
+                " B=" + ptToCm(_bInf[3]).toFixed(3) +
+                " W=" + ptToCm(Math.abs(_bInf[2]-_bInf[0])).toFixed(3) +
+                " H=" + ptToCm(Math.abs(_bInf[1]-_bInf[3])).toFixed(3) +
+                " hidden=" + (_pInf.hidden ? "SI" : "NO"));
         }
     }
 }

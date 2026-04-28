@@ -1,11 +1,12 @@
 // ============================================================
 //  modules/teams/TeamsScreen.tsx — Lista y gestión de equipos
 // ============================================================
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTeamStore } from '../../store/useTeamStore';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
+import { usePermission } from '../../hooks/usePermission';
 import type { TeamEntry } from '../../types';
 
 interface Props {
@@ -17,11 +18,34 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function exportSummary(entry: TeamEntry): string {
-  const count = Object.keys(entry.exportHistory).length;
-  if (count === 0) return 'Sin exportaciones';
-  const tallas = Object.keys(entry.exportHistory).join(', ');
-  return `${count} talla${count !== 1 ? 's' : ''} exportadas: ${tallas}`;
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2)  return 'ahora';
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `hace ${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'ayer';
+  if (days < 30)  return `hace ${days} días`;
+  return `hace ${Math.floor(days / 30)} mes${Math.floor(days / 30) > 1 ? 'es' : ''}`;
+}
+
+function getConfiguredCount(entry: TeamEntry): number {
+  return entry.tallas.filter(t => {
+    const rules = entry.tallaRules[t];
+    if (!rules) return false;
+    return Object.values(rules).some(v => v === 'SI');
+  }).length;
+}
+
+function lastExportInfo(entry: TeamEntry): { relative: string; full: string; tallas: string } | null {
+  const entries = Object.entries(entry.exportHistory);
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => new Date(b[1].exportedAt).getTime() - new Date(a[1].exportedAt).getTime());
+  const [, { exportedAt }] = entries[0];
+  const tallas = entries.map(([t]) => t).join(', ');
+  return { relative: formatRelative(exportedAt), full: formatDate(exportedAt), tallas };
 }
 
 const EMPTY_ENTRY: TeamEntry = {
@@ -32,13 +56,15 @@ const EMPTY_ENTRY: TeamEntry = {
 
 export function TeamsScreen({ onToast }: Props) {
   const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam } = useTeamsStore();
-  const { setScreen, loadFromEntry } = useTeamStore();
+  const { loadFromEntry } = useTeamStore();
+  const canManageSettings = usePermission('settings:manage');
 
-  // Paginación
-  const PAGE_SIZE = 9;
+  // Paginación — active team shown as featured, paginate the rest
+  const PAGE_SIZE = 16;
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(teams.length / PAGE_SIZE);
-  const pagedTeams = teams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const otherTeams = teams.filter(t => t.id !== activeTeamId);
+  const totalPages = Math.ceil(otherTeams.length / PAGE_SIZE);
+  const pagedTeams = otherTeams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Estado del modal "nuevo equipo"
   const [showNewModal, setShowNewModal] = useState(false);
@@ -146,16 +172,89 @@ export function TeamsScreen({ onToast }: Props) {
         </div>
       ) : (
         <>
+        {/* ── Featured active team ───────────────────────────── */}
+        {(() => {
+          const featured = teams.find(t => t.id === activeTeamId);
+          if (!featured) return null;
+          const isEmpty = featured.players.length === 0;
+          return (
+            <div className="team-card-featured">
+              <div className="team-card-featured-info">
+                <div className="team-card-featured-label">▶ EQUIPO ACTIVO</div>
+                <div className="team-card-featured-name">{featured.nombre || 'Sin nombre'}</div>
+                <div className="team-card-featured-meta">
+                  <span><strong>{featured.players.length}</strong> jugadores · <strong>{featured.tallas.length}</strong> tallas{featured.tallas.length > 0 ? `: ${featured.tallas.join(', ')}` : ''}</span>
+                  {!isEmpty && (() => {
+                    const exp = lastExportInfo(featured);
+                    return exp
+                      ? <span title={exp.full}>✓ exportado {exp.relative} · {exp.tallas}</span>
+                      : <span>Sin exportaciones</span>;
+                  })()}
+                </div>
+                {featured.tallas.length > 0 && (() => {
+                  const configured = getConfiguredCount(featured);
+                  const pct = Math.round((configured / featured.tallas.length) * 100);
+                  return (
+                    <div className="team-card-progress">
+                      <div className="team-card-progress-bar" style={{ width: `${pct}%` }} />
+                      <span className="team-card-progress-label">{configured}/{featured.tallas.length} tallas configuradas</span>
+                    </div>
+                  );
+                })()}
+                <div className="team-card-featured-dates">
+                  Modificado: {formatDate(featured.updatedAt)}
+                </div>
+              </div>
+              <div className="team-card-featured-actions">
+                {isEmpty ? (
+                  <button className="btn btn-primary btn-sm" onClick={() => handleLoadPlayers(featured)}>
+                    📂 CARGAR JUGADORES
+                  </button>
+                ) : (
+                  <>
+                    <button className="btn btn-primary btn-sm" onClick={() => handleOpen(featured)}>
+                      ✏ CONTINUAR
+                    </button>
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(featured)}>
+                      🔄 RE-CARGAR
+                    </button>
+                  </>
+                )}
+                <button
+                  className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === featured.id ? 'is-base' : ''}`}
+                  style={{ color: baseTeamId === featured.id ? '#f5a623' : undefined }}
+                  title={baseTeamId === featured.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
+                  onClick={() => setBaseTeam(featured.id)}
+                >
+                  {baseTeamId === featured.id ? '★' : '☆'}
+                </button>
+                {canManageSettings && (
+                  <ConfirmButton
+                    className="btn btn-ghost btn-sm btn-danger"
+                    title="Eliminar equipo"
+                    onConfirm={() => handleDelete(featured.id)}
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── Rest of teams ──────────────────────────────────── */}
+        {pagedTeams.length > 0 && (
         <div className="teams-grid">
-          {pagedTeams.map(entry => {
-            const isActive = entry.id === activeTeamId;
+          {pagedTeams.map((entry, idx) => {
             const isEmpty = entry.players.length === 0;
+            const configured = getConfiguredCount(entry);
             return (
-              <div key={entry.id} className={`team-card ${isActive ? 'active' : ''} ${isEmpty ? 'empty' : ''}`}>
+              <div
+                key={entry.id}
+                className={`team-card stagger-item ${isEmpty ? 'empty' : ''}`}
+                style={{ '--i': idx } as CSSProperties}
+              >
                 <div className="team-card-header">
                   <div className="team-card-name">{entry.nombre || 'Sin nombre'}</div>
                   <div style={{ display: 'flex', gap: '0.3rem' }}>
-                    {isActive && <span className="team-active-badge">ACTIVO</span>}
                     {isEmpty && <span className="team-empty-badge">VACÍO</span>}
                   </div>
                 </div>
@@ -163,7 +262,16 @@ export function TeamsScreen({ onToast }: Props) {
                   <span>{entry.players.length} jugadores</span>
                   {!isEmpty && <span>{entry.tallas.length} tallas: {entry.tallas.join(', ')}</span>}
                 </div>
-                {!isEmpty && <div className="team-card-export">{exportSummary(entry)}</div>}
+                {entry.tallas.length > 0 && (
+                  <div className="team-card-progress">
+                    <div className="team-card-progress-bar" style={{ width: `${Math.round((configured / entry.tallas.length) * 100)}%` }} />
+                    <span className="team-card-progress-label">{configured}/{entry.tallas.length} tallas configuradas</span>
+                  </div>
+                )}
+                {!isEmpty && (() => {
+                  const exp = lastExportInfo(entry);
+                  return <div className="team-card-export">{exp ? `✓ ${exp.relative} · ${exp.tallas}` : 'Sin exportaciones'}</div>;
+                })()}
                 <div className="team-card-dates">
                   <span>Creado: {formatDate(entry.createdAt)}</span>
                   <span>Modificado: {formatDate(entry.updatedAt)}</span>
@@ -175,13 +283,13 @@ export function TeamsScreen({ onToast }: Props) {
                         📂 CARGAR JUGADORES
                       </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => handleOpen(entry)}>
-                        {isActive ? '✏ CONTINUAR' : '▶ ABRIR'}
+                        ▶ ABRIR
                       </button>
                     </>
                   ) : (
                     <>
                       <button className="btn btn-primary btn-sm" onClick={() => handleOpen(entry)}>
-                        {isActive ? '✏ CONTINUAR' : '▶ ABRIR'}
+                        ▶ ABRIR
                       </button>
                       <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(entry)}>
                         🔄 RE-CARGAR
@@ -195,16 +303,19 @@ export function TeamsScreen({ onToast }: Props) {
                   >
                     {baseTeamId === entry.id ? '★' : '☆'}
                   </button>
-                  <ConfirmButton
-                    className="btn btn-ghost btn-sm btn-danger"
-                    title="Eliminar equipo"
-                    onConfirm={() => handleDelete(entry.id)}
-                  />
+                  {canManageSettings && (
+                    <ConfirmButton
+                      className="btn btn-ghost btn-sm btn-danger"
+                      title="Eliminar equipo"
+                      onConfirm={() => handleDelete(entry.id)}
+                    />
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
+        )}
         {totalPages > 1 && (
           <div className="teams-pagination">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
@@ -222,15 +333,6 @@ export function TeamsScreen({ onToast }: Props) {
       )}
 
       <div className="teams-footer">
-        {teams.length > 0 && (
-          <button className="btn btn-ghost btn-sm" onClick={() => {
-            const active = useTeamsStore.getState().getActiveTeam();
-            if (active && active.players.length > 0) { saveActiveTeam(); setScreen('configure'); }
-            else onToast('No hay equipo activo con jugadores', 'error');
-          }}>
-            ← VOLVER AL EQUIPO ACTIVO
-          </button>
-        )}
       </div>
 
       {/* ── Modal nuevo equipo ─────────────────────────────── */}

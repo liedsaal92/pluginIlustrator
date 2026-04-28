@@ -1,20 +1,19 @@
 // ============================================================
 //  modules/settings/TallasSettingsTab.tsx
-//  Tabla CRUD de tallas filtrada por cliente
+//  Tabla CRUD de tallas filtrada por cliente + molde
 // ============================================================
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
-const FIELDS: { key: keyof TallaDims; label: string; ranglan?: boolean }[] = [
-  { key: 'ALTO',               label: 'ALTO'              },
-  { key: 'ANCHO',              label: 'ANCHO'             },
-  { key: 'MANGA_ANCHO',        label: 'MANGA ANCHO'       },
-  { key: 'MANGA_ALTO',         label: 'MANGA ALTO'        },
-  { key: 'MANGA_RANGLAN_ANCHO', label: 'RANGLAN ANCHO', ranglan: true },
-  { key: 'MANGA_RANGLAN_ALTO',  label: 'RANGLAN ALTO',  ranglan: true },
+const FIELDS: { key: keyof TallaDims; label: string }[] = [
+  { key: 'ALTO',        label: 'ALTO'        },
+  { key: 'ANCHO',       label: 'ANCHO'       },
+  { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
+  { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
 ];
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
@@ -26,16 +25,29 @@ function tallaColor(talla: string): string {
   return colorMap[talla];
 }
 
+interface Props {
+  onToast: (msg: string, type: 'ok' | 'error') => void;
+}
 
-export function TallasSettingsTab() {
+export function TallasSettingsTab({ onToast }: Props) {
   const { clientes } = useClientesStore();
+  const { moldes } = useMoldesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
+  const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
   const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [dimSaved, setDimSaved] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const tallas = clienteId ? getTallas(clienteId) : {};
+  function flashSaved() {
+    setDimSaved(true);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => setDimSaved(false), 1800);
+  }
+
+  const tallas = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
   const allKeys = Object.keys(tallas).sort((a, b) => {
     const numA = parseInt(a), numB = parseInt(b);
     return numA !== numB ? numA - numB : a.localeCompare(b);
@@ -46,16 +58,18 @@ export function TallasSettingsTab() {
 
   function handleAdd() {
     const t = newTalla.trim().toUpperCase();
-    if (!t || !clienteId) return;
-    addTalla(clienteId, t);
+    if (!t || !clienteId || !moldeId) return;
+    addTalla(clienteId, moldeId, t);
     setNewTalla('');
+    onToast(`Talla "${t}" agregada`, 'ok');
   }
 
   function handleReset() {
-    if (!clienteId) return;
+    if (!clienteId || !moldeId) return;
     if (!confirmReset) { setConfirmReset(true); return; }
-    initClienteFromDefault(clienteId);
+    initClienteFromDefault(clienteId, moldeId);
     setConfirmReset(false);
+    onToast('Tallas restablecidas a valores por defecto', 'ok');
   }
 
   if (clientes.length === 0) {
@@ -68,10 +82,20 @@ export function TallasSettingsTab() {
     );
   }
 
+  if (moldes.length === 0) {
+    return (
+      <div className="tallas-tab">
+        <div className="tallas-no-clientes">
+          No hay moldes registrados. Creá un molde en la pestaña <strong>MOLDES</strong> primero.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="tallas-tab">
 
-      {/* ── Barra de controles unificada ── */}
+      {/* ── Barra de controles ── */}
       <div className="tallas-toolbar">
 
         <div className="tallas-toolbar-group">
@@ -90,7 +114,23 @@ export function TallasSettingsTab() {
           </select>
         </div>
 
-        {clienteId && (
+        <div className="tallas-toolbar-sep" />
+
+        <div className="tallas-toolbar-group">
+          <span className="tallas-toolbar-label">MOLDE</span>
+          <select
+            className="tallas-cliente-select"
+            value={moldeId}
+            onChange={e => { setMoldeId(e.target.value); setConfirmReset(false); }}
+          >
+            <option value="">— Seleccionar —</option>
+            {moldes.map(m => (
+              <option key={m.id} value={m.id}>{m.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        {clienteId && moldeId && (
           <>
             <div className="tallas-toolbar-sep" />
             <input
@@ -113,16 +153,18 @@ export function TallasSettingsTab() {
             >
               {confirmReset ? '¿CONFIRMAR RESET?' : '↺ RESTABLECER DEFAULTS'}
             </button>
+            <div className="tallas-toolbar-sep" />
+            <span className={`tallas-dim-saved ${dimSaved ? 'visible' : ''}`}>✓ GUARDADO</span>
           </>
         )}
 
       </div>
 
-      {clienteId && (
+      {clienteId && moldeId && (
         <>
           {allKeys.length === 0 ? (
             <p className="tallas-hint" style={{ textAlign: 'center' }}>
-              Sin tallas — agregá una o usá ↺ RESTABLECER DEFAULTS
+              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ RESTABLECER DEFAULTS
             </p>
           ) : (
             <div className="tallas-generos">
@@ -141,7 +183,7 @@ export function TallasSettingsTab() {
                           <tr>
                             <th className="col-talla">TALLA</th>
                             {FIELDS.map(f => (
-                              <th key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
+                              <th key={f.key} className="col-dim">
                                 {f.label} <span className="unit">cm</span>
                               </th>
                             ))}
@@ -155,15 +197,14 @@ export function TallasSettingsTab() {
                                 <span className="talla-badge" style={{ background: tallaColor(talla) }}>{talla}</span>
                               </td>
                               {FIELDS.map(f => (
-                                <td key={f.key} className={`col-dim${f.ranglan ? ' col-dim-ranglan' : ''}`}>
+                                <td key={f.key} className="col-dim">
                                   <input
                                     className="input-dim"
                                     type="number"
                                     step="0.01"
                                     min="0"
                                     value={tallas[talla][f.key] ?? ''}
-                                    placeholder={f.ranglan ? '—' : ''}
-                                    onChange={e => setDim(clienteId, talla, f.key, e.target.value)}
+                                    onChange={e => { setDim(clienteId, moldeId, talla, f.key, e.target.value); flashSaved(); }}
                                   />
                                 </td>
                               ))}
@@ -171,7 +212,7 @@ export function TallasSettingsTab() {
                                 <ConfirmButton
                                   className="btn-del-talla"
                                   title="Eliminar talla"
-                                  onConfirm={() => removeTalla(clienteId, talla)}
+                                  onConfirm={() => removeTalla(clienteId, moldeId, talla)}
                                 />
                               </td>
                             </tr>
@@ -186,8 +227,7 @@ export function TallasSettingsTab() {
           )}
 
           <p className="tallas-hint">
-            {allKeys.length} tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong>.
-            Los valores se aplican al exportar el CSV según el cliente seleccionado.
+            {allKeys.length} tallas · <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> · <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong>
           </p>
         </>
       )}
@@ -195,5 +235,4 @@ export function TallasSettingsTab() {
   );
 }
 
-// También exportamos el valor por defecto de TALLAS_DEFAULT para referencia
 export { TALLAS_DEFAULT };

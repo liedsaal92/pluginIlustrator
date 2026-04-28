@@ -42,6 +42,7 @@ export interface SchemaElement {
   icon: string;
   toggleKey: string | null;
   fields: SchemaField[];
+  group?: string;
 }
 
 export interface SchemaPieza {
@@ -72,8 +73,6 @@ export interface TallaDims {
   ANCHO: string;
   MANGA_ANCHO: string;
   MANGA_ALTO: string;
-  MANGA_RANGLAN_ANCHO: string;
-  MANGA_RANGLAN_ALTO: string;
 }
 
 // ── CLIENTE (costurera) ───────────────────────────────────────
@@ -83,8 +82,14 @@ export interface Cliente {
   casaCosturera: string;
 }
 
+// ── MOLDE (tipo de prenda) ────────────────────────────────────
+export interface Molde {
+  id: string;
+  nombre: string;
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'settings';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings';
 export type ConfigTab = 'rules' | 'players';
-export type SettingsTab = 'clientes' | 'tallas';
+export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

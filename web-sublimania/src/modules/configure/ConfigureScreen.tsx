@@ -2,9 +2,9 @@
 //  modules/configure/ConfigureScreen.tsx
 // ============================================================
 import { useTeamStore } from '../../store/useTeamStore';
-import { saveActiveTeam } from '../../store/useTeamsStore';
 import { GLOBAL_FIELDS, getGeneroTalla, getNumeroTalla } from '../../utils/schema';
 import { useSaveStatus } from '../../components/ui/SaveStatus';
+
 import { RulesTab } from './RulesTab';
 import { PlayerCard } from './PlayerCard';
 import { AddPlayerForm } from './AddPlayerForm';
@@ -18,18 +18,54 @@ export function ConfigureScreen({ onToast }: Props) {
     players, tallas,
     configTab, globalConfig,
     activeTalla,
-    setScreen, setConfigTab, setGlobalConfig,
+    setConfigTab, setGlobalConfig,
   } = useTeamStore();
 
-  const { statusClass, statusContent, handleSaveAndGoTeams } = useSaveStatus();
+  const { statusClass, statusContent } = useSaveStatus();
+
+
+  const primaryField   = GLOBAL_FIELDS[0];          // EQUIPO
+  const secondaryFields = GLOBAL_FIELDS.slice(1);   // NOTAS + future
 
   return (
     <div className="screen configure-screen">
+      <div className="config-sticky-top">
       <div className="config-header">
-        <div className="config-header-left">
-          <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('upload'); }}>← VOLVER</button>
+
+        {/* ── Single row: equipo · notas · save · stats ──── */}
+        <div className="config-header-row">
+          {primaryField && (
+            <div className="config-primary-field">
+              <label className="config-field-label">{primaryField.label.toUpperCase()}</label>
+              <input
+                type="text"
+                className="config-equipo-input"
+                value={globalConfig[primaryField.key]}
+                placeholder={primaryField.placeholder}
+                onChange={e => setGlobalConfig(primaryField.key, e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="config-divider" />
+
+          {secondaryFields.map(f => (
+            <div key={f.key} className="config-secondary-field">
+              <label className="config-field-label">{f.label.toUpperCase()}</label>
+              <input
+                type="text"
+                className="config-notas-input"
+                value={globalConfig[f.key]}
+                placeholder={f.placeholder}
+                onChange={e => setGlobalConfig(f.key, e.target.value)}
+              />
+            </div>
+          ))}
+
+          <div className={statusClass} style={{ marginLeft: 'auto', flexShrink: 0 }}>{statusContent}</div>
+
           <div className="config-stats">
-            <span className="stat-badge stat-players">{players.length} JUGADORES</span>
+            <span className="stat-badge stat-players">{players.length} JUG.</span>
             <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
             {configTab === 'rules' && activeTalla && (
               <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
@@ -37,38 +73,6 @@ export function ConfigureScreen({ onToast }: Props) {
           </div>
         </div>
 
-        <div className="config-global">
-          {GLOBAL_FIELDS.map(f => (
-            <div key={f.key} className="global-field">
-              <label>{f.label.toUpperCase()}</label>
-              <input
-                type="text"
-                className="input-global"
-                value={globalConfig[f.key]}
-                placeholder={f.placeholder}
-                onChange={e => setGlobalConfig(f.key, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="config-header-right">
-          <div className={statusClass}>{statusContent}</div>
-          <div className="config-actions">
-            <button className="btn btn-ghost btn-sm" onClick={handleSaveAndGoTeams} title="Ver todos los equipos">
-              ☰ EQUIPOS
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('export'); }}>
-              EXPORTAR CSV →
-            </button>
-            <button className="btn btn-ghost btn-sm" onClick={() => { saveActiveTeam(); setScreen('settings'); }} title="Configuración">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </button>
-          </div>
-        </div>
       </div>
 
       <div className="config-tabs">
@@ -76,7 +80,7 @@ export function ConfigureScreen({ onToast }: Props) {
           className={`tab-btn ${configTab === 'rules' ? 'active' : ''}`}
           onClick={() => setConfigTab('rules')}
         >
-          ⚙ REGLAS POR TALLA
+          ⚙ REGLAS DE CAMISETAS
         </button>
         <button
           className={`tab-btn ${configTab === 'players' ? 'active' : ''}`}
@@ -85,12 +89,29 @@ export function ConfigureScreen({ onToast }: Props) {
           👤 JUGADORES ({players.length})
         </button>
       </div>
+      </div> {/* end config-sticky-top */}
 
       <div className="config-body">
         {configTab === 'rules' && <RulesTab onToast={onToast} />}
         {configTab === 'players' && (
           <div className="players-layout">
             <AddPlayerForm />
+            {players.length === 0 && (
+              <div className="players-empty-hint">
+                <span className="players-empty-hint-icon">↑</span>
+                <div className="players-empty-hint-body">
+                  <div className="players-empty-hint-title">SIN JUGADORES CARGADOS</div>
+                  <div className="players-empty-hint-text">Agregá jugadores uno por uno con el formulario de arriba, o importá la lista completa desde un Excel.</div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    style={{ marginTop: '0.6rem' }}
+                    onClick={() => useTeamStore.getState().setScreen('upload')}
+                  >
+                    ↑ CARGAR DESDE EXCEL
+                  </button>
+                </div>
+              </div>
+            )}
             {(() => {
               const sorted = [...players.keys()].sort((a, b) => {
                 const ga = getGeneroTalla(players[a].TALLA);

@@ -8,7 +8,9 @@
   --black:  #0D0D0D;
   --yellow: #FFE600;
   --red:    #FF3B3B;
+  --coral:  #FF5757;
   --green:  #00CC88;
+  --cyan:   #00C8B8;
   --blue:   #2B4FFF;
 
   --border-width: 3px;
@@ -60,7 +62,9 @@ ul { list-style: none; }
 
 .tag-yellow { background: var(--yellow); color: var(--black); }
 .tag-red    { background: var(--red);    color: #fff; }
+.tag-coral  { background: var(--coral);  color: #fff; }
 .tag-green  { background: var(--green);  color: var(--black); }
+.tag-cyan   { background: var(--cyan);   color: var(--black); }
 .tag-white  { background: var(--white);  color: var(--black); }
 
 /* ─── Buttons ─────────────────────────── */
@@ -102,6 +106,20 @@ ul { list-style: none; }
   box-shadow: var(--shadow);
 }
 .btn-ghost:hover { background: var(--black); color: var(--yellow); transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+
+.btn-cyan {
+  background: var(--cyan);
+  color: var(--black);
+  box-shadow: var(--shadow);
+}
+.btn-cyan:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+
+.btn-coral {
+  background: var(--coral);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.btn-coral:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
 
 .btn-lg { padding: 20px 40px; font-size: 17px; }
 .btn-sm { padding: 10px 20px; font-size: 13px; }

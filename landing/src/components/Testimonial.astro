@@ -1,0 +1,296 @@
+---
+---
+
+<section class="test-section">
+
+  <div class="test-inner">
+
+    <!-- Left: main quote -->
+    <div class="test-left">
+      <div class="test-quote-mark">❝</div>
+
+      <div class="test-avatar-block">
+        <div class="test-avatar">JR</div>
+        <div class="test-avatar-info">
+          <strong>Juan Rodríguez</strong>
+          <span>Taller Deportivo Tucumán</span>
+        </div>
+      </div>
+
+      <blockquote class="test-quote">
+        Antes tardaba casi 3 horas para armar un equipo de 18 chicos. Con SubliFlow lo hago en 10 minutos. Lo más valioso no es el tiempo — es que ya no me equivoco más en los números ni en las tallas.
+      </blockquote>
+
+      <div class="test-chips">
+        <span class="test-chip">3 hrs → 10 min</span>
+        <span class="test-chip">0 errores de impresión</span>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="test-divider"></div>
+
+    <!-- Right: mini testimonials stack -->
+    <div class="test-right">
+
+      <div class="test-mini-header">
+        <span class="test-tag">Testimonios</span>
+        <p>Lo que dicen los talleres que ya usan SubliFlow</p>
+      </div>
+
+      <div class="test-mini-list">
+
+        <div class="test-mini">
+          <div class="mini-avatar">MP</div>
+          <div class="mini-content">
+            <blockquote>"La configuración de base se reutiliza. El segundo equipo me llevó 5 minutos."</blockquote>
+            <span class="mini-author">Marta Pérez — Confecciones Deportivas MP</span>
+          </div>
+        </div>
+
+        <div class="test-mini">
+          <div class="mini-avatar cyan">LC</div>
+          <div class="mini-content">
+            <blockquote>"El plugin de Illustrator hace todo solo. No puedo creer que no existiera antes."</blockquote>
+            <span class="mini-author">Luis Cano — Studio 9 Uniformes</span>
+          </div>
+        </div>
+
+        <div class="test-mini">
+          <div class="mini-avatar coral">AG</div>
+          <div class="mini-content">
+            <blockquote>"Pasé de 2 equipos por semana a 6. La diferencia es brutal."</blockquote>
+            <span class="mini-author">Ana Gómez — Taller Gómez Sporting</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<style>
+  .test-section {
+    background: #FFE600;
+    border-bottom: 3px solid #0D0D0D;
+  }
+
+  .test-inner {
+    display: grid;
+    grid-template-columns: 1fr 3px 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 480px;
+  }
+
+  /* ─── Left: main quote ────────────────── */
+  .test-left {
+    padding: 64px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    justify-content: center;
+  }
+
+  .test-quote-mark {
+    font-size: 96px;
+    line-height: 0.7;
+    font-weight: 900;
+    color: #0D0D0D;
+    opacity: 0.15;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    margin-bottom: -8px;
+  }
+
+  .test-avatar-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .test-avatar {
+    width: 52px;
+    height: 52px;
+    background: #0D0D0D;
+    border: 3px solid #0D0D0D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: #FFE600;
+    flex-shrink: 0;
+  }
+
+  .test-avatar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .test-avatar-info strong {
+    font-size: 16px;
+    font-weight: 800;
+    color: #0D0D0D;
+  }
+
+  .test-avatar-info span {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .test-quote {
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: 600;
+    line-height: 1.55;
+    color: #0D0D0D;
+    font-style: normal;
+    max-width: 480px;
+  }
+
+  .test-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .test-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 5px 14px;
+    border: 3px solid #0D0D0D;
+    background: #0D0D0D;
+    color: #FFE600;
+  }
+
+  /* ─── Divider ─────────────────────────── */
+  .test-divider {
+    background: #0D0D0D;
+    width: 3px;
+  }
+
+  /* ─── Right: mini testimonials ────────── */
+  .test-right {
+    padding: 64px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .test-mini-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .test-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border: 3px solid #0D0D0D;
+    background: transparent;
+    color: #0D0D0D;
+    width: fit-content;
+  }
+
+  .test-mini-header p {
+    font-size: 14px;
+    color: #555;
+  }
+
+  .test-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 3px solid #0D0D0D;
+  }
+
+  .test-mini {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 24px;
+    border-bottom: 3px solid #0D0D0D;
+    background: #fff;
+  }
+
+  .test-mini:last-child { border-bottom: none; }
+
+  .test-mini:nth-child(even) {
+    background: #FFFCF0;
+  }
+
+  .mini-avatar {
+    width: 36px;
+    height: 36px;
+    background: #0D0D0D;
+    border: 2px solid #0D0D0D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #FFE600;
+    flex-shrink: 0;
+  }
+
+  .mini-avatar.cyan  { background: #00C8B8; color: #0D0D0D; border-color: #00C8B8; }
+  .mini-avatar.coral { background: #FF5757; color: #fff;    border-color: #FF5757; }
+
+  .mini-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mini-content blockquote {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: #0D0D0D;
+    font-style: normal;
+  }
+
+  .mini-author {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Responsive ──────────────────────── */
+  @media (max-width: 900px) {
+    .test-inner {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 3px auto;
+    }
+    .test-divider {
+      width: 100%;
+      height: 3px;
+    }
+    .test-left  { padding: 48px 32px 40px; }
+    .test-right { padding: 40px 32px 56px; }
+  }
+
+  @media (max-width: 600px) {
+    .test-left  { padding: 40px 20px 32px; }
+    .test-right { padding: 32px 20px 48px; }
+    .test-quote { font-size: 18px; }
+  }
+</style>

@@ -1,7 +1,7 @@
 // ============================================================
 //  components/ui/SaveStatus.tsx — Hook de estado de guardado
 // ============================================================
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTeamStore';
 

@@ -27,12 +27,7 @@ export function buildCSV(
     const base = tallaRules[talla] ?? {};
     const override = overrides[idx] ?? {};
     const merged: Record<string, string> = { ...base, ...override };
-    const dims = tallaDims?.[talla] ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '', MANGA_RANGLAN_ANCHO: '', MANGA_RANGLAN_ALTO: '' };
-
-    // Cuando alguna manga es ranglan, usar las dims de ranglan para escalar el molde
-    const esRanglan = merged['MANGA_IZQ_ES_RANGLAN'] === 'SI' || merged['MANGA_DER_ES_RANGLAN'] === 'SI';
-    const mangaAncho = esRanglan && dims.MANGA_RANGLAN_ANCHO ? dims.MANGA_RANGLAN_ANCHO : dims.MANGA_ANCHO;
-    const mangaAlto  = esRanglan && dims.MANGA_RANGLAN_ALTO  ? dims.MANGA_RANGLAN_ALTO  : dims.MANGA_ALTO;
+    const dims = tallaDims?.[talla] ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '' };
 
     const row: Record<string, string> = {
       ...merged,
@@ -43,8 +38,8 @@ export function buildCSV(
       TALLA:           talla,
       ALTO:            dims.ALTO,
       ANCHO:           dims.ANCHO,
-      MANGA_ALTO:      mangaAlto,
-      MANGA_ANCHO:     mangaAncho,
+      MANGA_ALTO:      dims.MANGA_ALTO,
+      MANGA_ANCHO:     dims.MANGA_ANCHO,
       EQUIPO:          globalConfig.EQUIPO    ?? '',
       NOTAS:           globalConfig.NOTAS     ?? '',
     };

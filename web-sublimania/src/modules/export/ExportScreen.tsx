@@ -6,9 +6,25 @@ import { useTeamStore, buildTeamEntryFromWorkingStore } from '../../store/useTea
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
-import { saveActiveTeam } from '../../store/useTeamsStore';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
+
+// Columnas visibles en el preview de tabla
+const PREVIEW_COLS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA', 'ALTO', 'ANCHO', 'MANGA_ALTO', 'MANGA_ANCHO'];
+
+function parseCSVRow(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (const ch of line) {
+    if (ch === '"') { inQuotes = !inQuotes; continue; }
+    if (ch === ',' && !inQuotes) { result.push(current); current = ''; continue; }
+    current += ch;
+  }
+  result.push(current);
+  return result;
+}
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -19,13 +35,31 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 2)  return 'ahora';
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24)  return `hace ${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'ayer';
+  if (days < 30)  return `hace ${days} días`;
+  return `hace ${Math.floor(days / 30)} mes${Math.floor(days / 30) > 1 ? 'es' : ''}`;
+}
+
 export function ExportScreen({ onToast }: Props) {
-  const { players, tallas, tallaRules, overrides, globalConfig, setScreen } = useTeamStore();
+  const { players, tallas, tallaRules, overrides, globalConfig } = useTeamStore();
   const { activeTeamId, getActiveTeam, markExported, saveTeam } = useTeamsStore();
   const { getTallas } = useTallasStore();
   const clientes = useClientesStore(s => s.clientes);
+  const { moldes } = useMoldesStore();
 
   const [clienteId, setClienteId] = useState<string>('');
+  const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
+  const [exportConfirm, setExportConfirm] = useState<{
+    filename: string; tallas: string[]; jugadores: number; at: string;
+  } | null>(null);
 
   const activeTeam = getActiveTeam();
   const teamHistory = activeTeam?.exportHistory ?? {};
@@ -52,7 +86,7 @@ export function ExportScreen({ onToast }: Props) {
 
   const tallasSeleccionadasArr = Array.from(seleccionadas);
 
-  const tallaDims = clienteId ? getTallas(clienteId) : {};
+  const tallaDims = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
 
   const csv = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
@@ -68,8 +102,27 @@ export function ExportScreen({ onToast }: Props) {
     [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
   );
 
-  const preview = previewCSV.split('\r\n').slice(0, 6).join('\n');
   const jugadoresFiltrados = players.filter(p => seleccionadas.has(p.TALLA ?? ''));
+
+  // Historia de exportaciones
+  const historialEntries = tallasConJugadores
+    .map(t => ({ talla: t, count: players.filter(p => p.TALLA === t).length, info: teamHistory[t] ?? null }))
+    .filter(e => e.count > 0);
+  const lastExportTs = Object.values(teamHistory)
+    .map(h => new Date(h.exportedAt).getTime())
+    .sort((a, b) => b - a)[0] ?? null;
+
+  // Parse preview CSV into table rows
+  const { previewHeaders, previewColIndices, previewRows } = useMemo(() => {
+    const lines = previewCSV.split('\r\n').filter(Boolean);
+    if (lines.length < 1) return { previewHeaders: [], previewColIndices: [], previewRows: [] };
+    const allHeaders = parseCSVRow(lines[0]);
+    const indices = PREVIEW_COLS.map(col => allHeaders.indexOf(col)).filter(i => i >= 0);
+    const headers = indices.map(i => allHeaders[i]);
+    const rows = lines.slice(1, 7).map(line => parseCSVRow(line));
+    return { previewHeaders: headers, previewColIndices: indices, previewRows: rows };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewCSV]);
 
   function handleDownload() {
     if (!equipo) {
@@ -102,119 +155,250 @@ export function ExportScreen({ onToast }: Props) {
     }
 
     onToast('CSV descargado — ' + tallasSeleccionadasArr.join(', '), 'ok');
+    setExportConfirm({ filename, tallas: tallasSeleccionadasArr, jugadores: jugadoresFiltrados.length, at: new Date().toISOString() });
     setSeleccionadas(new Set());
   }
+
+  const canDownload = seleccionadas.size > 0 && !!equipo && !!clienteId && !!moldeId;
+  const downloadHint = !equipo ? 'Completá el nombre del equipo'
+    : !clienteId ? 'Seleccioná un cliente'
+    : !moldeId ? 'Seleccioná un molde'
+    : seleccionadas.size === 0 ? 'Seleccioná al menos una talla'
+    : '';
 
   return (
     <div className="screen export-screen">
       <div className="export-header">
-        <button className="btn btn-ghost" onClick={() => { saveActiveTeam(); setScreen('configure'); }}>← VOLVER</button>
-        <h2>EXPORTAR CSV</h2>
-        <button
-          className="btn btn-primary"
-          onClick={handleDownload}
-          disabled={seleccionadas.size === 0 || !equipo || !clienteId}
-          title={!equipo ? 'Completá el nombre del equipo' : !clienteId ? 'Seleccioná un cliente' : seleccionadas.size === 0 ? 'Seleccioná al menos una talla' : ''}
-        >
-          ⬇ DESCARGAR CSV
-        </button>
+        <div className="export-title">
+          <div className="export-title-main">EXPORTAR CSV</div>
+          {equipo && <div className="export-title-team">// {equipo}</div>}
+        </div>
       </div>
 
       {!equipo && (
         <div className="export-warning">
-          ⚠ El campo <strong>EQUIPO</strong> está vacío. Completalo en la pantalla de configuración antes de exportar.
+          ⚠ El campo <strong>EQUIPO</strong> está vacío. Completalo en Configuración antes de exportar.
         </div>
       )}
 
       <div className="export-body">
 
-        {/* ── Selector de cliente ────────────────────────── */}
-        <div className="export-cliente">
-          <div className="export-cliente-label">
-            CLIENTE / COSTURERA <span className="export-required">*requerido</span>
-          </div>
-          {clientes.length === 0 ? (
-            <div className="export-no-clientes">
-              ⚠ Sin clientes registrados — creá uno en <strong>⚙ Configuración → Clientes</strong>
+        {/* ── LEFT: controls ─────────────────────────────── */}
+        <div className="export-controls">
+
+          {/* Cliente */}
+          <div className="export-section">
+            <div className="export-section-label">
+              CLIENTE / COSTURERA <span className="export-required">*</span>
             </div>
-          ) : (
-            <select
-              className="export-cliente-select"
-              value={clienteId}
-              onChange={e => setClienteId(e.target.value)}
-            >
-              <option value="">— Seleccionar cliente —</option>
-              {clientes.map(c => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}{c.casaCosturera ? ` — ${c.casaCosturera}` : ''}
-                </option>
-              ))}
-            </select>
+            {clientes.length === 0 ? (
+              <div className="export-no-clientes">
+                ⚠ Sin clientes — creá uno en <strong>⚙ Ajustes → Clientes</strong>
+              </div>
+            ) : (
+              <select
+                className="export-cliente-select"
+                value={clienteId}
+                onChange={e => setClienteId(e.target.value)}
+              >
+                <option value="">— Seleccionar —</option>
+                {clientes.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}{c.casaCosturera ? ` — ${c.casaCosturera}` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Molde */}
+          <div className="export-section">
+            <div className="export-section-label">
+              TIPO DE MOLDE <span className="export-required">*</span>
+            </div>
+            {moldes.length === 0 ? (
+              <div className="export-no-clientes">
+                ⚠ Sin moldes — creá uno en <strong>⚙ Ajustes → Moldes</strong>
+              </div>
+            ) : (
+              <select
+                className="export-cliente-select"
+                value={moldeId}
+                onChange={e => setMoldeId(e.target.value)}
+              >
+                <option value="">— Seleccionar —</option>
+                {moldes.map(m => (
+                  <option key={m.id} value={m.id}>{m.nombre}</option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Tallas */}
+          <div className="export-section">
+            <div className="export-section-label">TALLAS A EXPORTAR</div>
+            <div className="talla-toggles-grid">
+              {todasLasTallas.map(talla => {
+                const exportInfo = teamHistory[talla];
+                const count = players.filter(p => p.TALLA === talla).length;
+                const hasPlayers = count > 0;
+                const selected = seleccionadas.has(talla);
+                return (
+                  <button
+                    key={talla}
+                    type="button"
+                    className={[
+                      'talla-toggle',
+                      !hasPlayers ? 'disabled' : '',
+                      selected ? 'selected' : '',
+                      exportInfo ? 'exported' : '',
+                    ].join(' ')}
+                    onClick={() => hasPlayers && toggleTalla(talla)}
+                    disabled={!hasPlayers}
+                    title={!hasPlayers ? 'Sin jugadores en esta talla' : exportInfo ? `Exportado ${formatDate(exportInfo.exportedAt)}` : ''}
+                  >
+                    <span className="talla-toggle-name">{talla}</span>
+                    <span className="talla-toggle-count">
+                      {hasPlayers ? `${count} jug.` : 'vacía'}
+                    </span>
+                    {exportInfo && (
+                      <span className="talla-toggle-exported" title={formatDate(exportInfo.exportedAt)}>
+                        ✓ {formatRelative(exportInfo.exportedAt)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Historial — debajo de los toggles, contexto para decidir qué exportar */}
+          {historialEntries.length > 0 && (
+            <div className="export-section">
+              <div className="export-historial">
+                <div className="export-historial-label">HISTORIAL</div>
+                <div className="export-historial-rows">
+                  {historialEntries.map(({ talla, count, info }) => (
+                    <div key={talla} className={`export-hist-row ${info ? 'hist-exported' : ''}`}>
+                      <span className="hist-talla">{talla}</span>
+                      <span className="hist-count">{count} jug.</span>
+                      {info ? (
+                        <span className="hist-date" title={formatDate(info.exportedAt)}>
+                          ✓ {formatRelative(info.exportedAt)}
+                        </span>
+                      ) : (
+                        <span className="hist-never">sin exportar</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* ── Selector de tallas ─────────────────────────── */}
-        <div className="export-tallas">
-          <div className="export-tallas-title">SELECCIONÁ LAS TALLAS A EXPORTAR</div>
-          <div className="export-tallas-grid">
-            {todasLasTallas.map(talla => {
-              const exportInfo = teamHistory[talla];
-              const count = players.filter(p => p.TALLA === talla).length;
-              const hasPlayers = count > 0;
-              const checked = seleccionadas.has(talla);
+        {/* ── RIGHT: output ──────────────────────────────── */}
+        <div className="export-output">
 
-              if (!hasPlayers) {
-                return (
-                  <div key={talla} className="talla-check-card disabled">
-                    <div className="talla-check-info">
-                      <span className="talla-check-name">{talla}</span>
-                      <span className="talla-check-count">Sin jugadores</span>
-                    </div>
-                  </div>
-                );
-              }
+          {/* Stat strip */}
+          <div className="export-stats-strip">
+            <div className="export-stat-pill">
+              <span className="export-stat-num">{jugadoresFiltrados.length}</span>
+              <span className="export-stat-lbl">JUGADORES</span>
+            </div>
+            <div className="export-stat-pill">
+              <span className="export-stat-num">{seleccionadas.size}</span>
+              <span className="export-stat-lbl">TALLAS</span>
+            </div>
+            <div className="export-stat-pill">
+              <span className="export-stat-num">{CSV_COLUMN_ORDER.length}</span>
+              <span className="export-stat-lbl">COLUMNAS</span>
+            </div>
+            <div className="export-stat-pill" title={lastExportTs ? formatDate(new Date(lastExportTs).toISOString()) : ''}>
+              <span className="export-stat-num export-stat-num--sm">
+                {lastExportTs ? formatRelative(new Date(lastExportTs).toISOString()) : '—'}
+              </span>
+              <span className="export-stat-lbl">ÚLT. EXPORT</span>
+            </div>
+          </div>
 
-              return (
-                <label
-                  key={talla}
-                  className={`talla-check-card has-players ${checked ? 'selected' : ''} ${exportInfo ? 'exported' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleTalla(talla)}
-                  />
-                  <div className="talla-check-info">
-                    <span className="talla-check-name">{talla}</span>
-                    <span className="talla-check-count">{count} jugador{count !== 1 ? 'es' : ''}</span>
-                    {exportInfo && (
-                      <span className="talla-check-exported">
-                        ✓ Exportado {formatDate(exportInfo.exportedAt)}
+          {/* Preview */}
+          <div className="export-preview">
+            <div className="preview-label">
+              PREVIEW {seleccionadas.size > 0 ? `· ${jugadoresFiltrados.length} jugadores` : '— seleccioná tallas'}
+            </div>
+
+            {/* Talla breakdown */}
+            {seleccionadas.size > 0 && (
+              <div className="talla-breakdown">
+                {tallasSeleccionadasArr.map(talla => {
+                  const jug = players.filter(p => p.TALLA === talla);
+                  return (
+                    <div key={talla} className="tdb-row">
+                      <span className="tdb-talla">{talla}</span>
+                      <span className="tdb-count">{jug.length} jug.</span>
+                      <span className="tdb-names">
+                        {jug.map(p => p.NOMBRE_CAMISETA || p.NOMBRE).join(' · ')}
                       </span>
-                    )}
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-        </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-        {/* ── Stats ──────────────────────────────────────── */}
-        <div className="export-stats">
-          <div className="stat-card"><div className="stat-num">{jugadoresFiltrados.length}</div><div className="stat-lbl">JUGADORES</div></div>
-          <div className="stat-card"><div className="stat-num">{seleccionadas.size}</div><div className="stat-lbl">TALLAS</div></div>
-          <div className="stat-card"><div className="stat-num">{CSV_COLUMN_ORDER.length}</div><div className="stat-lbl">COLUMNAS</div></div>
-          <div className="stat-card"><div className="stat-num">{Object.keys(overrides).length}</div><div className="stat-lbl">OVERRIDES</div></div>
-        </div>
+            {/* CSV preview table */}
+            <div className="preview-scroll">
+              {seleccionadas.size > 0 && previewRows.length > 0 ? (
+                <table className="preview-table">
+                  <thead>
+                    <tr>
+                      {previewHeaders.map(h => <th key={h}>{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewRows.map((row, i) => (
+                      <tr key={i}>
+                        {previewColIndices.map(j => (
+                          <td key={j}>{row[j] ?? ''}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="preview-empty">Seleccioná tallas para ver el preview</div>
+              )}
+            </div>
+          </div>
 
-        {/* ── Preview ────────────────────────────────────── */}
-        <div className="export-preview">
-          <div className="preview-label">
-            PREVIEW {seleccionadas.size > 0 ? `(${tallasSeleccionadasArr.join(', ')})` : '— seleccioná tallas para ver datos'}
-          </div>
-          <div className="preview-scroll">
-            <pre className="preview-csv">{seleccionadas.size > 0 ? preview : ''}</pre>
-          </div>
+          {/* Export confirm banner */}
+          {exportConfirm && (
+            <div className="export-confirm-banner">
+              <div className="export-confirm-check">✓</div>
+              <div className="export-confirm-body">
+                <div className="export-confirm-title">EXPORTADO CORRECTAMENTE</div>
+                <div className="export-confirm-file">{exportConfirm.filename}</div>
+                <div className="export-confirm-meta">
+                  {exportConfirm.jugadores} jugadores · {exportConfirm.tallas.join(' · ')}
+                </div>
+              </div>
+              <button className="export-confirm-close" onClick={() => setExportConfirm(null)}>×</button>
+            </div>
+          )}
+
+          {/* Download CTA */}
+          <button
+            className="btn-download-cta"
+            onClick={handleDownload}
+            disabled={!canDownload}
+            title={downloadHint}
+          >
+            <span className="btn-download-cta-main">⬇ DESCARGAR CSV</span>
+            {canDownload
+              ? <span className="btn-download-cta-sub">{tallasSeleccionadasArr.join(' · ')}</span>
+              : <span className="btn-download-cta-sub">{downloadHint}</span>
+            }
+          </button>
         </div>
       </div>
     </div>

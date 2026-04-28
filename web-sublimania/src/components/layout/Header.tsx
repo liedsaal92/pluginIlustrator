@@ -6,6 +6,8 @@ import { useTeamStore } from '../../store/useTeamStore';
 import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
+import { useAuthStore } from '../../store/useAuthStore';
+import { usePermission } from '../../hooks/usePermission';
 import { exportBackup, importBackup, mergeBackup } from '../../utils/configBackup';
 
 interface Props {
@@ -14,6 +16,8 @@ interface Props {
 
 export function Header({ onToast }: Props) {
   const setScreen = useTeamStore(s => s.setScreen);
+  const { session, logout } = useAuthStore();
+  const canManageSettings = usePermission('settings:manage');
   const importInputRef = useRef<HTMLInputElement>(null);
 
   function handleExportBackup() {
@@ -58,31 +62,54 @@ export function Header({ onToast }: Props) {
           <div className="logo-tag">Motor de Automatización de Producción Deportiva v1.0</div>
         </div>
 
-        <div className="header-backup-actions">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => importInputRef.current?.click()}
-            title="Importar y combinar configuración"
-          >
-            ⬇ IMPORTAR
-          </button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={e => {
-              if (e.target.files?.[0]) handleImportBackupFile(e.target.files[0]);
-              e.target.value = '';
-            }}
-          />
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={handleExportBackup}
-            title="Exportar configuración completa"
-          >
-            ⬆ EXPORTAR
-          </button>
+        <div className="header-right">
+          {canManageSettings && (
+            <div className="header-backup-actions">
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => importInputRef.current?.click()}
+                title="Importar y combinar configuración"
+              >
+                ⬇ IMPORTAR
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  if (e.target.files?.[0]) handleImportBackupFile(e.target.files[0]);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={handleExportBackup}
+                title="Exportar configuración completa"
+              >
+                ⬆ EXPORTAR
+              </button>
+            </div>
+          )}
+
+          {session && (
+            <div className="header-user">
+              <div className="header-user-info">
+                <span className="header-user-name">{session.user.nombre}</span>
+                <span className="header-org-name">{session.user.orgName}</span>
+              </div>
+              <span className={`header-role-badge role-${session.user.role}`}>
+                {session.user.role.toUpperCase()}
+              </span>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => logout()}
+                title="Cerrar sesión"
+              >
+                SALIR
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

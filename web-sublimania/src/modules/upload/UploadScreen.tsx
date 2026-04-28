@@ -1,7 +1,7 @@
 // ============================================================
 //  modules/upload/UploadScreen.tsx
 // ============================================================
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
 import { useTeamsStore } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
@@ -17,8 +17,10 @@ interface Props {
 export function UploadScreen({ onToast }: Props) {
   const fileInputRef   = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const { setPlayers, setScreen } = useTeamStore();
-  const { teams, replaceAll } = useTeamsStore();
+  const { setPlayers, players } = useTeamStore();
+  const { teams, replaceAll, activeTeamId } = useTeamsStore();
+  const isFirstTeam = teams.length === 0 || (teams.length === 1 && !activeTeamId);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   function handleExportBackup() {
     const { clientes } = useClientesStore.getState();
@@ -92,18 +94,42 @@ export function UploadScreen({ onToast }: Props) {
     }
   }
 
+  function requestFile(file: File) {
+    if (players.length > 0) {
+      setPendingFile(file);
+    } else {
+      handleFile(file);
+    }
+  }
+
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) requestFile(file);
   }
 
   return (
     <div className="screen upload-screen">
-      <button className="btn btn-ghost btn-sm upload-back" onClick={() => setScreen('teams')}>
-        ← EQUIPOS
-      </button>
+      {isFirstTeam && (
+        <div className="onboarding-flow">
+          <div className="onboarding-step onboarding-step--active">
+            <div className="onboarding-step-num">1</div>
+            <div className="onboarding-step-label">CARGÁ EXCEL</div>
+          </div>
+          <div className="onboarding-arrow">→</div>
+          <div className="onboarding-step">
+            <div className="onboarding-step-num">2</div>
+            <div className="onboarding-step-label">CONFIGURÁ REGLAS</div>
+          </div>
+          <div className="onboarding-arrow">→</div>
+          <div className="onboarding-step">
+            <div className="onboarding-step-num">3</div>
+            <div className="onboarding-step-label">EXPORTÁ CSV</div>
+          </div>
+        </div>
+      )}
+
       <div className="upload-box">
         <div className="upload-badge">PASO 01</div>
         <h2 className="upload-title">CARGÁ TU EXCEL</h2>
@@ -114,20 +140,48 @@ export function UploadScreen({ onToast }: Props) {
           onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
           onDragLeave={e => e.currentTarget.classList.remove('drag-over')}
           onDrop={onDrop}
+          onClick={() => !pendingFile && fileInputRef.current?.click()}
         >
+          <div className="drop-icon">
+            <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="4" width="48" height="48" stroke="currentColor" strokeWidth="2.5"/>
+              <line x1="4" y1="22" x2="52" y2="22" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="4" y1="38" x2="52" y2="38" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="22" y1="4" x2="22" y2="52" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="38" y1="4" x2="38" y2="52" stroke="currentColor" strokeWidth="1.5"/>
+              <rect x="4" y="4" width="18" height="18" fill="currentColor" fillOpacity="0.15"/>
+            </svg>
+          </div>
           <div className="drop-label">SOLTÁ TU .XLSX ACÁ</div>
           <div className="drop-sub-label">
             Columnas requeridas: NOMBRE · NOMBRE_CAMISETA · NUMERO · TALLA
           </div>
-          <button className="btn btn-primary" onClick={() => fileInputRef.current?.click()}>
-            SELECCIONAR ARCHIVO
-          </button>
+          {pendingFile ? (
+            <div className="upload-confirm">
+              <div className="upload-confirm-msg">
+                ⚠ Ya hay <strong>{players.length} jugadores</strong> cargados.<br/>
+                ¿Reemplazar con <strong>{pendingFile.name}</strong>?
+              </div>
+              <div className="upload-confirm-actions">
+                <button className="btn btn-danger btn-sm" onClick={() => { handleFile(pendingFile); setPendingFile(null); }}>
+                  REEMPLAZAR
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setPendingFile(null); fileInputRef.current && (fileInputRef.current.value = ''); }}>
+                  CANCELAR
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button className="btn btn-primary" onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+              SELECCIONAR ARCHIVO
+            </button>
+          )}
           <input
             ref={fileInputRef}
             type="file"
             accept=".xlsx,.xls"
             style={{ display: 'none' }}
-            onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
+            onChange={e => { if (e.target.files?.[0]) requestFile(e.target.files[0]); e.target.value = ''; }}
           />
         </div>
 

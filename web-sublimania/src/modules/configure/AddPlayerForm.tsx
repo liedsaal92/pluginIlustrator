@@ -12,13 +12,18 @@ const EMPTY: Player = { NOMBRE: '', NOMBRE_CAMISETA: '', NUMERO: '', TALLA: '' }
 
 export function AddPlayerForm() {
   const addPlayer = useTeamStore(s => s.addPlayer);
+  const teamTallas = useTeamStore(s => s.tallas);
   const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
   const [form, setForm] = useState<Player>({ ...EMPTY });
   const [open, setOpen] = useState(false);
 
-  const tallaOptions = sortTallas([...new Set(
-    Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
-  )]);
+  // Team tallas (from Excel) as primary source; fallback to tallas defined in moldes
+  const moldesTallas = [...new Set(
+    Object.values(tallasPorCliente).flatMap(byMolde =>
+      Object.values(byMolde).flatMap(byTalla => Object.keys(byTalla))
+    )
+  )];
+  const tallaOptions = sortTallas([...new Set([...teamTallas, ...moldesTallas])]);
   const hTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'H');
   const mTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'M');
   const otraTallas = tallaOptions.filter(t => getGeneroTalla(t) === 'other');

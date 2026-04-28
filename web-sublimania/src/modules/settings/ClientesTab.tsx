@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 
 interface Props {
@@ -23,7 +24,7 @@ export function ClientesTab({ onToast }: Props) {
   function handleAdd() {
     if (!form.nombre.trim()) return;
     const id = addCliente(form.nombre, form.casaCosturera);
-    initClienteFromDefault(id);
+    initClienteFromDefault(id, MOLDE_DEFAULT_ID);
     setForm({ ...EMPTY });
     onToast(`Cliente "${form.nombre.trim()}" creado con tallas por defecto`, 'ok');
   }
