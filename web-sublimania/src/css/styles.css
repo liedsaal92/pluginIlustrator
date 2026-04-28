@@ -3670,6 +3670,36 @@ body {
 }
 .auth-role-note strong { color: var(--black); }
 
+.auth-forgot-link {
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  margin-top: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0.02em;
+  transition: color 0.15s;
+}
+.auth-forgot-link:hover { color: var(--accent); }
+
+.auth-success-box {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.auth-success-icon {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+
 /* ── HEADER — usuario autenticado ────────────────────────────── */
 .header-right {
   display: flex;
