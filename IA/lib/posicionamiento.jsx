@@ -14,11 +14,13 @@ function getEstaticoRefBounds(estatico, fallback) {
     if (estatico.clipped) {
         try { return estatico.pageItems[0].geometricBounds; } catch(e) {}
     }
-    for (var _i = 0; _i < estatico.pageItems.length; _i++) {
-        var _c = estatico.pageItems[_i];
-        if (_c.typename === "GroupItem" && _c.clipped) {
-            var _cb = buscarClipBounds(_c);
-            if (_cb) return _cb;
+    if (estatico.pageItems) {
+        for (var _i = 0; _i < estatico.pageItems.length; _i++) {
+            var _c = estatico.pageItems[_i];
+            if (_c.typename === "GroupItem" && _c.clipped) {
+                var _cb = buscarClipBounds(_c);
+                if (_cb) return _cb;
+            }
         }
     }
     return estatico.geometricBounds;
