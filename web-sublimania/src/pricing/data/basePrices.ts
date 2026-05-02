@@ -1,0 +1,28 @@
+import type { BasePrice } from '../types';
+
+export const defaultBasePrices: BasePrice[] = [
+  { segment: 'vip', size: 24, camiseta: 3, pantaloneta: 2.5, equipo: 5 },
+  { segment: 'vip', size: 26, camiseta: 3, pantaloneta: 2.5, equipo: 5 },
+  { segment: 'vip', size: 28, camiseta: 3, pantaloneta: 2.5, equipo: 5 },
+  { segment: 'vip', size: 30, camiseta: 3, pantaloneta: 2.5, equipo: 5 },
+  { segment: 'vip', size: 32, camiseta: 3, pantaloneta: 2.5, equipo: 5 },
+  { segment: 'vip', size: 34, camiseta: 4.25, pantaloneta: 3.75, equipo: 7.5 },
+  { segment: 'vip', size: 35, camiseta: 4.25, pantaloneta: 3.75, equipo: 7.5 },
+  { segment: 'vip', size: 36, camiseta: 4.25, pantaloneta: 3.75, equipo: 7.5 },
+  { segment: 'vip', size: 38, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'vip', size: 40, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'vip', size: 42, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'vip', size: 44, camiseta: 5, pantaloneta: 4.5, equipo: 9 },
+  { segment: 'normal', size: 24, camiseta: 3.5, pantaloneta: 3, equipo: 6 },
+  { segment: 'normal', size: 26, camiseta: 3.5, pantaloneta: 3, equipo: 6 },
+  { segment: 'normal', size: 28, camiseta: 3.5, pantaloneta: 3, equipo: 6 },
+  { segment: 'normal', size: 30, camiseta: 3.5, pantaloneta: 3, equipo: 6 },
+  { segment: 'normal', size: 32, camiseta: 3.5, pantaloneta: 3, equipo: 6 },
+  { segment: 'normal', size: 34, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'normal', size: 35, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'normal', size: 36, camiseta: 4.5, pantaloneta: 4, equipo: 8 },
+  { segment: 'normal', size: 38, camiseta: 5, pantaloneta: 4.5, equipo: 9 },
+  { segment: 'normal', size: 40, camiseta: 5, pantaloneta: 4.5, equipo: 9 },
+  { segment: 'normal', size: 42, camiseta: 5, pantaloneta: 4.5, equipo: 9 },
+  { segment: 'normal', size: 44, camiseta: 5.5, pantaloneta: 5, equipo: 10 },
+];

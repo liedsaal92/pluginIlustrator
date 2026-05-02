@@ -20,6 +20,7 @@ import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
 import { PreviewScreen } from './modules/preview/PreviewScreen';
 import { ClienteScreen } from './modules/cliente/ClienteScreen';
+import { PricingScreen } from './modules/pricing/PricingScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
@@ -146,6 +147,7 @@ export default function App() {
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
           {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
+          {screen === 'pricing'   && <PricingScreen   onToast={showToast} />}
           {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
         </div>
       </main>

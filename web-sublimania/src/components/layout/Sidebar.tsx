@@ -177,7 +177,18 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
               <span className="sidebar-no-team-hint">Seleccioná uno en<br/>Mis Equipos ↑</span>
             </div>
           )}
+        </div>        <div className="sidebar-section">
+          <button
+            className={`sidebar-nav-item ${screen === 'pricing' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing'); })}
+            title="Cotizador"
+          >
+            <span className="sidebar-nav-item-icon">$</span>
+            <span className="sidebar-nav-text">COTIZADOR</span>
+          </button>
         </div>
+
+
 
         <div className="sidebar-section">
           <button
