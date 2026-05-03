@@ -1,0 +1,287 @@
+import { useMemo } from 'react';
+import { getCostPerMeter } from '../../pricing/engines/costEngine';
+import { printProfiles } from '../../pricing/data/printProfiles';
+import { usePricingStore } from '../../store/usePricingStore';
+
+interface Props {
+  onToast: (msg: string, type: 'ok' | 'error') => void;
+}
+
+const dec4 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 4, maximumFractionDigits: 4 });
+function fmt4(v: number) { return dec4.format(v); }
+function toNum(v: string) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+
+export function CostosBaseScreen({ onToast }: Props) {
+  const {
+    config, supplies, machines, operations,
+    updateConfig,
+    updateSupply, addSupply, removeSupply,
+    updateMachine, addMachine, removeMachine,
+    updateOperation, addOperation, removeOperation,
+    resetPricingData,
+  } = usePricingStore();
+
+  const cpmSupplies = useMemo(() => supplies.reduce((s, sup) => {
+    if (!sup.quantity || sup.quantity <= 0) return s;
+    return s + sup.totalCost / sup.quantity;
+  }, 0), [supplies]);
+
+  const cpmMachines = useMemo(() => machines.reduce((s, m) => {
+    if (!m.lifeMeters || m.lifeMeters <= 0) return s;
+    return s + m.cost / m.lifeMeters;
+  }, 0), [machines]);
+
+  const cpmOperations = useMemo(() => {
+    const monthly = operations.reduce((s, o) => s + o.monthlyCost, 0);
+    return monthly / (config.monthlyMeters > 0 ? config.monthlyMeters : 1);
+  }, [operations, config.monthlyMeters]);
+
+  const cpmNormal = useMemo(() => {
+    try { return getCostPerMeter('normal', config, supplies, machines, operations); } catch { return 0; }
+  }, [config, supplies, machines, operations]);
+
+  return (
+    <div className="screen pricing-screen">
+      <div className="pricing-header">
+        <div>
+          <h1 className="pricing-title">COSTOS BASE</h1>
+          <div className="pricing-subtitle">// Insumos, maquinaria y operaciones que alimentan el motor de precios</div>
+        </div>
+        <div className="pricing-header-actions">
+          <button className="btn btn-ghost btn-sm" onClick={() => { resetPricingData(); onToast('Datos restablecidos a semilla', 'ok'); }}>
+            RESET DATOS
+          </button>
+        </div>
+      </div>
+
+      {/* ── Costo/metro summary ──────────────────────────────── */}
+      <section className="pricing-panel">
+        <div className="pricing-panel-title">RESUMEN COSTO/METRO</div>
+        <div className="pricing-kpis" style={{ marginTop: '0.75rem' }}>
+          <div className="pricing-kpi">
+            <span>Total (perfil normal)</span>
+            <strong>{fmt4(cpmNormal)}</strong>
+          </div>
+          <div className="pricing-kpi">
+            <span>Insumos</span>
+            <strong>{fmt4(cpmSupplies)}</strong>
+          </div>
+          <div className="pricing-kpi">
+            <span>Maquinaria</span>
+            <strong>{fmt4(cpmMachines)}</strong>
+          </div>
+          <div className="pricing-kpi">
+            <span>Operaciones</span>
+            <strong>{fmt4(cpmOperations)}</strong>
+          </div>
+        </div>
+        <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {printProfiles.filter(p => p.id !== 'normal').map(p => {
+            let cpm = 0;
+            try { cpm = getCostPerMeter(p.id, config, supplies, machines, operations); } catch { /**/ }
+            const saving = cpmNormal - cpm;
+            return (
+              <div key={p.id} className="pricing-kpi" style={{ flex: '1 1 120px' }}>
+                <span>{p.name}</span>
+                <strong>{fmt4(cpm)}</strong>
+                {saving > 0 && <small style={{ opacity: 0.55, fontSize: '0.68rem' }}>−{fmt4(saving)}/m vs normal</small>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Insumos ──────────────────────────────────────────── */}
+      <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
+        <div className="pricing-panel-title">INSUMOS</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Materiales consumidos por metro impreso. "Varía c/tinta" reduce el costo en perfiles ECO.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>PRECIO LOTE ($)</th>
+                <th>METROS EN LOTE</th>
+                <th>COSTO/METRO</th>
+                <th>VARÍA C/TINTA</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {supplies.map(s => (
+                <tr key={s.id}>
+                  <td>
+                    <input className="pricing-price-input" type="text" value={s.name}
+                      onChange={e => updateSupply(s.id, { name: e.target.value })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0" step="0.01" value={s.totalCost}
+                      onChange={e => updateSupply(s.id, { totalCost: toNum(e.target.value) })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0.01" step="1" value={s.quantity}
+                      onChange={e => updateSupply(s.id, { quantity: toNum(e.target.value) })} />
+                  </td>
+                  <td className="pricing-costs-derived">
+                    {s.quantity > 0 ? fmt4(s.totalCost / s.quantity) : '—'}
+                  </td>
+                  <td className="pricing-costs-check-cell">
+                    <input type="checkbox" checked={s.applyInkFactor}
+                      onChange={e => updateSupply(s.id, { applyInkFactor: e.target.checked })} />
+                  </td>
+                  <td>
+                    <button className="pricing-order-remove" onClick={() => removeSupply(s.id)}>✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button className="pricing-order-add" onClick={addSupply}>+ AGREGAR INSUMO</button>
+      </section>
+
+      {/* ── Maquinaria ───────────────────────────────────────── */}
+      <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
+        <div className="pricing-panel-title">MAQUINARIA</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Depreciación distribuida por metros de vida útil estimados.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>VALOR ($)</th>
+                <th>VIDA (METROS)</th>
+                <th>DEP./METRO</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {machines.map(m => (
+                <tr key={m.id}>
+                  <td>
+                    <input className="pricing-price-input" type="text" value={m.name}
+                      onChange={e => updateMachine(m.id, { name: e.target.value })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0" step="0.01" value={m.cost}
+                      onChange={e => updateMachine(m.id, { cost: toNum(e.target.value) })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="1" step="100" value={m.lifeMeters}
+                      onChange={e => updateMachine(m.id, { lifeMeters: toNum(e.target.value) })} />
+                  </td>
+                  <td className="pricing-costs-derived">
+                    {m.lifeMeters > 0 ? fmt4(m.cost / m.lifeMeters) : '—'}
+                  </td>
+                  <td>
+                    <button className="pricing-order-remove" onClick={() => removeMachine(m.id)}>✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button className="pricing-order-add" onClick={addMachine}>+ AGREGAR EQUIPO</button>
+      </section>
+
+      {/* ── Operaciones mensuales ────────────────────────────── */}
+      <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
+        <div className="pricing-panel-title">OPERACIONES MENSUALES</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Costos fijos mensuales distribuidos entre los metros producidos.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>COSTO/MES ($)</th>
+                <th>COSTO/METRO *</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {operations.map(o => (
+                <tr key={o.id}>
+                  <td>
+                    <input className="pricing-price-input" type="text" value={o.name}
+                      onChange={e => updateOperation(o.id, { name: e.target.value })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0" step="0.01" value={o.monthlyCost}
+                      onChange={e => updateOperation(o.id, { monthlyCost: toNum(e.target.value) })} />
+                  </td>
+                  <td className="pricing-costs-derived">
+                    {config.monthlyMeters > 0 ? fmt4(o.monthlyCost / config.monthlyMeters) : '—'}
+                  </td>
+                  <td>
+                    <button className="pricing-order-remove" onClick={() => removeOperation(o.id)}>✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pricing-costs-ops-note">
+          * Con
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+            <input className="pricing-price-input" style={{ width: '90px', display: 'inline-block' }}
+              type="number" min="1" step="100" value={config.monthlyMeters}
+              onChange={e => updateConfig('monthlyMeters', toNum(e.target.value))} />
+            metros/mes
+          </label>
+        </div>
+        <button className="pricing-order-add" onClick={addOperation}>+ AGREGAR COSTO</button>
+      </section>
+
+      {/* ── Reglas de precio ─────────────────────────────────── */}
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">REGLAS DE PRECIO</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Restricciones financieras que garantizan rentabilidad mínima en cada cotización.
+        </div>
+        <div className="pricing-form-grid">
+          <label className="pricing-field">
+            <span>MARGEN MÍNIMO %</span>
+            <input className="field-input" type="number" min="1" max="95"
+              value={Math.round(config.minMargin * 100)}
+              onChange={e => updateConfig('minMargin', Number(e.target.value) / 100)} />
+          </label>
+          <label className="pricing-field">
+            <span>GANANCIA / COSTO</span>
+            <input className="field-input" type="number" min="0" step="0.1"
+              value={config.minProfitRatio}
+              onChange={e => updateConfig('minProfitRatio', Number(e.target.value))} />
+          </label>
+          <label className="pricing-field">
+            <span>PRECIO / CM</span>
+            <input className="field-input" type="number" min="0" step="0.01"
+              value={config.pricePerCm}
+              onChange={e => updateConfig('pricePerCm', Number(e.target.value))} />
+          </label>
+          <label className="pricing-check">
+            <input type="checkbox" checked={config.roundingEnabled}
+              onChange={e => updateConfig('roundingEnabled', e.target.checked)} />
+            <span>REDONDEAR PRECIOS</span>
+          </label>
+          {config.roundingEnabled && (
+            <label className="pricing-field">
+              <span>INCREMENTO</span>
+              <select className="field-input field-select" value={config.roundingIncrement}
+                onChange={e => updateConfig('roundingIncrement', Number(e.target.value))}>
+                <option value={0.05}>0.05</option>
+                <option value={0.1}>0.10</option>
+                <option value={0.25}>0.25</option>
+                <option value={0.5}>0.50</option>
+              </select>
+            </label>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

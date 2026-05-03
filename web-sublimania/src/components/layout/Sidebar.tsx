@@ -178,13 +178,30 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
             </div>
           )}
         </div>        <div className="sidebar-section">
+          <div className="sidebar-section-label sidebar-nav-text">PRECIOS</div>
           <button
-            className={`sidebar-nav-item ${screen === 'pricing' ? 'active' : ''}`}
-            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing'); })}
+            className={`sidebar-nav-item sub ${screen === 'pricing_cotizador' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_cotizador'); })}
             title="Cotizador"
           >
             <span className="sidebar-nav-item-icon">$</span>
             <span className="sidebar-nav-text">COTIZADOR</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_costos' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_costos'); })}
+            title="Costos Base"
+          >
+            <span className="sidebar-nav-item-icon">◎</span>
+            <span className="sidebar-nav-text">COSTOS BASE</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_tablas' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_tablas'); })}
+            title="Tablas de Precios"
+          >
+            <span className="sidebar-nav-item-icon">≡</span>
+            <span className="sidebar-nav-text">TABLAS</span>
           </button>
         </div>
 

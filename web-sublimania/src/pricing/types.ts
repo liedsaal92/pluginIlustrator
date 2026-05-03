@@ -21,6 +21,7 @@ export interface Supply {
   totalCost: number;
   quantity: number;
   unit: string;
+  applyInkFactor: boolean;
 }
 
 export interface MachineCost {
@@ -88,6 +89,9 @@ export interface QuoteInput {
   quantity: number;
   profileId: PrintProfileId;
   basePrices: BasePrice[];
+  supplies: Supply[];
+  machines: MachineCost[];
+  operations: OperationCost[];
   linearCm?: number;
   manualPrice?: number;
   savingsTransferRate: number;

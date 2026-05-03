@@ -28,6 +28,9 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     quantity,
     profileId: normalizedInput.profileId,
     basePrices: normalizedInput.basePrices,
+    supplies: normalizedInput.supplies,
+    machines: normalizedInput.machines,
+    operations: normalizedInput.operations,
     linearCm: normalizedInput.linearCm,
     config: normalizedInput.config,
   });

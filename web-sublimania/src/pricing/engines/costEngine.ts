@@ -1,29 +1,37 @@
-import { machines } from '../data/machines';
-import { operations } from '../data/operations';
 import { printProfiles } from '../data/printProfiles';
-import { supplies } from '../data/supplies';
 import { sizeMeasurements } from '../data/sizeMeasurements';
-import type { BasePrice, CostBreakdown, PricingConfig, PrintProfileId, ProductId, CustomerSegment } from '../types';
+import type {
+  BasePrice, CostBreakdown, MachineCost, OperationCost,
+  PricingConfig, PrintProfileId, ProductId, CustomerSegment, Supply,
+} from '../types';
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-export function getCostPerMeter(profileId: PrintProfileId, config: PricingConfig): number {
+export function getCostPerMeter(
+  profileId: PrintProfileId,
+  config: PricingConfig,
+  supplies: Supply[],
+  machines: MachineCost[],
+  operations: OperationCost[],
+): number {
   const profile = printProfiles.find(p => p.id === profileId);
   if (!profile) throw new Error(`Perfil no encontrado: ${profileId}`);
 
-  const paper = supplies.find(s => s.id === 'paper_sublimation')!;
-  const ink = supplies.find(s => s.id === 'ink_base')!;
-  const newspaper = supplies.find(s => s.id === 'newspaper')!;
+  const suppliesCost = supplies.reduce((sum, s) => {
+    if (!s.quantity || s.quantity <= 0) return sum;
+    const cpm = s.totalCost / s.quantity;
+    return sum + (s.applyInkFactor ? cpm * profile.inkFactor : cpm);
+  }, 0);
 
-  const suppliesCost =
-    paper.totalCost / paper.quantity +
-    (ink.totalCost / ink.quantity) * profile.inkFactor +
-    newspaper.totalCost / newspaper.quantity;
+  const machineCost = machines.reduce((sum, m) => {
+    if (!m.lifeMeters || m.lifeMeters <= 0) return sum;
+    return sum + m.cost / m.lifeMeters;
+  }, 0);
 
-  const machineCost = machines.reduce((sum, item) => sum + item.cost / item.lifeMeters, 0);
-  const operationCost = operations.reduce((sum, item) => sum + item.monthlyCost, 0) / config.monthlyMeters;
+  const monthlyMeters = config.monthlyMeters > 0 ? config.monthlyMeters : 1;
+  const operationCost = operations.reduce((sum, o) => sum + o.monthlyCost, 0) / monthlyMeters;
 
   return suppliesCost + machineCost + operationCost;
 }
@@ -40,7 +48,13 @@ function getBasePrice(basePrices: BasePrice[], segment: CustomerSegment, size: n
   return price;
 }
 
-function getMetersForProduct(productId: ProductId, basePrices: BasePrice[], segment: CustomerSegment, size: number, linearCm?: number) {
+function getMetersForProduct(
+  productId: ProductId,
+  basePrices: BasePrice[],
+  segment: CustomerSegment,
+  size: number,
+  linearCm?: number,
+) {
   const measurement = getSizeMeasurement(size);
   const prices = getBasePrice(basePrices, segment, size);
   const notes: string[] = [];
@@ -72,11 +86,14 @@ export function calculateCost(input: {
   quantity: number;
   profileId: PrintProfileId;
   basePrices: BasePrice[];
+  supplies: Supply[];
+  machines: MachineCost[];
+  operations: OperationCost[];
   linearCm?: number;
   config: PricingConfig;
 }): CostBreakdown {
-  const costPerMeter = getCostPerMeter(input.profileId, input.config);
-  const normalCostPerMeter = getCostPerMeter('normal', input.config);
+  const costPerMeter = getCostPerMeter(input.profileId, input.config, input.supplies, input.machines, input.operations);
+  const normalCostPerMeter = getCostPerMeter('normal', input.config, input.supplies, input.machines, input.operations);
   const productMeters = getMetersForProduct(input.productId, input.basePrices, input.segment, input.size, input.linearCm);
   const metersUnit = productMeters.meters * (1 + input.config.wasteRate);
   const unitCost = roundMoney(metersUnit * costPerMeter);

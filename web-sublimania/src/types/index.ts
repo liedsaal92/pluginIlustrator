@@ -113,7 +113,7 @@ export interface PortalInfo {
 }
 
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'pricing' | 'settings';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings' | 'pricing_cotizador' | 'pricing_costos' | 'pricing_tablas';
 export type ConfigTab = 'rules' | 'players';
 export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

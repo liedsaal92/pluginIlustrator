@@ -1,11 +1,20 @@
 import { create } from 'zustand';
 import { defaultBasePrices } from '../pricing/data/basePrices';
 import { defaultPricingConfig } from '../pricing/data/config';
-import type { BasePrice, BasePriceField, CustomerSegment, PricingConfig, QuoteHistoryEntry, QuoteResult } from '../pricing/types';
+import { defaultSupplies } from '../pricing/data/supplies';
+import { machines as defaultMachines } from '../pricing/data/machines';
+import { operations as defaultOperations } from '../pricing/data/operations';
+import type {
+  BasePrice, BasePriceField, CustomerSegment, MachineCost,
+  OperationCost, PricingConfig, QuoteHistoryEntry, QuoteResult, Supply,
+} from '../pricing/types';
 
-const HISTORY_KEY = 'subliflow_pricing_history';
-const CONFIG_KEY = 'subliflow_pricing_config';
-const PRICES_KEY = 'subliflow_pricing_base_prices';
+const HISTORY_KEY   = 'subliflow_pricing_history';
+const CONFIG_KEY    = 'subliflow_pricing_config';
+const PRICES_KEY    = 'subliflow_pricing_base_prices';
+const SUPPLIES_KEY  = 'subliflow_pricing_supplies';
+const MACHINES_KEY  = 'subliflow_pricing_machines';
+const OPS_KEY       = 'subliflow_pricing_operations';
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -20,21 +29,45 @@ function persist<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+function genId(): string {
+  return `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
 interface PricingState {
   config: PricingConfig;
   basePrices: BasePrice[];
+  supplies: Supply[];
+  machines: MachineCost[];
+  operations: OperationCost[];
   history: QuoteHistoryEntry[];
+
   updateConfig: <K extends keyof PricingConfig>(key: K, value: PricingConfig[K]) => void;
   updateBasePrice: (segment: CustomerSegment, size: number, field: BasePriceField, value: number) => void;
+
+  updateSupply: (id: string, patch: Partial<Omit<Supply, 'id'>>) => void;
+  addSupply: () => void;
+  removeSupply: (id: string) => void;
+
+  updateMachine: (id: string, patch: Partial<Omit<MachineCost, 'id'>>) => void;
+  addMachine: () => void;
+  removeMachine: (id: string) => void;
+
+  updateOperation: (id: string, patch: Partial<Omit<OperationCost, 'id'>>) => void;
+  addOperation: () => void;
+  removeOperation: (id: string) => void;
+
   resetPricingData: () => void;
   saveQuote: (quote: QuoteResult) => void;
   clearHistory: () => void;
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
-  config: loadJson(CONFIG_KEY, defaultPricingConfig),
-  basePrices: loadJson(PRICES_KEY, defaultBasePrices),
-  history: loadJson(HISTORY_KEY, [] as QuoteHistoryEntry[]),
+  config:     loadJson(CONFIG_KEY,   defaultPricingConfig),
+  basePrices: loadJson(PRICES_KEY,   defaultBasePrices),
+  supplies:   loadJson(SUPPLIES_KEY, defaultSupplies),
+  machines:   loadJson(MACHINES_KEY, defaultMachines),
+  operations: loadJson(OPS_KEY,      defaultOperations),
+  history:    loadJson(HISTORY_KEY,  [] as QuoteHistoryEntry[]),
 
   updateConfig: (key, value) => {
     const config = { ...get().config, [key]: value };
@@ -52,10 +85,73 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     set({ basePrices });
   },
 
+  updateSupply: (id, patch) => {
+    const supplies = get().supplies.map(s => s.id === id ? { ...s, ...patch } : s);
+    persist(SUPPLIES_KEY, supplies);
+    set({ supplies });
+  },
+  addSupply: () => {
+    const supplies = [...get().supplies, {
+      id: genId(), name: 'Nuevo insumo', totalCost: 0, quantity: 1, unit: 'm', applyInkFactor: false,
+    }];
+    persist(SUPPLIES_KEY, supplies);
+    set({ supplies });
+  },
+  removeSupply: (id) => {
+    const supplies = get().supplies.filter(s => s.id !== id);
+    persist(SUPPLIES_KEY, supplies);
+    set({ supplies });
+  },
+
+  updateMachine: (id, patch) => {
+    const machines = get().machines.map(m => m.id === id ? { ...m, ...patch } : m);
+    persist(MACHINES_KEY, machines);
+    set({ machines });
+  },
+  addMachine: () => {
+    const machines = [...get().machines, {
+      id: genId(), name: 'Nuevo equipo', cost: 0, lifeMeters: 1000,
+    }];
+    persist(MACHINES_KEY, machines);
+    set({ machines });
+  },
+  removeMachine: (id) => {
+    const machines = get().machines.filter(m => m.id !== id);
+    persist(MACHINES_KEY, machines);
+    set({ machines });
+  },
+
+  updateOperation: (id, patch) => {
+    const operations = get().operations.map(o => o.id === id ? { ...o, ...patch } : o);
+    persist(OPS_KEY, operations);
+    set({ operations });
+  },
+  addOperation: () => {
+    const operations = [...get().operations, {
+      id: genId(), name: 'Nuevo costo', monthlyCost: 0,
+    }];
+    persist(OPS_KEY, operations);
+    set({ operations });
+  },
+  removeOperation: (id) => {
+    const operations = get().operations.filter(o => o.id !== id);
+    persist(OPS_KEY, operations);
+    set({ operations });
+  },
+
   resetPricingData: () => {
-    persist(CONFIG_KEY, defaultPricingConfig);
-    persist(PRICES_KEY, defaultBasePrices);
-    set({ config: defaultPricingConfig, basePrices: defaultBasePrices });
+    persist(CONFIG_KEY,   defaultPricingConfig);
+    persist(PRICES_KEY,   defaultBasePrices);
+    persist(SUPPLIES_KEY, defaultSupplies);
+    persist(MACHINES_KEY, defaultMachines);
+    persist(OPS_KEY,      defaultOperations);
+    set({
+      config:     defaultPricingConfig,
+      basePrices: defaultBasePrices,
+      supplies:   defaultSupplies,
+      machines:   defaultMachines,
+      operations: defaultOperations,
+    });
   },
 
   saveQuote: (quote) => {
