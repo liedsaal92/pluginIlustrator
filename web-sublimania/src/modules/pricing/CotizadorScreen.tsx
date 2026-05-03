@@ -34,14 +34,14 @@ export function CotizadorScreen({ onToast }: Props) {
   const [savingsTransferRate, setSavingsTransferRate] = useState(0);
   const [orderLines, setOrderLines]           = useState<OrderLine[]>([newLine()]);
 
-  const { config, basePrices, supplies, machines, operations, history, saveQuote, clearHistory } = usePricingStore();
+  const { config, basePrices, supplies, machines, operations, volumeTiers, history, saveQuote, clearHistory } = usePricingStore();
 
   const lineQuotes = useMemo<(QuoteResult | null)[]>(() =>
     orderLines.map(line => {
       const input: QuoteInput = {
         customerSegment, productId: line.productId, size: line.size,
         quantity: Math.max(1, line.quantity), profileId,
-        basePrices, supplies, machines, operations,
+        basePrices, supplies, machines, operations, volumeTiers,
         linearCm: line.linearCm,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config,
@@ -54,6 +54,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
   const totalProfit  = lineQuotes.reduce((s, q) => s + (q?.totalProfit ?? 0), 0);
   const totalCost    = lineQuotes.reduce((s, q) => s + (q?.cost.totalCost ?? 0), 0);
+  const totalVolumeDiscount = lineQuotes.reduce((s, q) => s + (q?.volumeDiscountAmount ?? 0), 0);
   const totalTransferredSavings = lineQuotes.reduce((s, q) => s + (q ? q.transferredSavings * q.input.quantity : 0), 0);
   const totalRetainedSavings    = lineQuotes.reduce((s, q) => s + (q ? q.retainedSavings * q.input.quantity : 0), 0);
   const totalEcoSavings  = totalTransferredSavings + totalRetainedSavings;
@@ -68,7 +69,7 @@ export function CotizadorScreen({ onToast }: Props) {
         const input: QuoteInput = {
           customerSegment, productId: line.productId, size: line.size,
           quantity: Math.max(1, line.quantity), profileId: profile.id,
-          basePrices, supplies, machines, operations,
+          basePrices, supplies, machines, operations, volumeTiers,
           linearCm: line.linearCm,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
           savingsTransferRate, config,
@@ -94,7 +95,7 @@ export function CotizadorScreen({ onToast }: Props) {
       const input: QuoteInput = {
         customerSegment, productId: line.productId, size: line.size,
         quantity: Math.max(1, line.quantity), profileId,
-        basePrices, supplies, machines, operations,
+        basePrices, supplies, machines, operations, volumeTiers,
         linearCm: line.linearCm,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config,
@@ -207,6 +208,12 @@ export function CotizadorScreen({ onToast }: Props) {
             <div className="pricing-kpi"><span>Costo total</span><strong>{fmt(totalCost)}</strong></div>
             <div className="pricing-kpi"><span>Ganancia total</span><strong>{fmt(totalProfit)}</strong></div>
             <div className="pricing-kpi"><span>Margen</span><strong>{pct.format(overallMargin)}</strong></div>
+            {totalVolumeDiscount > 0 && (
+              <div className="pricing-kpi pricing-kpi-discount">
+                <span>Desc. volumen</span>
+                <strong>−{fmt(totalVolumeDiscount)}</strong>
+              </div>
+            )}
           </div>
 
           {totalEcoSavings > 0 && (
@@ -229,7 +236,7 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-breakdown-wrap">
             <table className="pricing-breakdown-table">
               <thead>
-                <tr><th>#</th><th>PROD.</th><th>T.</th><th>CANT.</th><th>COSTO/U</th><th>P/U</th><th>SUBTOTAL</th><th>MRG</th></tr>
+                <tr><th>#</th><th>PROD.</th><th>T.</th><th>CANT.</th><th>COSTO/U</th><th>DESC.</th><th>P/U</th><th>SUBTOTAL</th><th>MRG</th></tr>
               </thead>
               <tbody>
                 {lineQuotes.map((q, i) => (
@@ -239,6 +246,9 @@ export function CotizadorScreen({ onToast }: Props) {
                     <td>{orderLines[i].productId === 'por_cm' ? `${orderLines[i].linearCm}cm` : orderLines[i].size}</td>
                     <td>{orderLines[i].quantity}</td>
                     <td>{q ? fmt(q.cost.unitCost) : '—'}</td>
+                    <td className={q && q.volumeDiscount > 0 ? 'pricing-discount-cell' : ''}>
+                      {q && q.volumeDiscount > 0 ? `−${Math.round(q.volumeDiscount * 100)}%` : '—'}
+                    </td>
                     <td>{q ? fmt(q.finalUnitPrice) : '—'}</td>
                     <td>{q ? fmt(q.totalPrice) : 'ERR'}</td>
                     <td>{q ? pct.format(q.margin) : '—'}</td>
@@ -249,7 +259,9 @@ export function CotizadorScreen({ onToast }: Props) {
                 <tr>
                   <td colSpan={3}><strong>TOTAL</strong></td>
                   <td><strong>{totalUnits}</strong></td>
-                  <td></td><td></td>
+                  <td></td>
+                  <td>{totalVolumeDiscount > 0 && <span className="pricing-discount-cell">−{fmt(totalVolumeDiscount)}</span>}</td>
+                  <td></td>
                   <td><strong>{fmt(totalPrice)}</strong></td>
                   <td><strong>{pct.format(overallMargin)}</strong></td>
                 </tr>

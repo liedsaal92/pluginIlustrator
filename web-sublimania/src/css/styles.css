@@ -5500,6 +5500,12 @@ body {
   border-right-color: rgba(226,228,244,0.1);
 }
 
+/* Volume discount cells */
+.pricing-discount-cell { color: #16a34a; font-weight: 700; }
+.pricing-kpi-discount strong { color: #16a34a; }
+[data-theme="dark"] .pricing-discount-cell,
+[data-theme="dark"] .pricing-kpi-discount strong { color: #4ade80; }
+
 /* COSTOS BASE panel */
 .pricing-costs-panel { margin-top: 1.25rem; padding: 1.25rem; }
 .pricing-costs-header {

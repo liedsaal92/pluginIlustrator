@@ -13,11 +13,12 @@ function toNum(v: string) { const n = Number(v); return Number.isFinite(n) ? n :
 
 export function CostosBaseScreen({ onToast }: Props) {
   const {
-    config, supplies, machines, operations,
+    config, supplies, machines, operations, volumeTiers,
     updateConfig,
     updateSupply, addSupply, removeSupply,
     updateMachine, addMachine, removeMachine,
     updateOperation, addOperation, removeOperation,
+    updateVolumeTier, addVolumeTier, removeVolumeTier,
     resetPricingData,
   } = usePricingStore();
 
@@ -244,6 +245,55 @@ export function CostosBaseScreen({ onToast }: Props) {
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
           Restricciones financieras que garantizan rentabilidad mínima en cada cotización.
         </div>
+        {/* Volume discount tiers */}
+        <div className="pricing-panel-title pricing-panel-title-spaced">DESCUENTOS POR VOLUMEN</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Descuento sobre el precio tabla según cantidad total de la línea. El mínimo financiero siempre prevalece.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>DESDE (u)</th>
+                <th>HASTA (u)</th>
+                <th>DESCUENTO %</th>
+                <th>PRECIO TABLA</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {volumeTiers.map(t => (
+                <tr key={t.id}>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="1" step="1"
+                      value={t.from}
+                      onChange={e => updateVolumeTier(t.id, { from: Math.max(1, Number(e.target.value)) })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="1" step="1"
+                      placeholder="∞"
+                      value={t.to ?? ''}
+                      onChange={e => updateVolumeTier(t.id, { to: e.target.value === '' ? null : Math.max(1, Number(e.target.value)) })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0" max="99" step="1"
+                      value={Math.round(t.discount * 100)}
+                      onChange={e => updateVolumeTier(t.id, { discount: Math.min(0.99, Number(e.target.value) / 100) })} />
+                  </td>
+                  <td className="pricing-costs-derived">
+                    {t.discount === 0 ? 'Precio tabla' : `−${Math.round(t.discount * 100)}%`}
+                  </td>
+                  <td>
+                    <button className="pricing-order-remove" onClick={() => removeVolumeTier(t.id)}>✕</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button className="pricing-order-add" onClick={addVolumeTier}>+ AGREGAR TRAMO</button>
+
+        <div className="pricing-panel-title pricing-panel-title-spaced">RESTRICCIONES FINANCIERAS</div>
         <div className="pricing-form-grid">
           <label className="pricing-field">
             <span>MARGEN MÍNIMO %</span>

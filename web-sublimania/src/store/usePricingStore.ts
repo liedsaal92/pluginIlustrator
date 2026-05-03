@@ -4,9 +4,10 @@ import { defaultPricingConfig } from '../pricing/data/config';
 import { defaultSupplies } from '../pricing/data/supplies';
 import { machines as defaultMachines } from '../pricing/data/machines';
 import { operations as defaultOperations } from '../pricing/data/operations';
+import { defaultVolumeTiers } from '../pricing/data/volumeTiers';
 import type {
   BasePrice, BasePriceField, CustomerSegment, MachineCost,
-  OperationCost, PricingConfig, QuoteHistoryEntry, QuoteResult, Supply,
+  OperationCost, PricingConfig, QuoteHistoryEntry, QuoteResult, Supply, VolumeTier,
 } from '../pricing/types';
 
 const HISTORY_KEY   = 'subliflow_pricing_history';
@@ -15,6 +16,7 @@ const PRICES_KEY    = 'subliflow_pricing_base_prices';
 const SUPPLIES_KEY  = 'subliflow_pricing_supplies';
 const MACHINES_KEY  = 'subliflow_pricing_machines';
 const OPS_KEY       = 'subliflow_pricing_operations';
+const TIERS_KEY     = 'subliflow_pricing_volume_tiers';
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -56,18 +58,24 @@ interface PricingState {
   addOperation: () => void;
   removeOperation: (id: string) => void;
 
+  volumeTiers: VolumeTier[];
+  updateVolumeTier: (id: string, patch: Partial<Omit<VolumeTier, 'id'>>) => void;
+  addVolumeTier: () => void;
+  removeVolumeTier: (id: string) => void;
+
   resetPricingData: () => void;
   saveQuote: (quote: QuoteResult) => void;
   clearHistory: () => void;
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
-  config:     loadJson(CONFIG_KEY,   defaultPricingConfig),
-  basePrices: loadJson(PRICES_KEY,   defaultBasePrices),
-  supplies:   loadJson(SUPPLIES_KEY, defaultSupplies),
-  machines:   loadJson(MACHINES_KEY, defaultMachines),
-  operations: loadJson(OPS_KEY,      defaultOperations),
-  history:    loadJson(HISTORY_KEY,  [] as QuoteHistoryEntry[]),
+  config:       loadJson(CONFIG_KEY,   defaultPricingConfig),
+  basePrices:   loadJson(PRICES_KEY,   defaultBasePrices),
+  supplies:     loadJson(SUPPLIES_KEY, defaultSupplies),
+  machines:     loadJson(MACHINES_KEY, defaultMachines),
+  operations:   loadJson(OPS_KEY,      defaultOperations),
+  volumeTiers:  loadJson(TIERS_KEY,    defaultVolumeTiers),
+  history:      loadJson(HISTORY_KEY,  [] as QuoteHistoryEntry[]),
 
   updateConfig: (key, value) => {
     const config = { ...get().config, [key]: value };
@@ -139,18 +147,38 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     set({ operations });
   },
 
+  updateVolumeTier: (id, patch) => {
+    const volumeTiers = get().volumeTiers.map(t => t.id === id ? { ...t, ...patch } : t);
+    persist(TIERS_KEY, volumeTiers);
+    set({ volumeTiers });
+  },
+  addVolumeTier: () => {
+    const tiers = get().volumeTiers;
+    const lastTo = tiers.length > 0 ? (tiers[tiers.length - 1].to ?? 99) : 0;
+    const volumeTiers = [...tiers, { id: genId(), from: lastTo + 1, to: null, discount: 0 }];
+    persist(TIERS_KEY, volumeTiers);
+    set({ volumeTiers });
+  },
+  removeVolumeTier: (id) => {
+    const volumeTiers = get().volumeTiers.filter(t => t.id !== id);
+    persist(TIERS_KEY, volumeTiers);
+    set({ volumeTiers });
+  },
+
   resetPricingData: () => {
     persist(CONFIG_KEY,   defaultPricingConfig);
     persist(PRICES_KEY,   defaultBasePrices);
     persist(SUPPLIES_KEY, defaultSupplies);
     persist(MACHINES_KEY, defaultMachines);
     persist(OPS_KEY,      defaultOperations);
+    persist(TIERS_KEY,    defaultVolumeTiers);
     set({
-      config:     defaultPricingConfig,
-      basePrices: defaultBasePrices,
-      supplies:   defaultSupplies,
-      machines:   defaultMachines,
-      operations: defaultOperations,
+      config:      defaultPricingConfig,
+      basePrices:  defaultBasePrices,
+      supplies:    defaultSupplies,
+      machines:    defaultMachines,
+      operations:  defaultOperations,
+      volumeTiers: defaultVolumeTiers,
     });
   },
 

@@ -8,6 +8,5 @@ export const defaultPricingConfig: PricingConfig = {
   rollWidthCm: 130,
   roundingEnabled: false,
   roundingIncrement: 0.1,
-  comboDiscount: 0.5,
   pricePerCm: 0.05,
 };

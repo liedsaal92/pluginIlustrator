@@ -11,8 +11,14 @@ export interface PricingConfig {
   rollWidthCm: number;
   roundingEnabled: boolean;
   roundingIncrement: number;
-  comboDiscount: number;
   pricePerCm: number;
+}
+
+export interface VolumeTier {
+  id: string;
+  from: number;
+  to: number | null;
+  discount: number;
 }
 
 export interface Supply {
@@ -92,6 +98,7 @@ export interface QuoteInput {
   supplies: Supply[];
   machines: MachineCost[];
   operations: OperationCost[];
+  volumeTiers: VolumeTier[];
   linearCm?: number;
   manualPrice?: number;
   savingsTransferRate: number;
@@ -102,6 +109,8 @@ export interface QuoteResult {
   input: QuoteInput;
   cost: CostBreakdown;
   basePrice: number;
+  volumeDiscount: number;
+  volumeDiscountAmount: number;
   minPriceByMargin: number;
   minPriceByProfit: number;
   minPrice: number;
