@@ -24,6 +24,7 @@ import { CotizadorScreen } from './modules/pricing/CotizadorScreen';
 import { CostosBaseScreen } from './modules/pricing/CostosBaseScreen';
 import { TablasScreen } from './modules/pricing/TablasScreen';
 import { MercadoScreen } from './modules/pricing/MercadoScreen';
+import { TablaClienteScreen } from './modules/pricing/TablaClienteScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
@@ -153,7 +154,8 @@ export default function App() {
           {screen === 'pricing_cotizador' && <CotizadorScreen  onToast={showToast} />}
           {screen === 'pricing_costos'    && <CostosBaseScreen onToast={showToast} />}
           {screen === 'pricing_tablas'    && <TablasScreen     onToast={showToast} />}
-          {screen === 'pricing_mercado'   && <MercadoScreen    onToast={showToast} />}
+          {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
+          {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
           {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
         </div>
       </main>

@@ -356,6 +356,21 @@ export function CostosBaseScreen({ onToast }: Props) {
               </select>
             </label>
           )}
+          <div className="pricing-field" style={{ gridColumn: '1 / -1' }}>
+            <span>TRASLADO AHORRO ECO POR DEFECTO</span>
+            <div className="pricing-table-sub" style={{ marginBottom: '0.5rem' }}>
+              Se pre-selecciona en el cotizador y en la tabla de precios para cliente. Fijá un valor estándar para evitar variación entre cotizaciones.
+            </div>
+            <div className="pricing-transfer-btns">
+              {([0, 0.20, 0.30, 0.40, 0.50] as number[]).map(rate => (
+                <button key={rate}
+                  className={`pricing-transfer-btn${(config.defaultSavingsTransferRate ?? 0) === rate ? ' active' : ''}`}
+                  onClick={() => updateConfig('defaultSavingsTransferRate', rate)}>
+                  {rate === 0 ? '—  Sin traslado' : `${Math.round(rate * 100)}%`}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -374,6 +389,7 @@ export function CostosBaseScreen({ onToast }: Props) {
                 <th>FACTOR TINTA</th>
                 <th>AHORRO VS NORMAL</th>
                 <th>COSTO/METRO</th>
+                <th>PREDETERMINADO</th>
                 <th>HABILITADO</th>
                 <th></th>
               </tr>
@@ -399,6 +415,11 @@ export function CostosBaseScreen({ onToast }: Props) {
                     </td>
                     <td className="pricing-costs-derived">
                       {cpm > 0 ? fmt4(cpm) : '—'}
+                    </td>
+                    <td className="pricing-costs-check-cell">
+                      <input type="radio" name="defaultProfile"
+                        checked={(config.defaultProfileId ?? 'normal') === p.id}
+                        onChange={() => updateConfig('defaultProfileId', p.id)} />
                     </td>
                     <td className="pricing-costs-check-cell">
                       <input type="checkbox" checked={p.enabled}

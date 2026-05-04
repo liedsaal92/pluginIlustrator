@@ -211,6 +211,14 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
             <span className="sidebar-nav-item-icon">◎</span>
             <span className="sidebar-nav-text">MERCADO</span>
           </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_tabla_cliente' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_tabla_cliente'); })}
+            title="Tabla para cliente"
+          >
+            <span className="sidebar-nav-item-icon">↗</span>
+            <span className="sidebar-nav-text">TABLA CLIENTE</span>
+          </button>
         </div>
 
 

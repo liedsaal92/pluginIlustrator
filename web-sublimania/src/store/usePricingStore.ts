@@ -9,10 +9,12 @@ import { defaultCompetitors } from '../pricing/data/competitors';
 import { defaultPrintProfiles } from '../pricing/data/printProfiles';
 import type {
   BasePrice, BasePriceField, Competitor, CustomerSegment, Gender, MachineCost,
-  OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult, Supply, VolumeTier,
+  OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
+  Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
-const HISTORY_KEY      = 'subliflow_pricing_history';
+const HISTORY_KEY       = 'subliflow_pricing_history';
+const TABLA_EXPORTS_KEY = 'subliflow_tabla_exports';
 const CONFIG_KEY       = 'subliflow_pricing_config';
 const PRICES_KEY       = 'subliflow_pricing_base_prices';
 const SUPPLIES_KEY     = 'subliflow_pricing_supplies';
@@ -105,6 +107,10 @@ interface PricingState {
   resetPricingData: () => void;
   saveQuote: (quote: QuoteResult) => void;
   clearHistory: () => void;
+
+  tablaExports: TablaExportEntry[];
+  saveTablaExport: (entry: Omit<TablaExportEntry, 'id' | 'createdAt'>) => void;
+  removeTablaExport: (id: string) => void;
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
@@ -116,7 +122,8 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   volumeTiers:    loadJson(TIERS_KEY,       defaultVolumeTiers),
   competitors:    loadJson(COMPETITORS_KEY, defaultCompetitors),
   printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
-  history:        loadJson(HISTORY_KEY,     [] as QuoteHistoryEntry[]),
+  history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
+  tablaExports:   loadJson(TABLA_EXPORTS_KEY, [] as TablaExportEntry[]),
   refClienteId:  localStorage.getItem(REF_CLIENTE_KEY) || null,
   refGender:     (localStorage.getItem(REF_GENDER_KEY) as Gender | null) || null,
 
@@ -286,5 +293,21 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   clearHistory: () => {
     persist(HISTORY_KEY, []);
     set({ history: [] });
+  },
+
+  saveTablaExport: (entry) => {
+    const full: TablaExportEntry = {
+      ...entry,
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      createdAt: new Date().toISOString(),
+    };
+    const tablaExports = [full, ...get().tablaExports].slice(0, 50);
+    persist(TABLA_EXPORTS_KEY, tablaExports);
+    set({ tablaExports });
+  },
+  removeTablaExport: (id) => {
+    const tablaExports = get().tablaExports.filter(e => e.id !== id);
+    persist(TABLA_EXPORTS_KEY, tablaExports);
+    set({ tablaExports });
   },
 }));

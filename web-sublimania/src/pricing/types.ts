@@ -13,6 +13,8 @@ export interface PricingConfig {
   roundingEnabled: boolean;
   roundingIncrement: number;
   pricePerCm: number;
+  defaultSavingsTransferRate: number;
+  defaultProfileId: string;
 }
 
 export interface VolumeTier {
@@ -142,4 +144,24 @@ export interface Competitor {
 export interface QuoteHistoryEntry extends QuoteResult {
   id: string;
   createdAt: string;
+}
+
+export interface TablaExportRow {
+  size: number;
+  gender: Gender;
+  prices: Partial<Record<'camiseta' | 'pantaloneta' | 'equipo', number>>;
+}
+
+export interface TablaExportEntry {
+  id: string;
+  createdAt: string;
+  clienteId: string | null;
+  clienteNombre: string | null;
+  segment: CustomerSegment;
+  profileId: string;
+  profileName: string;
+  transferRate: number;
+  roundingEnabled: boolean;
+  roundingIncrement: number;
+  rows: TablaExportRow[];
 }

@@ -61,14 +61,20 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   const transferredSavings = roundMoney(cost.savingsPerUnit * normalizedInput.savingsTransferRate);
   const retainedSavings = roundMoney(cost.savingsPerUnit - transferredSavings);
 
-  const rawRecommended = Math.max(minPrice, discountedBasePrice) - transferredSavings;
+  // Precio final = precio de tabla + descuento volumen + traslado de ahorro ECO al cliente
+  const rawTablePrice = discountedBasePrice - transferredSavings;
+  const tableUnitPrice = normalizedInput.config.roundingEnabled
+    ? roundUpTo(rawTablePrice, normalizedInput.config.roundingIncrement)
+    : roundMoney(rawTablePrice);
+
+  // Piso financiero — solo informativo, no sobreescribe la tabla
   const recommendedUnitPrice = normalizedInput.config.roundingEnabled
-    ? roundUpTo(rawRecommended, normalizedInput.config.roundingIncrement)
-    : roundMoney(rawRecommended);
+    ? roundUpTo(minPrice, normalizedInput.config.roundingIncrement)
+    : roundMoney(minPrice);
 
   const finalUnitPrice = normalizedInput.manualPrice && normalizedInput.manualPrice > 0
     ? normalizedInput.manualPrice
-    : recommendedUnitPrice;
+    : tableUnitPrice;
 
   const unitProfit  = roundMoney(finalUnitPrice - cost.unitCost);
   const totalPrice  = roundMoney(finalUnitPrice * quantity);

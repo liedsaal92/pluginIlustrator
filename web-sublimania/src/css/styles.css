@@ -5853,4 +5853,391 @@ body {
   font-size: 0.68rem;
   opacity: 0.7;
 }
+
+/* ============================================================
+   TABLA CLIENTE — pantalla + impresión
+   ============================================================ */
+
+.tabla-cliente-printable {
+  margin-top: 1.5rem;
+}
+
+.tabla-cliente-print-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border: var(--border);
+  background: var(--white);
+  margin-bottom: 0;
+}
+
+.tabla-cliente-brand {
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.tabla-cliente-recipient {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  opacity: 0.75;
+}
+
+.tabla-cliente-meta {
+  text-align: right;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  opacity: 0.7;
+}
+
+.tabla-cliente-date {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  margin-top: 0.35rem;
+}
+
+.tabla-cliente-info-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(128,128,128,0.15);
+}
+
+.tabla-cliente-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: var(--border);
+  font-size: 0.72rem;
+  background: var(--white);
+}
+
+.tabla-cliente-chip-label {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.55;
+}
+
+.tabla-cliente-chip-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tabla-cliente-chip-muted {
+  opacity: 0.4;
+  font-size: 0.68rem;
+  border: none;
+  padding-left: 0;
+}
+
+.tabla-cliente-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--border);
+  border-top: none;
+  font-size: 0.88rem;
+}
+
+.tabla-cliente-table thead tr {
+  background: var(--black);
+  color: var(--white);
+}
+
+.tabla-cliente-table th {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+}
+
+.tabla-cliente-table td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+}
+
+.tabla-cliente-table tbody tr:hover {
+  background: rgba(0,200,184,0.04);
+}
+
+.tabla-cliente-size {
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+}
+
+.tabla-cliente-price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.tabla-cliente-cost {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  opacity: 0.45;
+}
+
+/* ── Historial de exportaciones ─────────────────────────── */
+.tabla-hist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: var(--border);
+}
+
+.tabla-hist-entry {
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+}
+.tabla-hist-entry:last-child { border-bottom: none; }
+
+.tabla-hist-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tabla-hist-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.tabla-hist-date {
+  font-size: 0.72rem;
+  opacity: 0.55;
+  min-width: 130px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-hist-client { font-size: 0.82rem; font-weight: 600; flex: 1; min-width: 80px; }
+
+.tabla-hist-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.45rem;
+  border: 1.5px solid currentColor;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+.tabla-hist-badge-eco { color: var(--accent); opacity: 1; }
+
+.tabla-hist-actions { display: flex; gap: 0.35rem; margin-left: auto; }
+
+.tabla-hist-btn {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border: var(--border);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+.tabla-hist-btn:hover { background: rgba(0,200,184,0.08); }
+.tabla-hist-btn-del:hover { color: var(--red); border-color: var(--red); background: transparent; }
+
+.tabla-hist-detail {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1rem 1rem;
+  background: rgba(128,128,128,0.03);
+  border-top: 1px solid rgba(128,128,128,0.1);
+  flex-wrap: wrap;
+}
+
+.tabla-hist-gender-block { flex: 1; min-width: 220px; }
+
+.tabla-hist-gender-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin-bottom: 0.35rem;
+}
+
+.tabla-hist-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+.tabla-hist-table th {
+  text-align: left;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.65rem;
+  opacity: 0.55;
+  border-bottom: 1px solid rgba(128,128,128,0.2);
+}
+.tabla-hist-table td {
+  padding: 0.2rem 0.4rem;
+  border-bottom: 1px solid rgba(128,128,128,0.08);
+  font-variant-numeric: tabular-nums;
+}
+.tabla-hist-table tr:last-child td { border-bottom: none; }
+
+.tabla-cliente-snapshot-banner {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.72rem;
+  background: rgba(0,200,184,0.08);
+  border: 1.5px solid var(--accent);
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.tabla-cliente-gender-section {
+  border-left: var(--border);
+  border-right: var(--border);
+}
+
+.tabla-cliente-gender-section + .tabla-cliente-gender-section {
+  border-top: var(--border);
+}
+
+.tabla-cliente-gender-header {
+  padding: 0.4rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  background: rgba(128,128,128,0.06);
+  border-bottom: 1px solid rgba(128,128,128,0.15);
+}
+
+@media print {
+  .tabla-cliente-gender-header {
+    background: #f5f5f5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.tabla-cliente-print-footer {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.68rem;
+  opacity: 0.4;
+  border: var(--border);
+  border-top: none;
+  letter-spacing: 0.04em;
+}
+
+/* ── Print media ─────────────────────────────────────────── */
+@page {
+  size: A4 portrait;
+  margin: 0.8cm 1cm;
+}
+
+@media print {
+  .sidebar,
+  .app-topbar,
+  .no-print {
+    display: none !important;
+  }
+
+  body, .app-root, .main-content, .screen {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-size: 8pt !important;
+  }
+
+  .tabla-cliente-printable {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Header compacto */
+  .tabla-cliente-print-header {
+    border: 1px solid #000;
+    background: #fff;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .tabla-cliente-brand {
+    color: #000;
+    font-size: 11pt;
+  }
+
+  .tabla-cliente-recipient {
+    font-size: 8pt;
+    margin-top: 0.1rem;
+  }
+
+  .tabla-cliente-date {
+    font-size: 7pt;
+    margin-top: 0.1rem;
+  }
+
+  /* Secciones de género */
+  .tabla-cliente-gender-section {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+  }
+
+  .tabla-cliente-gender-section + .tabla-cliente-gender-section {
+    border-top: 1px solid #000;
+  }
+
+  .tabla-cliente-gender-header {
+    padding: 0.2rem 0.6rem;
+    font-size: 7pt;
+    background: #efefef;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    border-bottom: 1px solid #ccc;
+  }
+
+  /* Tabla compacta */
+  .tabla-cliente-table {
+    border: 1px solid #000;
+    border-top: none;
+    font-size: 8pt;
+  }
+
+  .tabla-cliente-table thead tr {
+    background: #222;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .tabla-cliente-table th {
+    padding: 0.25rem 0.5rem;
+    font-size: 7pt;
+  }
+
+  .tabla-cliente-table td {
+    padding: 0.2rem 0.5rem;
+    border-bottom: 0.5px solid #ddd;
+  }
+
+  .tabla-cliente-size {
+    font-size: 8pt;
+  }
+
+  .tabla-cliente-price {
+    font-size: 8pt;
+  }
+
+  .tabla-cliente-table tbody tr:hover {
+    background: transparent;
+  }
+
+  .tabla-cliente-print-footer {
+    border: 1px solid #000;
+    border-top: none;
+    padding: 0.25rem 0.6rem;
+    font-size: 6.5pt;
+  }
+}
 .mkt-legend-sep { color: var(--text-muted); margin: 0 0.1rem; }

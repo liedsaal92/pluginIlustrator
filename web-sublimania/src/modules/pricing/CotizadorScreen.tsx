@@ -37,14 +37,16 @@ function newLine(): OrderLine {
 
 export function CotizadorScreen({ onToast }: Props) {
   const [customerSegment, setCustomerSegment] = useState<CustomerSegment>('normal');
-  const [profileId, setProfileId]             = useState<PrintProfileId>('normal');
-  const [savingsTransferRate, setSavingsTransferRate] = useState(0);
+  const [profileId, setProfileId]             = useState<PrintProfileId>(
+    () => usePricingStore.getState().config.defaultProfileId ?? 'normal'
+  );
   const [orderLines, setOrderLines]           = useState<OrderLine[]>([newLine()]);
   const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
   const [segmentOverridden, setSegmentOverridden] = useState(false);
 
   const { config, basePrices, supplies, machines, operations, volumeTiers, printProfiles, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
+  const savingsTransferRate = config.defaultSavingsTransferRate ?? 0;
   const { clientes } = useClientesStore();
   const { getSegmentoForCliente } = useTiposClienteStore();
   const { tallasPorCliente } = useTallasStore();
@@ -83,7 +85,7 @@ export function CotizadorScreen({ onToast }: Props) {
       };
       try { return calculateQuote(input); } catch { return null; }
     }),
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, savingsTransferRate, config, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, config, refClienteId, refGender, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -118,7 +120,7 @@ export function CotizadorScreen({ onToast }: Props) {
       }
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, savingsTransferRate, config, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, config, refClienteId, refGender, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine()]); }
@@ -219,28 +221,19 @@ export function CotizadorScreen({ onToast }: Props) {
                 <option value="vip">VIP</option>
               </select>
             </label>
-            <div className="pricing-field">
-              <span>TRASLADO AHORRO</span>
-              <div className="pricing-transfer-btns">
-                {[0.20, 0.30, 0.40, 0.50].map(rate => (
-                  <button key={rate}
-                    className={`pricing-transfer-btn${savingsTransferRate === rate ? ' active' : ''}`}
-                    onClick={() => setSavingsTransferRate(savingsTransferRate === rate ? 0 : rate)}>
-                    {Math.round(rate * 100)}%
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="pricing-panel-title pricing-panel-title-spaced">LÍNEAS DEL PEDIDO</div>
           <div className="pricing-order-wrap">
             <table className="pricing-order-table">
               <thead>
-                <tr><th>PRODUCTO</th><th>TALLA / CM</th><th>CANT.</th><th>P. MANUAL</th><th></th></tr>
+                <tr><th>PRODUCTO</th><th>TALLA / CM</th><th>CANT.</th><th title="Dejá vacío para usar el precio calculado">PRECIO ($)</th><th>GANANCIA/U</th><th></th></tr>
               </thead>
               <tbody>
-                {orderLines.map(line => (
+                {orderLines.map((line, i) => {
+                  const q = lineQuotes[i];
+                  const profit = q?.unitProfit ?? null;
+                  return (
                   <tr key={line.id}>
                     <td>
                       <select className="pricing-order-input pricing-order-select" value={line.productId}
@@ -273,15 +266,24 @@ export function CotizadorScreen({ onToast }: Props) {
                         onChange={e => updateLine(line.id, 'quantity', Number(e.target.value))} />
                     </td>
                     <td>
-                      <input className="pricing-order-input" type="number" min="0.01" step="0.01" placeholder="—"
+                      <input className="pricing-order-input" type="number" min="0.01" step="0.01" placeholder="auto"
                         value={line.manualPrice}
                         onChange={e => updateLine(line.id, 'manualPrice', e.target.value)} />
+                    </td>
+                    <td className="pricing-order-profit-cell" style={{
+                      color: profit === null ? undefined : profit >= 0 ? 'var(--green, #4caf50)' : 'var(--red, #f44336)',
+                      fontVariantNumeric: 'tabular-nums',
+                      fontSize: '0.78rem',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {profit !== null ? fmt(profit) : '—'}
                     </td>
                     <td>
                       <button className="pricing-order-remove" onClick={() => removeLine(line.id)}>✕</button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             <button className="pricing-order-add" onClick={addLine}>+ AGREGAR LÍNEA</button>
@@ -343,7 +345,18 @@ export function CotizadorScreen({ onToast }: Props) {
                       <td className={q && q.volumeDiscount > 0 ? 'pricing-discount-cell' : ''}>
                         {q && q.volumeDiscount > 0 ? `−${Math.round(q.volumeDiscount * 100)}%` : '—'}
                       </td>
-                      <td>{q ? fmt(q.finalUnitPrice) : '—'}</td>
+                      <td>
+                        {q ? (
+                          <>
+                            {fmt(q.finalUnitPrice)}
+                            {q.finalUnitPrice < q.recommendedUnitPrice && (
+                              <div style={{ fontSize: '0.62rem', opacity: 0.45, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                                mín {fmt(q.recommendedUnitPrice)}
+                              </div>
+                            )}
+                          </>
+                        ) : '—'}
+                      </td>
                       <td>{q ? fmt(q.totalPrice) : 'ERR'}</td>
                       <td>{q ? pct.format(q.margin) : '—'}</td>
                       {Object.keys(mktAvg).length > 0 && (
