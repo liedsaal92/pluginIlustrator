@@ -43,11 +43,11 @@ export function CotizadorScreen({ onToast }: Props) {
   const [orderLines, setOrderLines]           = useState<OrderLine[]>([newLine()]);
   const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
   const [segmentOverridden, setSegmentOverridden] = useState(false);
-  const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service'>('sublimation');
+  const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service' | 'paper'>('sublimation');
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, supplies, machines, operations, volumeTiers, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)
@@ -90,11 +90,12 @@ export function CotizadorScreen({ onToast }: Props) {
         serviceMode, fabrics,
         selectedFabricIdCamiseta: fabricCamisetaId,
         selectedFabricIdPantaloneta: fabricPantalonetaId,
+        basePricesCompleto, cmPriceTiers, paperPriceTiers,
       };
       try { return calculateQuote(input); } catch { return null; }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -107,6 +108,8 @@ export function CotizadorScreen({ onToast }: Props) {
   const overallMargin    = totalPrice > 0 ? totalProfit / totalPrice : 0;
   const totalUnits       = orderLines.reduce((s, l) => s + l.quantity, 0);
   const allAlerts        = lineQuotes.flatMap((q, i) => (q?.alerts ?? []).map(a => `L${i + 1}: ${a}`));
+  const totalRecommended = lineQuotes.reduce((s, q) => s + (q ? q.recommendedUnitPrice * q.input.quantity : 0), 0);
+  const belowMin         = totalPrice > 0 && totalPrice < totalRecommended;
 
   const profileTotals = useMemo(() =>
     enabledProfiles.map(profile => {
@@ -127,13 +130,14 @@ export function CotizadorScreen({ onToast }: Props) {
           serviceMode, fabrics,
           selectedFabricIdCamiseta: fabricCamisetaId,
           selectedFabricIdPantaloneta: fabricPantalonetaId,
+          basePricesCompleto, cmPriceTiers, paperPriceTiers,
         };
         try { const r = calculateQuote(input); tp += r.totalPrice; tpr += r.totalProfit; } catch { /**/ }
       }
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine()]); }
@@ -155,7 +159,7 @@ export function CotizadorScreen({ onToast }: Props) {
         customerSegment, gender, productId: line.productId, size,
         quantity: Math.max(1, line.quantity), profileId,
         profiles: printProfiles,
-        basePrices, supplies, machines, operations, volumeTiers,
+        basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers,
         linearCm: line.linearCm,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims,
@@ -224,6 +228,11 @@ export function CotizadorScreen({ onToast }: Props) {
             onClick={() => setServiceMode('full_service')}>
             SERVICIO COMPLETO
           </button>
+          <button
+            className={`pricing-transfer-btn${serviceMode === 'paper' ? ' active' : ''}`}
+            onClick={() => setServiceMode('paper')}>
+            SOLO PAPEL
+          </button>
         </div>
 
         {serviceMode === 'full_service' && (
@@ -240,8 +249,9 @@ export function CotizadorScreen({ onToast }: Props) {
                     onChange={e => setFabricCamisetaId(e.target.value || null)}>
                     <option value="">— Sin tela —</option>
                     {fabrics.map(f => {
-                      const ppm = f.metersPerKg > 0 ? f.costPerKg / f.metersPerKg : 0;
-                      return <option key={f.id} value={f.id}>{f.name} (${ppm.toFixed(2)}/m)</option>;
+                      const eff = f.metersPerKg * (f.tubular ? 2 : 1);
+                      const ppm = eff > 0 ? f.costPerKg / eff : 0;
+                      return <option key={f.id} value={f.id}>{f.name}{f.tubular ? ' (tubular)' : ''} — ${ppm.toFixed(2)}/m</option>;
                     })}
                   </select>
                 </label>
@@ -251,8 +261,9 @@ export function CotizadorScreen({ onToast }: Props) {
                     onChange={e => setFabricPantalonetaId(e.target.value || null)}>
                     <option value="">— Sin tela —</option>
                     {fabrics.map(f => {
-                      const ppm = f.metersPerKg > 0 ? f.costPerKg / f.metersPerKg : 0;
-                      return <option key={f.id} value={f.id}>{f.name} (${ppm.toFixed(2)}/m)</option>;
+                      const eff = f.metersPerKg * (f.tubular ? 2 : 1);
+                      const ppm = eff > 0 ? f.costPerKg / eff : 0;
+                      return <option key={f.id} value={f.id}>{f.name}{f.tubular ? ' (tubular)' : ''} — ${ppm.toFixed(2)}/m</option>;
                     })}
                   </select>
                 </label>
@@ -334,7 +345,8 @@ export function CotizadorScreen({ onToast }: Props) {
                         onChange={e => updateLine(line.id, 'quantity', Number(e.target.value))} />
                     </td>
                     <td>
-                      <input className="pricing-order-input" type="number" min="0.01" step="0.01" placeholder="auto"
+                      <input className="pricing-order-input" type="number" min="0.01" step="0.01"
+                        placeholder={q ? q.basePrice.toFixed(2) : '—'}
                         value={line.manualPrice}
                         onChange={e => updateLine(line.id, 'manualPrice', e.target.value)} />
                     </td>
@@ -361,35 +373,63 @@ export function CotizadorScreen({ onToast }: Props) {
         {/* ── Right: result ─────────────────────── */}
         <section className="pricing-panel pricing-result-panel">
           <div className="pricing-panel-title">RESULTADO</div>
-          <div className="pricing-hero-number">{fmt(totalPrice)}</div>
-          <div className="pricing-hero-label">TOTAL PEDIDO — {totalUnits} prenda{totalUnits !== 1 ? 's' : ''}</div>
-
-          <div className="pricing-kpis">
-            <div className="pricing-kpi"><span>Costo total</span><strong>{fmt(totalCost)}</strong></div>
-            <div className="pricing-kpi"><span>Ganancia total</span><strong>{fmt(totalProfit)}</strong></div>
-            <div className="pricing-kpi"><span>Margen</span><strong>{pct.format(overallMargin)}</strong></div>
-            {totalVolumeDiscount > 0 && (
-              <div className="pricing-kpi pricing-kpi-discount">
-                <span>Desc. volumen</span>
-                <strong>−{fmt(totalVolumeDiscount)}</strong>
+          <div className="pricing-hero-row">
+            <div>
+              <div
+                className="pricing-hero-number"
+                style={totalPrice > 0 ? (belowMin
+                  ? { background: 'rgba(244,67,54,0.13)', color: '#f44336', borderColor: 'rgba(244,67,54,0.35)' }
+                  : { background: 'rgba(76,175,80,0.13)',  color: '#2e7d32', borderColor: 'rgba(76,175,80,0.35)'  }
+                ) : undefined}
+              >
+                {fmt(totalPrice)}
+              </div>
+              <div className="pricing-hero-label">TOTAL PEDIDO — {totalUnits} prenda{totalUnits !== 1 ? 's' : ''}</div>
+            </div>
+            {belowMin && (
+              <div className="pricing-hero-min">
+                <div className="pricing-hero-min-label">SUGERIDO</div>
+                <div className="pricing-hero-min-value">{fmt(totalRecommended)}</div>
+                <div className="pricing-hero-min-sub">para mantener margen</div>
               </div>
             )}
           </div>
 
-          {serviceMode === 'full_service' && (() => {
-            const totalPrint    = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit    * q.input.quantity : 0), 0);
-            const totalFabric   = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit   * q.input.quantity : 0), 0);
-            const totalTailoring= lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit* q.input.quantity : 0), 0);
-            const totalPolines  = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit  * q.input.quantity : 0), 0);
-            return (
-              <div className="pricing-kpis" style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border, #333)', paddingTop: '0.5rem' }}>
-                <div className="pricing-kpi"><span>↳ Sublimado</span><strong>{fmt(totalPrint)}</strong></div>
-                {totalFabric > 0 && <div className="pricing-kpi"><span>↳ Tela</span><strong>{fmt(totalFabric)}</strong></div>}
-                {totalTailoring > 0 && <div className="pricing-kpi"><span>↳ Costura</span><strong>{fmt(totalTailoring)}</strong></div>}
-                {totalPolines > 0 && <div className="pricing-kpi"><span>↳ Polines/medias</span><strong>{fmt(totalPolines)}</strong></div>}
-              </div>
-            );
-          })()}
+          {/* ── COSTOS ───────────────────────────── */}
+          <div className="pricing-kpi-section">
+            <div className="pricing-kpi-section-label">COSTOS</div>
+            <div className="pricing-kpis">
+              {serviceMode === 'full_service' ? (() => {
+                const totalPrint     = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit     * q.input.quantity : 0), 0);
+                const totalFabric    = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit    * q.input.quantity : 0), 0);
+                const totalTailoring = lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit * q.input.quantity : 0), 0);
+                const totalPolines   = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit   * q.input.quantity : 0), 0);
+                return (<>
+                  <div className="pricing-kpi"><span>Sublimado</span><strong>{fmt(totalPrint)}</strong></div>
+                  {totalFabric    > 0 && <div className="pricing-kpi"><span>Tela</span><strong>{fmt(totalFabric)}</strong></div>}
+                  {totalTailoring > 0 && <div className="pricing-kpi"><span>Costura</span><strong>{fmt(totalTailoring)}</strong></div>}
+                  {totalPolines   > 0 && <div className="pricing-kpi"><span>Polines/medias</span><strong>{fmt(totalPolines)}</strong></div>}
+                  <div className="pricing-kpi pricing-kpi-total"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
+                </>);
+              })() : (
+                <div className="pricing-kpi"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
+              )}
+            </div>
+          </div>
+
+          {/* ── RESULTADO ────────────────────────── */}
+          <div className="pricing-kpi-section">
+            <div className="pricing-kpi-section-label">RESULTADO</div>
+            <div className="pricing-kpis">
+              <div className="pricing-kpi"><span>Ganancia</span><strong>{fmt(totalProfit)}</strong></div>
+              <div className="pricing-kpi"><span>Margen</span><strong>{pct.format(overallMargin)}</strong></div>
+              {totalVolumeDiscount > 0 && (
+                <div className="pricing-kpi pricing-kpi-discount">
+                  <span>Desc. volumen</span><strong>−{fmt(totalVolumeDiscount)}</strong>
+                </div>
+              )}
+            </div>
+          </div>
 
           {totalEcoSavings > 0 && (
             <div className="pricing-savings-chain">

@@ -10,9 +10,25 @@ function roundUpTo(value: number, increment: number): number {
   return roundMoney(Math.ceil(value / increment) * increment);
 }
 
+function getCmTierPrice(cm: number, tiers: import('../types').CmPriceTier[]): number {
+  if (!tiers.length) return 0;
+  const sorted = [...tiers].sort((a, b) => a.maxCm - b.maxCm);
+  const tier = sorted.find(t => cm <= t.maxCm);
+  return tier ? tier.price : sorted[sorted.length - 1].price;
+}
+
 function getBasePrice(input: QuoteInput): number {
-  if (input.productId === 'por_cm') return roundMoney((input.linearCm ?? 0) * input.config.pricePerCm);
-  const row = input.basePrices.find(item =>
+  if (input.productId === 'por_cm') {
+    const cm = input.linearCm ?? 0;
+    if (input.serviceMode === 'paper' && input.paperPriceTiers?.length)
+      return roundMoney(getCmTierPrice(cm, input.paperPriceTiers));
+    if (input.cmPriceTiers?.length) return roundMoney(getCmTierPrice(cm, input.cmPriceTiers));
+    return roundMoney(cm * input.config.pricePerCm);
+  }
+  const pool = (input.serviceMode === 'full_service' && input.basePricesCompleto?.length)
+    ? input.basePricesCompleto
+    : input.basePrices;
+  const row = pool.find(item =>
     item.segment === input.customerSegment &&
     item.gender  === input.gender &&
     item.size    === input.size

@@ -201,7 +201,7 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
             title="Tablas de Precios"
           >
             <span className="sidebar-nav-item-icon">≡</span>
-            <span className="sidebar-nav-text">TABLAS</span>
+            <span className="sidebar-nav-text">PRECIOS BASE</span>
           </button>
           <button
             className={`sidebar-nav-item sub ${screen === 'pricing_mercado' ? 'active' : ''}`}
@@ -217,7 +217,7 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
             title="Tabla para cliente"
           >
             <span className="sidebar-nav-item-icon">↗</span>
-            <span className="sidebar-nav-text">TABLA CLIENTE</span>
+            <span className="sidebar-nav-text">TABLAS DE PRECIOS</span>
           </button>
         </div>
 

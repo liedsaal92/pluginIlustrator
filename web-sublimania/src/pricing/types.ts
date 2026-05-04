@@ -127,10 +127,13 @@ export interface QuoteInput {
   savingsTransferRate: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
-  serviceMode?: 'sublimation' | 'full_service';
+  serviceMode?: 'sublimation' | 'full_service' | 'paper';
   fabrics?: FabricType[];
   selectedFabricIdCamiseta?: string | null;
   selectedFabricIdPantaloneta?: string | null;
+  basePricesCompleto?: BasePrice[];
+  cmPriceTiers?: CmPriceTier[];
+  paperPriceTiers?: CmPriceTier[];
 }
 
 export interface QuoteResult {
@@ -154,6 +157,12 @@ export interface QuoteResult {
 }
 
 export type MarketProductId = 'camiseta' | 'pantaloneta' | 'equipo' | 'por_cm';
+
+export interface CmPriceTier {
+  id: string;
+  maxCm: number;
+  price: number;
+}
 
 export interface Competitor {
   id: string;
@@ -184,4 +193,7 @@ export interface TablaExportEntry {
   roundingEnabled: boolean;
   roundingIncrement: number;
   rows: TablaExportRow[];
+  serviceMode?: 'sublimation' | 'full_service';
+  fabricCamisetaNombre?: string | null;
+  fabricPantalonetaNombre?: string | null;
 }

@@ -8,25 +8,30 @@ import { operations as defaultOperations } from '../pricing/data/operations';
 import { defaultVolumeTiers } from '../pricing/data/volumeTiers';
 import { defaultCompetitors } from '../pricing/data/competitors';
 import { defaultPrintProfiles } from '../pricing/data/printProfiles';
+import { defaultCmPriceTiers } from '../pricing/data/cmPriceTiers';
+import { defaultPaperPriceTiers } from '../pricing/data/paperPriceTiers';
 import type {
-  BasePrice, BasePriceField, Competitor, CustomerSegment, FabricType, Gender, MachineCost,
-  OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
+  BasePrice, BasePriceField, CmPriceTier, Competitor, CustomerSegment, FabricType, Gender,
+  MachineCost, OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
   Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
-const FABRICS_KEY       = 'subliflow_pricing_fabrics';
-const HISTORY_KEY       = 'subliflow_pricing_history';
-const TABLA_EXPORTS_KEY = 'subliflow_tabla_exports';
-const CONFIG_KEY       = 'subliflow_pricing_config';
-const PRICES_KEY       = 'subliflow_pricing_base_prices';
-const SUPPLIES_KEY     = 'subliflow_pricing_supplies';
-const MACHINES_KEY     = 'subliflow_pricing_machines';
-const OPS_KEY          = 'subliflow_pricing_operations';
-const TIERS_KEY        = 'subliflow_pricing_volume_tiers';
-const COMPETITORS_KEY  = 'subliflow_pricing_competitors';
-const PROFILES_KEY     = 'subliflow_pricing_print_profiles';
-const REF_CLIENTE_KEY  = 'subliflow_pricing_ref_cliente';
-const REF_GENDER_KEY   = 'subliflow_pricing_ref_gender';
+const FABRICS_KEY           = 'subliflow_pricing_fabrics';
+const HISTORY_KEY           = 'subliflow_pricing_history';
+const TABLA_EXPORTS_KEY     = 'subliflow_tabla_exports';
+const CONFIG_KEY            = 'subliflow_pricing_config';
+const PRICES_KEY            = 'subliflow_pricing_base_prices';
+const PRICES_COMPLETO_KEY   = 'subliflow_pricing_base_prices_completo';
+const SUPPLIES_KEY          = 'subliflow_pricing_supplies';
+const MACHINES_KEY          = 'subliflow_pricing_machines';
+const OPS_KEY               = 'subliflow_pricing_operations';
+const TIERS_KEY             = 'subliflow_pricing_volume_tiers';
+const COMPETITORS_KEY       = 'subliflow_pricing_competitors';
+const CM_TIERS_KEY          = 'subliflow_pricing_cm_price_tiers';
+const PAPER_TIERS_KEY       = 'subliflow_pricing_paper_price_tiers';
+const PROFILES_KEY          = 'subliflow_pricing_print_profiles';
+const REF_CLIENTE_KEY       = 'subliflow_pricing_ref_cliente';
+const REF_GENDER_KEY        = 'subliflow_pricing_ref_gender';
 
 function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -84,6 +89,8 @@ interface PricingState {
 
   updateConfig: <K extends keyof PricingConfig>(key: K, value: PricingConfig[K]) => void;
   updateBasePrice: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
+  basePricesCompleto: BasePrice[];
+  updateBasePriceCompleto: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
 
   updateSupply: (id: string, patch: Partial<Omit<Supply, 'id'>>) => void;
   addSupply: () => void;
@@ -112,6 +119,16 @@ interface PricingState {
   addCompetitor: () => void;
   removeCompetitor: (id: string) => void;
 
+  cmPriceTiers: CmPriceTier[];
+  updateCmTier: (id: string, patch: Partial<Omit<CmPriceTier, 'id'>>) => void;
+  addCmTier: () => void;
+  removeCmTier: (id: string) => void;
+
+  paperPriceTiers: CmPriceTier[];
+  updatePaperTier: (id: string, patch: Partial<Omit<CmPriceTier, 'id'>>) => void;
+  addPaperTier: () => void;
+  removePaperTier: (id: string) => void;
+
   printProfiles: PrintProfile[];
   updatePrintProfile: (id: string, patch: Partial<Omit<PrintProfile, 'id'>>) => void;
   addPrintProfile: () => void;
@@ -132,14 +149,17 @@ interface PricingState {
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
-  config:         migrateConfig(loadJson(CONFIG_KEY, defaultPricingConfig)),
-  basePrices:     migrateBasePrices(loadJson(PRICES_KEY, defaultBasePrices)),
+  config:              migrateConfig(loadJson(CONFIG_KEY, defaultPricingConfig)),
+  basePrices:          migrateBasePrices(loadJson(PRICES_KEY, defaultBasePrices)),
+  basePricesCompleto:  migrateBasePrices(loadJson(PRICES_COMPLETO_KEY, defaultBasePrices)),
   supplies:       loadJson(SUPPLIES_KEY,    defaultSupplies),
   machines:       loadJson(MACHINES_KEY,    defaultMachines),
   operations:     loadJson(OPS_KEY,         defaultOperations),
   volumeTiers:    loadJson(TIERS_KEY,       defaultVolumeTiers),
   fabrics:        loadJson(FABRICS_KEY,     defaultFabrics),
   competitors:    loadJson(COMPETITORS_KEY, defaultCompetitors),
+  cmPriceTiers:    loadJson(CM_TIERS_KEY,    defaultCmPriceTiers),
+  paperPriceTiers: loadJson(PAPER_TIERS_KEY, defaultPaperPriceTiers),
   printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
   history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
   tablaExports:   loadJson(TABLA_EXPORTS_KEY, [] as TablaExportEntry[]),
@@ -160,6 +180,16 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     );
     persist(PRICES_KEY, basePrices);
     set({ basePrices });
+  },
+
+  updateBasePriceCompleto: (segment, gender, size, field, value) => {
+    const basePricesCompleto = get().basePricesCompleto.map(row =>
+      row.segment === segment && row.gender === gender && row.size === size
+        ? { ...row, [field]: Number.isFinite(value) ? value : 0 }
+        : row
+    );
+    persist(PRICES_COMPLETO_KEY, basePricesCompleto);
+    set({ basePricesCompleto });
   },
 
   updateSupply: (id, patch) => {
@@ -256,6 +286,42 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const competitors = get().competitors.map(c => c.id === id ? { ...c, ...patch } : c);
     persist(COMPETITORS_KEY, competitors);
     set({ competitors });
+  },
+
+  updateCmTier: (id, patch) => {
+    const cmPriceTiers = get().cmPriceTiers.map(t => t.id === id ? { ...t, ...patch } : t);
+    persist(CM_TIERS_KEY, cmPriceTiers);
+    set({ cmPriceTiers });
+  },
+  addCmTier: () => {
+    const tiers = get().cmPriceTiers;
+    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
+    const cmPriceTiers = [...tiers, { id: genId(), maxCm: lastMax + 10, price: 0 }];
+    persist(CM_TIERS_KEY, cmPriceTiers);
+    set({ cmPriceTiers });
+  },
+  removeCmTier: (id) => {
+    const cmPriceTiers = get().cmPriceTiers.filter(t => t.id !== id);
+    persist(CM_TIERS_KEY, cmPriceTiers);
+    set({ cmPriceTiers });
+  },
+
+  updatePaperTier: (id, patch) => {
+    const paperPriceTiers = get().paperPriceTiers.map(t => t.id === id ? { ...t, ...patch } : t);
+    persist(PAPER_TIERS_KEY, paperPriceTiers);
+    set({ paperPriceTiers });
+  },
+  addPaperTier: () => {
+    const tiers = get().paperPriceTiers;
+    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
+    const paperPriceTiers = [...tiers, { id: genId(), maxCm: lastMax + 10, price: 0 }];
+    persist(PAPER_TIERS_KEY, paperPriceTiers);
+    set({ paperPriceTiers });
+  },
+  removePaperTier: (id) => {
+    const paperPriceTiers = get().paperPriceTiers.filter(t => t.id !== id);
+    persist(PAPER_TIERS_KEY, paperPriceTiers);
+    set({ paperPriceTiers });
   },
   addCompetitor: () => {
     const competitors = [...get().competitors, { id: genId(), name: 'Nuevo competidor', prices: {} }];
