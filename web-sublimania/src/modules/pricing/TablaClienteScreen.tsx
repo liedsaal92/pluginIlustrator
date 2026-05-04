@@ -209,13 +209,16 @@ export function TablaClienteScreen({ onToast }: Props) {
   const [liveRows, setLiveRows] = useState<LiveRow[]>([]);
 
   const profileId         = config.defaultProfileId ?? 'normal';
-  const transferRate      = config.defaultSavingsTransferRate ?? 0;
   const roundingEnabled   = config.roundingEnabled;
   const roundingIncrement = config.roundingIncrement;
 
   const segment: CustomerSegment = selectedClienteId
     ? getSegmentoForCliente(selectedClienteId)
     : 'normal';
+
+  const transferRate = segment === 'vip'
+    ? (config.savingsTransferRateVip ?? 0)
+    : (config.savingsTransferRateNormal ?? 0);
 
   const clienteNombre = clientes.find(c => c.id === selectedClienteId)?.nombre ?? null;
   const profileName   = printProfiles.find(p => p.id === profileId)?.name ?? profileId;

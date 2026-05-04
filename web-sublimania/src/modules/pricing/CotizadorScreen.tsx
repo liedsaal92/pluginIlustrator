@@ -46,7 +46,9 @@ export function CotizadorScreen({ onToast }: Props) {
 
   const { config, basePrices, supplies, machines, operations, volumeTiers, printProfiles, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
-  const savingsTransferRate = config.defaultSavingsTransferRate ?? 0;
+  const savingsTransferRate = customerSegment === 'vip'
+    ? (config.savingsTransferRateVip ?? 0)
+    : (config.savingsTransferRateNormal ?? 0);
   const { clientes } = useClientesStore();
   const { getSegmentoForCliente } = useTiposClienteStore();
   const { tallasPorCliente } = useTallasStore();
@@ -85,7 +87,8 @@ export function CotizadorScreen({ onToast }: Props) {
       };
       try { return calculateQuote(input); } catch { return null; }
     }),
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, config, refClienteId, refGender, tallasPorCliente]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, refClienteId, refGender, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -120,7 +123,8 @@ export function CotizadorScreen({ onToast }: Props) {
       }
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, config, refClienteId, refGender, tallasPorCliente]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, refClienteId, refGender, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine()]); }

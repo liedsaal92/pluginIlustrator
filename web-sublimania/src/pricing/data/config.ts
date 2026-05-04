@@ -9,6 +9,7 @@ export const defaultPricingConfig: PricingConfig = {
   roundingEnabled: false,
   roundingIncrement: 0.1,
   pricePerCm: 0.05,
-  defaultSavingsTransferRate: 0,
+  savingsTransferRateNormal: 0,
+  savingsTransferRateVip: 0,
   defaultProfileId: 'normal',
 };

@@ -357,15 +357,24 @@ export function CostosBaseScreen({ onToast }: Props) {
             </label>
           )}
           <div className="pricing-field" style={{ gridColumn: '1 / -1' }}>
-            <span>TRASLADO AHORRO ECO POR DEFECTO</span>
-            <div className="pricing-table-sub" style={{ marginBottom: '0.5rem' }}>
-              Se pre-selecciona en el cotizador y en la tabla de precios para cliente. Fijá un valor estándar para evitar variación entre cotizaciones.
-            </div>
+            <span>TRASLADO AHORRO ECO — CLIENTE NORMAL</span>
             <div className="pricing-transfer-btns">
-              {([0, 0.20, 0.30, 0.40, 0.50] as number[]).map(rate => (
+              {([0, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0] as number[]).map(rate => (
                 <button key={rate}
-                  className={`pricing-transfer-btn${(config.defaultSavingsTransferRate ?? 0) === rate ? ' active' : ''}`}
-                  onClick={() => updateConfig('defaultSavingsTransferRate', rate)}>
+                  className={`pricing-transfer-btn${(config.savingsTransferRateNormal ?? 0) === rate ? ' active' : ''}`}
+                  onClick={() => updateConfig('savingsTransferRateNormal', rate)}>
+                  {rate === 0 ? '—  Sin traslado' : `${Math.round(rate * 100)}%`}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="pricing-field" style={{ gridColumn: '1 / -1' }}>
+            <span>TRASLADO AHORRO ECO — CLIENTE VIP</span>
+            <div className="pricing-transfer-btns">
+              {([0, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 1.0] as number[]).map(rate => (
+                <button key={rate}
+                  className={`pricing-transfer-btn${(config.savingsTransferRateVip ?? 0) === rate ? ' active' : ''}`}
+                  onClick={() => updateConfig('savingsTransferRateVip', rate)}>
                   {rate === 0 ? '—  Sin traslado' : `${Math.round(rate * 100)}%`}
                 </button>
               ))}

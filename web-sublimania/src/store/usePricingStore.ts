@@ -35,6 +35,17 @@ function loadJson<T>(key: string, fallback: T): T {
   }
 }
 
+function migrateConfig(raw: PricingConfig): PricingConfig {
+  const out = { ...defaultPricingConfig, ...raw };
+  // migrate old single-rate field to per-segment
+  const legacy = (raw as Record<string, unknown>)['defaultSavingsTransferRate'];
+  if (typeof legacy === 'number' && !('savingsTransferRateNormal' in raw)) {
+    out.savingsTransferRateNormal = legacy;
+    out.savingsTransferRateVip = legacy;
+  }
+  return out;
+}
+
 function migrateBasePrices(raw: BasePrice[]): BasePrice[] {
   if (!raw.length) return defaultBasePrices;
   // Old rows lack gender — duplicate: H from existing, M as copies
@@ -114,7 +125,7 @@ interface PricingState {
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
-  config:         loadJson(CONFIG_KEY,      defaultPricingConfig),
+  config:         migrateConfig(loadJson(CONFIG_KEY, defaultPricingConfig)),
   basePrices:     migrateBasePrices(loadJson(PRICES_KEY, defaultBasePrices)),
   supplies:       loadJson(SUPPLIES_KEY,    defaultSupplies),
   machines:       loadJson(MACHINES_KEY,    defaultMachines),

@@ -13,7 +13,8 @@ export interface PricingConfig {
   roundingEnabled: boolean;
   roundingIncrement: number;
   pricePerCm: number;
-  defaultSavingsTransferRate: number;
+  savingsTransferRateNormal: number;
+  savingsTransferRateVip: number;
   defaultProfileId: string;
 }
 
