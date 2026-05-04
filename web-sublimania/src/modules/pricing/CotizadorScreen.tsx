@@ -43,8 +43,11 @@ export function CotizadorScreen({ onToast }: Props) {
   const [orderLines, setOrderLines]           = useState<OrderLine[]>([newLine()]);
   const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
   const [segmentOverridden, setSegmentOverridden] = useState(false);
+  const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service'>('sublimation');
+  const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
+  const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, supplies, machines, operations, volumeTiers, printProfiles, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, supplies, machines, operations, volumeTiers, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)
@@ -84,11 +87,14 @@ export function CotizadorScreen({ onToast }: Props) {
         linearCm: line.linearCm,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims,
+        serviceMode, fabrics,
+        selectedFabricIdCamiseta: fabricCamisetaId,
+        selectedFabricIdPantaloneta: fabricPantalonetaId,
       };
       try { return calculateQuote(input); } catch { return null; }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -118,13 +124,16 @@ export function CotizadorScreen({ onToast }: Props) {
           linearCm: line.linearCm,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
           savingsTransferRate, config, tallaDims,
+          serviceMode, fabrics,
+          selectedFabricIdCamiseta: fabricCamisetaId,
+          selectedFabricIdPantaloneta: fabricPantalonetaId,
         };
         try { const r = calculateQuote(input); tp += r.totalPrice; tpr += r.totalProfit; } catch { /**/ }
       }
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine()]); }
@@ -150,6 +159,9 @@ export function CotizadorScreen({ onToast }: Props) {
         linearCm: line.linearCm,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims,
+        serviceMode, fabrics,
+        selectedFabricIdCamiseta: fabricCamisetaId,
+        selectedFabricIdPantaloneta: fabricPantalonetaId,
       };
       validateQuoteInput(input).forEach(e => errors.push(`L${i + 1}: ${e}`));
     });
@@ -196,6 +208,58 @@ export function CotizadorScreen({ onToast }: Props) {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* ── Modo de servicio ─────────────────────────────────── */}
+      <section className="pricing-panel" style={{ padding: '1rem 1.25rem', marginTop: '1rem' }}>
+        <div className="pricing-panel-title" style={{ marginBottom: '0.6rem' }}>MODO DE SERVICIO</div>
+        <div className="pricing-transfer-btns">
+          <button
+            className={`pricing-transfer-btn${serviceMode === 'sublimation' ? ' active' : ''}`}
+            onClick={() => setServiceMode('sublimation')}>
+            SOLO SUBLIMADO
+          </button>
+          <button
+            className={`pricing-transfer-btn${serviceMode === 'full_service' ? ' active' : ''}`}
+            onClick={() => setServiceMode('full_service')}>
+            SERVICIO COMPLETO
+          </button>
+        </div>
+
+        {serviceMode === 'full_service' && (
+          <div style={{ marginTop: '1rem' }}>
+            {fabrics.length === 0 ? (
+              <div className="pricing-table-sub" style={{ color: 'var(--red, #f44336)' }}>
+                Sin telas configuradas — ir a <strong>COSTOS BASE → TELAS</strong> para agregar.
+              </div>
+            ) : (
+              <div className="pricing-form-grid">
+                <label className="pricing-field">
+                  <span>TELA CAMISETA</span>
+                  <select className="field-input field-select" value={fabricCamisetaId ?? ''}
+                    onChange={e => setFabricCamisetaId(e.target.value || null)}>
+                    <option value="">— Sin tela —</option>
+                    {fabrics.map(f => {
+                      const ppm = f.metersPerKg > 0 ? f.costPerKg / f.metersPerKg : 0;
+                      return <option key={f.id} value={f.id}>{f.name} (${ppm.toFixed(2)}/m)</option>;
+                    })}
+                  </select>
+                </label>
+                <label className="pricing-field">
+                  <span>TELA PANTALONETA</span>
+                  <select className="field-input field-select" value={fabricPantalonetaId ?? ''}
+                    onChange={e => setFabricPantalonetaId(e.target.value || null)}>
+                    <option value="">— Sin tela —</option>
+                    {fabrics.map(f => {
+                      const ppm = f.metersPerKg > 0 ? f.costPerKg / f.metersPerKg : 0;
+                      return <option key={f.id} value={f.id}>{f.name} (${ppm.toFixed(2)}/m)</option>;
+                    })}
+                  </select>
+                </label>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="pricing-grid">
@@ -311,6 +375,21 @@ export function CotizadorScreen({ onToast }: Props) {
               </div>
             )}
           </div>
+
+          {serviceMode === 'full_service' && (() => {
+            const totalPrint    = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit    * q.input.quantity : 0), 0);
+            const totalFabric   = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit   * q.input.quantity : 0), 0);
+            const totalTailoring= lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit* q.input.quantity : 0), 0);
+            const totalPolines  = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit  * q.input.quantity : 0), 0);
+            return (
+              <div className="pricing-kpis" style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border, #333)', paddingTop: '0.5rem' }}>
+                <div className="pricing-kpi"><span>↳ Sublimado</span><strong>{fmt(totalPrint)}</strong></div>
+                {totalFabric > 0 && <div className="pricing-kpi"><span>↳ Tela</span><strong>{fmt(totalFabric)}</strong></div>}
+                {totalTailoring > 0 && <div className="pricing-kpi"><span>↳ Costura</span><strong>{fmt(totalTailoring)}</strong></div>}
+                {totalPolines > 0 && <div className="pricing-kpi"><span>↳ Polines/medias</span><strong>{fmt(totalPolines)}</strong></div>}
+              </div>
+            );
+          })()}
 
           {totalEcoSavings > 0 && (
             <div className="pricing-savings-chain">

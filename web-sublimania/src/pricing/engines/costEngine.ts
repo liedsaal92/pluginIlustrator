@@ -1,6 +1,6 @@
 import { sizeMeasurements } from '../data/sizeMeasurements';
 import type {
-  BasePrice, CostBreakdown, MachineCost, OperationCost,
+  BasePrice, CostBreakdown, FabricType, MachineCost, OperationCost,
   PricingConfig, PrintProfile, PrintProfileId, ProductId, CustomerSegment, Supply,
 } from '../types';
 
@@ -83,7 +83,7 @@ function getMetersForProduct(
 
   if (productId === 'por_cm') {
     const cm = Math.max(0, linearCm ?? 0);
-    return { meters: cm / 100, source: 'real' as const, notes };
+    return { meters: cm / 100, camisetaMeters: 0, pantalonetaMeters: 0, source: 'real' as const, notes };
   }
 
   const shirtMeters = tallaDims
@@ -92,7 +92,7 @@ function getMetersForProduct(
   const source = tallaDims ? 'real' as const : 'real' as const;
 
   if (productId === 'camiseta') {
-    return { meters: shirtMeters, source, notes };
+    return { meters: shirtMeters, camisetaMeters: shirtMeters, pantalonetaMeters: 0, source, notes };
   }
 
   const prices = getBasePrice(basePrices, segment, size);
@@ -100,12 +100,20 @@ function getMetersForProduct(
 
   if (productId === 'pantaloneta') {
     if (!tallaDims) notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
-    return { meters: shirtMeters * ratio, source: tallaDims ? source : 'estimated' as const, notes };
+    const pMeters = shirtMeters * ratio;
+    return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: tallaDims ? source : 'estimated' as const, notes };
   }
 
   // equipo
   if (!tallaDims) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
-  return { meters: shirtMeters * (1 + ratio), source: tallaDims ? source : 'estimated' as const, notes };
+  const pMeters = shirtMeters * ratio;
+  return {
+    meters: shirtMeters + pMeters,
+    camisetaMeters: shirtMeters,
+    pantalonetaMeters: pMeters,
+    source: tallaDims ? source : 'estimated' as const,
+    notes,
+  };
 }
 
 export function calculateCost(input: {
@@ -122,6 +130,10 @@ export function calculateCost(input: {
   linearCm?: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  serviceMode?: 'sublimation' | 'full_service';
+  fabrics?: FabricType[];
+  selectedFabricIdCamiseta?: string | null;
+  selectedFabricIdPantaloneta?: string | null;
 }): CostBreakdown {
   const costPerMeter = getCostPerMeter(input.profileId, input.config, input.supplies, input.machines, input.operations, input.profiles);
   // baseline is always inkFactor=1 (full ink), independent of which profile is 'normal'
@@ -130,18 +142,57 @@ export function calculateCost(input: {
     input.productId, input.basePrices, input.segment, input.size,
     input.config.rollWidthCm, input.linearCm, input.tallaDims,
   );
-  const metersUnit = productMeters.meters * (1 + input.config.wasteRate);
-  const unitCost = roundMoney(metersUnit * costPerMeter);
-  const normalUnitCost = roundMoney(metersUnit * normalCostPerMeter);
+  const wasteRate = input.config.wasteRate;
+  const metersUnit = productMeters.meters * (1 + wasteRate);
+  const printCostPerUnit = roundMoney(metersUnit * costPerMeter);
+  const normalPrintCostPerUnit = roundMoney(metersUnit * normalCostPerMeter);
+
+  // ── Servicio completo ──────────────────────────────────────
+  const isFullService = input.serviceMode === 'full_service';
+  const fabrics = input.fabrics ?? [];
+
+  let fabricCostPerUnit = 0;
+  let tailoringCostPerUnit = 0;
+  let polinesCostPerUnit = 0;
+
+  if (isFullService) {
+    const fabricC = fabrics.find(f => f.id === input.selectedFabricIdCamiseta);
+    const fabricP = fabrics.find(f => f.id === input.selectedFabricIdPantaloneta);
+    const effC = fabricC ? fabricC.metersPerKg * (fabricC.tubular ? 2 : 1) : 0;
+    const effP = fabricP ? fabricP.metersPerKg * (fabricP.tubular ? 2 : 1) : 0;
+    const priceC = effC > 0 ? fabricC!.costPerKg / effC : 0;
+    const priceP = effP > 0 ? fabricP!.costPerKg / effP : 0;
+
+    const { productId } = input;
+    if (productId === 'camiseta') {
+      fabricCostPerUnit = roundMoney(metersUnit * priceC);
+      tailoringCostPerUnit = input.config.tailoringCamiseta ?? 0;
+    } else if (productId === 'pantaloneta') {
+      fabricCostPerUnit = roundMoney(metersUnit * priceP);
+      tailoringCostPerUnit = input.config.tailoringPantaloneta ?? 0;
+    } else if (productId === 'equipo') {
+      const cM = productMeters.camisetaMeters * (1 + wasteRate);
+      const pM = productMeters.pantalonetaMeters * (1 + wasteRate);
+      fabricCostPerUnit = roundMoney(cM * priceC + pM * priceP);
+      tailoringCostPerUnit = (input.config.tailoringCamiseta ?? 0) + (input.config.tailoringPantaloneta ?? 0);
+    }
+    polinesCostPerUnit = input.config.polinesCost ?? 0;
+  }
+
+  const unitCost = roundMoney(printCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit);
 
   return {
     profileId: input.profileId,
     costPerMeter,
     normalCostPerMeter,
     metersUnit,
+    printCostPerUnit,
+    fabricCostPerUnit,
+    tailoringCostPerUnit,
+    polinesCostPerUnit,
     unitCost,
     totalCost: roundMoney(unitCost * input.quantity),
-    savingsPerUnit: Math.max(0, roundMoney(normalUnitCost - unitCost)),
+    savingsPerUnit: Math.max(0, roundMoney(normalPrintCostPerUnit - printCostPerUnit)),
     measurementSource: productMeters.source,
     notes: productMeters.notes,
   };

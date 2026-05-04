@@ -12,4 +12,7 @@ export const defaultPricingConfig: PricingConfig = {
   savingsTransferRateNormal: 0,
   savingsTransferRateVip: 0,
   defaultProfileId: 'normal',
+  tailoringCamiseta: 0,
+  tailoringPantaloneta: 0,
+  polinesCost: 0,
 };

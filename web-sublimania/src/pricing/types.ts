@@ -16,6 +16,17 @@ export interface PricingConfig {
   savingsTransferRateNormal: number;
   savingsTransferRateVip: number;
   defaultProfileId: string;
+  tailoringCamiseta: number;
+  tailoringPantaloneta: number;
+  polinesCost: number;
+}
+
+export interface FabricType {
+  id: string;
+  name: string;
+  costPerKg: number;
+  metersPerKg: number;
+  tubular: boolean;
 }
 
 export interface VolumeTier {
@@ -87,6 +98,10 @@ export interface CostBreakdown {
   costPerMeter: number;
   normalCostPerMeter: number;
   metersUnit: number;
+  printCostPerUnit: number;
+  fabricCostPerUnit: number;
+  tailoringCostPerUnit: number;
+  polinesCostPerUnit: number;
   unitCost: number;
   totalCost: number;
   savingsPerUnit: number;
@@ -112,6 +127,10 @@ export interface QuoteInput {
   savingsTransferRate: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  serviceMode?: 'sublimation' | 'full_service';
+  fabrics?: FabricType[];
+  selectedFabricIdCamiseta?: string | null;
+  selectedFabricIdPantaloneta?: string | null;
 }
 
 export interface QuoteResult {

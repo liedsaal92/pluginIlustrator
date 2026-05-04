@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { defaultBasePrices } from '../pricing/data/basePrices';
 import { defaultPricingConfig } from '../pricing/data/config';
+import { defaultFabrics } from '../pricing/data/fabrics';
 import { defaultSupplies } from '../pricing/data/supplies';
 import { machines as defaultMachines } from '../pricing/data/machines';
 import { operations as defaultOperations } from '../pricing/data/operations';
@@ -8,11 +9,12 @@ import { defaultVolumeTiers } from '../pricing/data/volumeTiers';
 import { defaultCompetitors } from '../pricing/data/competitors';
 import { defaultPrintProfiles } from '../pricing/data/printProfiles';
 import type {
-  BasePrice, BasePriceField, Competitor, CustomerSegment, Gender, MachineCost,
+  BasePrice, BasePriceField, Competitor, CustomerSegment, FabricType, Gender, MachineCost,
   OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
   Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
+const FABRICS_KEY       = 'subliflow_pricing_fabrics';
 const HISTORY_KEY       = 'subliflow_pricing_history';
 const TABLA_EXPORTS_KEY = 'subliflow_tabla_exports';
 const CONFIG_KEY       = 'subliflow_pricing_config';
@@ -38,7 +40,7 @@ function loadJson<T>(key: string, fallback: T): T {
 function migrateConfig(raw: PricingConfig): PricingConfig {
   const out = { ...defaultPricingConfig, ...raw };
   // migrate old single-rate field to per-segment
-  const legacy = (raw as Record<string, unknown>)['defaultSavingsTransferRate'];
+  const legacy = (raw as unknown as Record<string, unknown>)['defaultSavingsTransferRate'];
   if (typeof legacy === 'number' && !('savingsTransferRateNormal' in raw)) {
     out.savingsTransferRateNormal = legacy;
     out.savingsTransferRateVip = legacy;
@@ -61,7 +63,7 @@ function migrateBasePrices(raw: BasePrice[]): BasePrice[] {
 function migratePrintProfiles(raw: PrintProfile[]): PrintProfile[] {
   if (!raw || !raw.length) return defaultPrintProfiles;
   // older records may lack the `enabled` field — default to true
-  return raw.map(p => ({ enabled: true, ...p }));
+  return raw.map(p => ({ ...p, enabled: p.enabled ?? true }));
 }
 
 function persist<T>(key: string, value: T) {
@@ -100,6 +102,11 @@ interface PricingState {
   addVolumeTier: () => void;
   removeVolumeTier: (id: string) => void;
 
+  fabrics: FabricType[];
+  updateFabric: (id: string, patch: Partial<Omit<FabricType, 'id'>>) => void;
+  addFabric: () => void;
+  removeFabric: (id: string) => void;
+
   competitors: Competitor[];
   updateCompetitor: (id: string, patch: Partial<Omit<Competitor, 'id'>>) => void;
   addCompetitor: () => void;
@@ -131,6 +138,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   machines:       loadJson(MACHINES_KEY,    defaultMachines),
   operations:     loadJson(OPS_KEY,         defaultOperations),
   volumeTiers:    loadJson(TIERS_KEY,       defaultVolumeTiers),
+  fabrics:        loadJson(FABRICS_KEY,     defaultFabrics),
   competitors:    loadJson(COMPETITORS_KEY, defaultCompetitors),
   printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
   history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
@@ -224,6 +232,24 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const volumeTiers = get().volumeTiers.filter(t => t.id !== id);
     persist(TIERS_KEY, volumeTiers);
     set({ volumeTiers });
+  },
+
+  updateFabric: (id, patch) => {
+    const fabrics = get().fabrics.map(f => f.id === id ? { ...f, ...patch } : f);
+    persist(FABRICS_KEY, fabrics);
+    set({ fabrics });
+  },
+  addFabric: () => {
+    const fabrics = [...get().fabrics, {
+      id: genId(), name: 'Nueva tela', costPerKg: 0, metersPerKg: 1, tubular: false,
+    }];
+    persist(FABRICS_KEY, fabrics);
+    set({ fabrics });
+  },
+  removeFabric: (id) => {
+    const fabrics = get().fabrics.filter(f => f.id !== id);
+    persist(FABRICS_KEY, fabrics);
+    set({ fabrics });
   },
 
   updateCompetitor: (id, patch) => {

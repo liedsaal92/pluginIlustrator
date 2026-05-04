@@ -18,6 +18,7 @@ export function CostosBaseScreen({ onToast }: Props) {
   const {
     config, supplies, machines, operations, volumeTiers,
     printProfiles, updatePrintProfile, addPrintProfile, removePrintProfile,
+    fabrics, updateFabric, addFabric, removeFabric,
     refClienteId, refGender, setRefCliente, setRefGender,
     updateConfig,
     updateSupply, addSupply, removeSupply,
@@ -380,6 +381,100 @@ export function CostosBaseScreen({ onToast }: Props) {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Telas ───────────────────────────────────────────── */}
+      <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
+        <div className="pricing-panel-title">TELAS</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Telas compradas por kilo. El precio/metro se calcula automáticamente. Usadas en cotizaciones de servicio completo.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>$/KG</th>
+                <th>METROS/KG</th>
+                <th>TUBULAR</th>
+                <th>$/METRO EFECTIVO</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {fabrics.map(f => (
+                <tr key={f.id}>
+                  <td>
+                    <input className="pricing-price-input" type="text" value={f.name}
+                      onChange={e => updateFabric(f.id, { name: e.target.value })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0" step="0.01" value={f.costPerKg}
+                      onChange={e => updateFabric(f.id, { costPerKg: toNum(e.target.value) })} />
+                  </td>
+                  <td>
+                    <input className="pricing-price-input" type="number" min="0.01" step="0.1" value={f.metersPerKg}
+                      onChange={e => updateFabric(f.id, { metersPerKg: Math.max(0.01, toNum(e.target.value)) })} />
+                  </td>
+                  <td className="pricing-costs-check-cell">
+                    <input type="checkbox" checked={f.tubular}
+                      onChange={e => updateFabric(f.id, { tubular: e.target.checked })} />
+                  </td>
+                  <td className="pricing-costs-derived">
+                    {(() => {
+                      const eff = f.metersPerKg * (f.tubular ? 2 : 1);
+                      return eff > 0 ? fmt4(f.costPerKg / eff) : '—';
+                    })()}
+                    {f.tubular && f.metersPerKg > 0 && (
+                      <small style={{ opacity: 0.5, display: 'block', fontSize: '0.65rem' }}>
+                        {(f.metersPerKg * 2).toFixed(2)} m/kg efectivos
+                      </small>
+                    )}
+                  </td>
+                  <td>
+                    <button className="pricing-order-remove" onClick={() => removeFabric(f.id)}>✕</button>
+                  </td>
+                </tr>
+              ))}
+              {fabrics.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', opacity: 0.45, fontSize: '0.78rem', padding: '0.75rem' }}>
+                    Sin telas configuradas — agregá una con el botón de abajo
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <button className="pricing-order-add" onClick={addFabric}>+ AGREGAR TELA</button>
+      </section>
+
+      {/* ── Confección ──────────────────────────────────────── */}
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">CONFECCIÓN</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Costos fijos por prenda cuando el servicio incluye costura. Solo aplican en cotizaciones de servicio completo.
+        </div>
+        <div className="pricing-form-grid">
+          <label className="pricing-field">
+            <span>COSTURA CAMISETA ($)</span>
+            <input className="field-input" type="number" min="0" step="0.01"
+              value={config.tailoringCamiseta ?? 0}
+              onChange={e => updateConfig('tailoringCamiseta', toNum(e.target.value))} />
+          </label>
+          <label className="pricing-field">
+            <span>COSTURA PANTALONETA ($)</span>
+            <input className="field-input" type="number" min="0" step="0.01"
+              value={config.tailoringPantaloneta ?? 0}
+              onChange={e => updateConfig('tailoringPantaloneta', toNum(e.target.value))} />
+          </label>
+          <label className="pricing-field">
+            <span>POLINES / MEDIAS ($)</span>
+            <input className="field-input" type="number" min="0" step="0.01"
+              value={config.polinesCost ?? 0}
+              onChange={e => updateConfig('polinesCost', toNum(e.target.value))} />
+          </label>
         </div>
       </section>
 

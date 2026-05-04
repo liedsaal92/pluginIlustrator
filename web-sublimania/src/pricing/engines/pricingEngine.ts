@@ -43,6 +43,10 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     linearCm: normalizedInput.linearCm,
     config: normalizedInput.config,
     tallaDims: normalizedInput.tallaDims,
+    serviceMode: normalizedInput.serviceMode,
+    fabrics: normalizedInput.fabrics,
+    selectedFabricIdCamiseta: normalizedInput.selectedFabricIdCamiseta,
+    selectedFabricIdPantaloneta: normalizedInput.selectedFabricIdPantaloneta,
   });
 
   const basePrice = getBasePrice(normalizedInput);
