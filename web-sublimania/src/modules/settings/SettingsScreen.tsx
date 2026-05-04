@@ -6,6 +6,7 @@ import { usePermission } from '../../hooks/usePermission';
 import { ClientesTab } from './ClientesTab';
 import { TallasSettingsTab } from './TallasSettingsTab';
 import { MoldesTab } from './MoldesTab';
+import { TiposClienteTab } from './TiposClienteTab';
 import { UsersTab } from './UsersTab';
 import type { SettingsTab } from '../../types';
 
@@ -49,6 +50,13 @@ export function SettingsScreen({ onToast }: Props) {
             <span className="settings-nav-icon">◫</span>
             MOLDES
           </button>
+          <button
+            className={`settings-nav-item ${tab === 'tipos' ? 'active' : ''}`}
+            onClick={() => setTab('tipos')}
+          >
+            <span className="settings-nav-icon">◆</span>
+            TIPOS
+          </button>
           {canManageUsers && (
             <button
               className={`settings-nav-item ${tab === 'users' ? 'active' : ''}`}
@@ -64,6 +72,7 @@ export function SettingsScreen({ onToast }: Props) {
           {tab === 'clientes' && <ClientesTab onToast={onToast} />}
           {tab === 'tallas'   && <TallasSettingsTab onToast={onToast} />}
           {tab === 'moldes'   && <MoldesTab onToast={onToast} />}
+          {tab === 'tipos'    && <TiposClienteTab onToast={onToast} />}
           {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
         </div>
       </div>

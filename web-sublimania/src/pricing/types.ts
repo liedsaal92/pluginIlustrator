@@ -1,6 +1,7 @@
 export type CustomerSegment = 'vip' | 'normal';
+export type Gender = 'H' | 'M';
 export type ProductId = 'camiseta' | 'pantaloneta' | 'equipo' | 'por_cm';
-export type PrintProfileId = 'normal' | 'eco' | 'super_eco' | 'ultra_eco';
+export type PrintProfileId = string;
 export type MeasurementSource = 'real' | 'estimated';
 
 export interface PricingConfig {
@@ -47,6 +48,7 @@ export interface PrintProfile {
   id: PrintProfileId;
   name: string;
   inkFactor: number;
+  enabled: boolean;
 }
 
 export interface Product {
@@ -68,6 +70,7 @@ export interface SizeMeasurement {
 
 export interface BasePrice {
   segment: CustomerSegment;
+  gender: Gender;
   size: number;
   camiseta: number;
   pantaloneta: number;
@@ -90,10 +93,12 @@ export interface CostBreakdown {
 
 export interface QuoteInput {
   customerSegment: CustomerSegment;
+  gender: Gender;
   productId: ProductId;
   size: number;
   quantity: number;
   profileId: PrintProfileId;
+  profiles: PrintProfile[];
   basePrices: BasePrice[];
   supplies: Supply[];
   machines: MachineCost[];
@@ -103,6 +108,7 @@ export interface QuoteInput {
   manualPrice?: number;
   savingsTransferRate: number;
   config: PricingConfig;
+  tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
 }
 
 export interface QuoteResult {
@@ -123,6 +129,14 @@ export interface QuoteResult {
   totalProfit: number;
   margin: number;
   alerts: string[];
+}
+
+export type MarketProductId = 'camiseta' | 'pantaloneta' | 'equipo' | 'por_cm';
+
+export interface Competitor {
+  id: string;
+  name: string;
+  prices: Partial<Record<MarketProductId, number>>;
 }
 
 export interface QuoteHistoryEntry extends QuoteResult {

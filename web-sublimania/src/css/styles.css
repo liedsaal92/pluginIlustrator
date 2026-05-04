@@ -2253,6 +2253,72 @@ body {
   line-height: 1.6;
 }
 
+/* ── TIPOS DE CLIENTE TAB ────────────────────────────────── */
+.tipos-toolbar { flex-wrap: wrap; }
+.tipos-segmento-select {
+  min-width: 110px;
+  max-width: 140px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border: var(--border);
+  background: var(--white);
+  outline: none;
+  cursor: pointer;
+}
+.tipos-segmento-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 2px 8px;
+  border: 1.5px solid currentColor;
+}
+.tipos-segmento-normal { color: #4A9BE8; border-color: #4A9BE8; background: rgba(74,155,232,0.08); }
+.tipos-segmento-vip    { color: #c8940a; border-color: #c8940a; background: rgba(255,230,0,0.15); }
+
+/* ── CLIENTES TAB — tipo column ──────────────────────────── */
+.col-cliente-tipo { min-width: 140px; }
+
+/* ── COTIZADOR — banner de referencia faltante ───────────── */
+.cotizador-ref-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 10px 16px;
+  background: #fff8e1;
+  border: 2px solid #c8940a;
+  border-left: 5px solid #c8940a;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+.cotizador-ref-banner span:first-child { font-size: 1rem; flex-shrink: 0; }
+
+/* ── TALLAS DE REFERENCIA — preview chips ────────────────── */
+.ref-tallas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.ref-talla-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 12px;
+  border: var(--border);
+  background: var(--cream);
+  font-family: var(--mono);
+  gap: 2px;
+  min-width: 70px;
+}
+.ref-talla-chip strong { font-size: 0.8rem; }
+.ref-talla-chip span   { color: var(--text-muted); font-size: 0.65rem; }
+
 /* ── ADD PLAYER FORM ─────────────────────────────────────── */
 .add-player-bar {
   padding: 10px 12px;
@@ -5713,3 +5779,78 @@ body {
 [data-theme="dark"] .pricing-order-input { border-color: rgba(226,228,244,0.18); }
 [data-theme="dark"] .pricing-order-input:focus { border-color: var(--yellow); }
 [data-theme="dark"] .pricing-order-add { border-color: rgba(226,228,244,0.18); }
+
+/* ── MERCADO SCREEN ─────────────────────────────────────────── */
+.mkt-empty-row { text-align: center; opacity: 0.45; padding: 1rem !important; font-style: italic; }
+
+/* Market diff columns */
+.mkt-diff-above { color: #dc2626; font-weight: 700; }
+.mkt-diff-below { color: #16a34a; font-weight: 700; }
+[data-theme="dark"] .mkt-diff-above { color: #f87171; }
+[data-theme="dark"] .mkt-diff-below { color: #4ade80; }
+
+/* Position badges */
+.mkt-pos-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  border: 2px solid currentColor;
+  white-space: nowrap;
+}
+.mkt-pos-premium  { color: #7B5CF0; border-color: #7B5CF0; }
+.mkt-pos-above    { color: #dc2626; border-color: #dc2626; }
+.mkt-pos-par      { color: #16a34a; border-color: #16a34a; }
+.mkt-pos-below    { color: #0284c7; border-color: #0284c7; }
+.mkt-pos-discount { color: #d97706; border-color: #d97706; }
+[data-theme="dark"] .mkt-pos-premium  { color: #a78bfa; border-color: #a78bfa; }
+[data-theme="dark"] .mkt-pos-above    { color: #f87171; border-color: #f87171; }
+[data-theme="dark"] .mkt-pos-par      { color: #4ade80; border-color: #4ade80; }
+[data-theme="dark"] .mkt-pos-below    { color: #38bdf8; border-color: #38bdf8; }
+[data-theme="dark"] .mkt-pos-discount { color: #fbbf24; border-color: #fbbf24; }
+
+/* Comparison table min widths */
+.mkt-comparison-table th, .mkt-comparison-table td { white-space: nowrap; }
+
+/* Profile scenario strip */
+.mkt-profile-strip {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+.mkt-profile-card {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid rgba(0,0,0,0.14);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s;
+}
+.mkt-profile-card span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.07em; opacity: 0.6; }
+.mkt-profile-card strong { font-size: 1rem; font-variant-numeric: tabular-nums; }
+.mkt-profile-card small { font-size: 0.7rem; }
+.mkt-profile-card:hover { border-color: var(--yellow); }
+.mkt-profile-card.active { border-color: var(--yellow); background: rgba(255,230,0,0.08); }
+[data-theme="dark"] .mkt-profile-card { border-color: rgba(226,228,244,0.14); }
+[data-theme="dark"] .mkt-profile-card.active { background: rgba(255,230,0,0.06); }
+
+/* Legend strip */
+.mkt-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  font-size: 0.68rem;
+  opacity: 0.7;
+}
+.mkt-legend-sep { color: var(--text-muted); margin: 0 0.1rem; }

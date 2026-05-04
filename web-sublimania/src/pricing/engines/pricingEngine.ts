@@ -12,8 +12,12 @@ function roundUpTo(value: number, increment: number): number {
 
 function getBasePrice(input: QuoteInput): number {
   if (input.productId === 'por_cm') return roundMoney((input.linearCm ?? 0) * input.config.pricePerCm);
-  const row = input.basePrices.find(item => item.segment === input.customerSegment && item.size === input.size);
-  if (!row) throw new Error(`Precio base no configurado: ${input.customerSegment} ${input.size}`);
+  const row = input.basePrices.find(item =>
+    item.segment === input.customerSegment &&
+    item.gender  === input.gender &&
+    item.size    === input.size
+  );
+  if (!row) throw new Error(`Precio base no configurado: ${input.customerSegment} ${input.gender} ${input.size}`);
   return row[input.productId as Exclude<ProductId, 'por_cm'>];
 }
 
@@ -31,12 +35,14 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     size: normalizedInput.size,
     quantity,
     profileId: normalizedInput.profileId,
+    profiles: normalizedInput.profiles,
     basePrices: normalizedInput.basePrices,
     supplies: normalizedInput.supplies,
     machines: normalizedInput.machines,
     operations: normalizedInput.operations,
     linearCm: normalizedInput.linearCm,
     config: normalizedInput.config,
+    tallaDims: normalizedInput.tallaDims,
   });
 
   const basePrice = getBasePrice(normalizedInput);
@@ -74,6 +80,9 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   if (margin < normalizedInput.config.minMargin) alerts.push('Margen menor al mínimo configurado.');
   if (unitProfit < minProfit) alerts.push('Ganancia por prenda menor a la relación 1:1 configurada.');
   if (cost.measurementSource === 'estimated') alerts.push('Cotización usa medidas estimadas.');
+  if (!normalizedInput.tallaDims && normalizedInput.productId !== 'por_cm') {
+    alerts.push('Medidas desde tabla por defecto — configurar referencia de tallas en COSTOS BASE para usar medidas reales.');
+  }
   if (normalizedInput.savingsTransferRate > 0.75) alerts.push('Se está trasladando mucho ahorro ECO al cliente.');
   if (volumeDiscount > 0 && discountedBasePrice < minPrice) {
     alerts.push(`Descuento volumen (${Math.round(volumeDiscount * 100)}%) limitado por mínimo financiero.`);

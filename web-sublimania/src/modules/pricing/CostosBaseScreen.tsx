@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
-import { getCostPerMeter } from '../../pricing/engines/costEngine';
-import { printProfiles } from '../../pricing/data/printProfiles';
+import { getCostPerMeter, calcShirtMetersFromDims } from '../../pricing/engines/costEngine';
 import { usePricingStore } from '../../store/usePricingStore';
+import { useClientesStore } from '../../store/useClientesStore';
+import { useTallasStore } from '../../store/useTallasStore';
+import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
+import type { Gender } from '../../pricing/types';
 
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
@@ -14,6 +17,8 @@ function toNum(v: string) { const n = Number(v); return Number.isFinite(n) ? n :
 export function CostosBaseScreen({ onToast }: Props) {
   const {
     config, supplies, machines, operations, volumeTiers,
+    printProfiles, updatePrintProfile, addPrintProfile, removePrintProfile,
+    refClienteId, refGender, setRefCliente, setRefGender,
     updateConfig,
     updateSupply, addSupply, removeSupply,
     updateMachine, addMachine, removeMachine,
@@ -21,6 +26,21 @@ export function CostosBaseScreen({ onToast }: Props) {
     updateVolumeTier, addVolumeTier, removeVolumeTier,
     resetPricingData,
   } = usePricingStore();
+
+  const { clientes } = useClientesStore();
+  const { tallasPorCliente } = useTallasStore();
+
+  const refTallas = useMemo(() => {
+    if (!refClienteId || !refGender) return [];
+    const byTalla = tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID] ?? {};
+    return Object.entries(byTalla)
+      .filter(([nombre]) => nombre.toUpperCase().endsWith(refGender))
+      .map(([nombre, dims]) => ({
+        nombre,
+        meters: calcShirtMetersFromDims(dims, config.rollWidthCm),
+      }))
+      .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
+  }, [refClienteId, refGender, tallasPorCliente, config.rollWidthCm]);
 
   const cpmSupplies = useMemo(() => supplies.reduce((s, sup) => {
     if (!sup.quantity || sup.quantity <= 0) return s;
@@ -38,8 +58,8 @@ export function CostosBaseScreen({ onToast }: Props) {
   }, [operations, config.monthlyMeters]);
 
   const cpmNormal = useMemo(() => {
-    try { return getCostPerMeter('normal', config, supplies, machines, operations); } catch { return 0; }
-  }, [config, supplies, machines, operations]);
+    try { return getCostPerMeter('normal', config, supplies, machines, operations, printProfiles); } catch { return 0; }
+  }, [config, supplies, machines, operations, printProfiles]);
 
   return (
     <div className="screen pricing-screen">
@@ -77,9 +97,9 @@ export function CostosBaseScreen({ onToast }: Props) {
           </div>
         </div>
         <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          {printProfiles.filter(p => p.id !== 'normal').map(p => {
+          {printProfiles.filter(p => p.id !== 'normal' && p.enabled).map(p => {
             let cpm = 0;
-            try { cpm = getCostPerMeter(p.id, config, supplies, machines, operations); } catch { /**/ }
+            try { cpm = getCostPerMeter(p.id, config, supplies, machines, operations, printProfiles); } catch { /**/ }
             const saving = cpmNormal - cpm;
             return (
               <div key={p.id} className="pricing-kpi" style={{ flex: '1 1 120px' }}>
@@ -313,6 +333,12 @@ export function CostosBaseScreen({ onToast }: Props) {
               value={config.pricePerCm}
               onChange={e => updateConfig('pricePerCm', Number(e.target.value))} />
           </label>
+          <label className="pricing-field">
+            <span>ANCHO PLÓTER (CM)</span>
+            <input className="field-input" type="number" min="50" max="320" step="1"
+              value={config.rollWidthCm}
+              onChange={e => updateConfig('rollWidthCm', Number(e.target.value))} />
+          </label>
           <label className="pricing-check">
             <input type="checkbox" checked={config.roundingEnabled}
               onChange={e => updateConfig('roundingEnabled', e.target.checked)} />
@@ -331,6 +357,118 @@ export function CostosBaseScreen({ onToast }: Props) {
             </label>
           )}
         </div>
+      </section>
+
+      {/* ── Perfiles de impresión ───────────────────────────── */}
+      <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
+        <div className="pricing-panel-title">PERFILES DE IMPRESIÓN</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Cada perfil define un factor de tinta que reduce el costo en insumos marcados con "Varía c/tinta".
+          Habilitá o deshabilitá perfiles para controlar cuáles aparecen en el cotizador.
+        </div>
+        <div className="pricing-price-table-wrap">
+          <table className="pricing-costs-table">
+            <thead>
+              <tr>
+                <th>NOMBRE</th>
+                <th>FACTOR TINTA</th>
+                <th>AHORRO VS NORMAL</th>
+                <th>COSTO/METRO</th>
+                <th>HABILITADO</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {printProfiles.map(p => {
+                let cpm = 0;
+                try { cpm = getCostPerMeter(p.id, config, supplies, machines, operations, printProfiles); } catch { /**/ }
+                const saving = p.inkFactor < 1 ? Math.round((1 - p.inkFactor) * 100) : 0;
+                return (
+                  <tr key={p.id} style={{ opacity: p.enabled ? 1 : 0.45 }}>
+                    <td>
+                      <input className="pricing-price-input" type="text" value={p.name}
+                        onChange={e => updatePrintProfile(p.id, { name: e.target.value })} />
+                    </td>
+                    <td>
+                      <input className="pricing-price-input" type="number" min="0.01" max="2" step="0.01"
+                        value={p.inkFactor}
+                        onChange={e => updatePrintProfile(p.id, { inkFactor: Math.max(0.01, toNum(e.target.value)) })} />
+                    </td>
+                    <td className="pricing-costs-derived">
+                      {saving > 0 ? `−${saving}% tinta` : '—'}
+                    </td>
+                    <td className="pricing-costs-derived">
+                      {cpm > 0 ? fmt4(cpm) : '—'}
+                    </td>
+                    <td className="pricing-costs-check-cell">
+                      <input type="checkbox" checked={p.enabled}
+                        onChange={e => updatePrintProfile(p.id, { enabled: e.target.checked })} />
+                    </td>
+                    <td>
+                      <button className="pricing-order-remove" onClick={() => removePrintProfile(p.id)}>✕</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <button className="pricing-order-add" onClick={addPrintProfile}>+ AGREGAR PERFIL</button>
+      </section>
+
+      {/* ── Tallas de referencia ─────────────────────────────── */}
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">TALLAS DE REFERENCIA</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+          Seleccioná un cliente y género para que el motor use las medidas reales
+          (ALTO + ANCHO + MANGA) de tus tallas configuradas en lugar de la tabla por defecto.
+        </div>
+
+        <div className="pricing-form-grid">
+          <label className="pricing-field">
+            <span>CLIENTE REF.</span>
+            <select className="field-input field-select" value={refClienteId ?? ''}
+              onChange={e => { setRefCliente(e.target.value || null); }}>
+              <option value="">— Usar tabla por defecto —</option>
+              {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </select>
+          </label>
+          <div className="pricing-field">
+            <span>GÉNERO</span>
+            <div className="pricing-transfer-btns">
+              {(['H', 'M'] as Gender[]).map(g => (
+                <button key={g}
+                  className={`pricing-transfer-btn${refGender === g ? ' active' : ''}`}
+                  onClick={() => setRefGender(refGender === g ? null : g)}>
+                  {g === 'H' ? '♂ H' : '♀ M'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {refClienteId && refGender && refTallas.length > 0 && (
+          <div className="ref-tallas-grid">
+            {refTallas.map(({ nombre, meters }) => (
+              <div key={nombre} className="ref-talla-chip">
+                <strong>{nombre}</strong>
+                <span>{meters.toFixed(3)} m</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {refClienteId && refGender && refTallas.length === 0 && (
+          <div className="pricing-table-sub" style={{ marginTop: '0.5rem', color: 'var(--red)' }}>
+            Sin tallas {refGender} configuradas para este cliente en el molde por defecto.
+          </div>
+        )}
+
+        {!refClienteId && (
+          <div className="pricing-table-sub" style={{ marginTop: '0.5rem', opacity: 0.55 }}>
+            Sin referencia activa — el cotizador usará la tabla hardcodeada de medidas.
+          </div>
+        )}
       </section>
     </div>
   );
