@@ -6293,4 +6293,82 @@ body {
     font-size: 6.5pt;
   }
 }
+
+/* ============================================================
+   DASHBOARD DE PRECIOS  (db-*)
+   ============================================================ */
+
+.db-controls-panel { padding: 1.25rem; margin-bottom: 1.25rem; }
+
+.db-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+  align-items: end;
+}
+
+/* KPI row */
+.db-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+.db-kpi-good  { color: var(--green); }
+.db-kpi-bad   { color: var(--red);   }
+.db-kpi-warn  { color: #ca8a04;      }
+.db-kpi-alert { border-color: var(--red) !important; }
+[data-theme="dark"] .db-kpi-warn { color: var(--yellow); }
+
+/* Analytics table */
+.db-table-panel  { padding: 1.25rem; margin-bottom: 1.25rem; }
+.db-analytics-table { min-width: 860px; }
+.db-row          { cursor: pointer; transition: background 0.1s; }
+.db-row:hover td { background: rgba(255,230,0,0.07); }
+.db-row-selected td { background: rgba(255,230,0,0.14) !important; }
+[data-theme="dark"] .db-row:hover td      { background: rgba(255,230,0,0.04); }
+[data-theme="dark"] .db-row-selected td   { background: rgba(255,230,0,0.09) !important; }
+
+.db-margin-good { color: var(--green);  font-weight: 800; }
+.db-margin-warn { color: #ca8a04;       font-weight: 800; }
+.db-margin-bad  { color: var(--red);    font-weight: 800; }
+[data-theme="dark"] .db-margin-warn { color: var(--yellow); }
+
+.db-alert-icon { color: var(--orange); font-size: 0.9rem; cursor: default; }
+.db-suggested  { color: var(--purple); font-weight: 700; font-variant-numeric: tabular-nums; }
+.db-sortable   { cursor: pointer; user-select: none; white-space: nowrap; }
+.db-sortable:hover { background: rgba(255,230,0,0.12); }
+
+/* Charts */
+.db-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.db-chart-panel { padding: 1.25rem; }
+.db-chart-full  { grid-column: 1 / -1; }
+
+/* Profile comparison */
+.db-comparison-panel { padding: 1.25rem; margin-bottom: 1.25rem; }
+
+/* Recharts dark mode */
+[data-theme="dark"] .recharts-cartesian-axis-tick-value { fill: rgba(226,228,244,0.55); }
+[data-theme="dark"] .recharts-default-tooltip {
+  background: #1e1e2e !important;
+  border-color: rgba(226,228,244,0.2) !important;
+  color: rgba(226,228,244,0.9) !important;
+}
+[data-theme="dark"] .recharts-legend-item-text { color: rgba(226,228,244,0.7) !important; }
+
+/* Responsive */
+@media (max-width: 980px) {
+  .db-kpi-row      { grid-template-columns: repeat(2, 1fr); }
+  .db-charts-grid  { grid-template-columns: 1fr; }
+  .db-chart-full   { grid-column: 1; }
+}
+@media (max-width: 640px) {
+  .db-kpi-row      { grid-template-columns: 1fr; }
+  .db-controls-grid { grid-template-columns: 1fr 1fr; }
+}
 .mkt-legend-sep { color: var(--text-muted); margin: 0 0.1rem; }
