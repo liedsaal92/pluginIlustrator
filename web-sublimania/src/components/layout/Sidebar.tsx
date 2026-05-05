@@ -28,6 +28,7 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
   const { teams, activeTeamId } = useTeamsStore();
   const activeTeam = teams.find(t => t.id === activeTeamId);
   const canManageSettings = usePermission('settings:manage');
+  const canManagePricing  = usePermission('billing:manage');
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const hasPlayers = players.length > 0;
@@ -177,7 +178,7 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
               <span className="sidebar-no-team-hint">Seleccioná uno en<br/>Mis Equipos ↑</span>
             </div>
           )}
-        </div>        <div className="sidebar-section">
+        </div>        {canManagePricing && <div className="sidebar-section">
           <div className="sidebar-section-label sidebar-nav-text">PRECIOS</div>
           <button
             className={`sidebar-nav-item sub ${screen === 'pricing_cotizador' ? 'active' : ''}`}
@@ -227,7 +228,7 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
             <span className="sidebar-nav-item-icon">▦</span>
             <span className="sidebar-nav-text">DASHBOARD</span>
           </button>
-        </div>
+        </div>}
 
 
 

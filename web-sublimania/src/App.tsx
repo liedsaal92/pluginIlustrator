@@ -26,6 +26,7 @@ import { TablasScreen } from './modules/pricing/TablasScreen';
 import { MercadoScreen } from './modules/pricing/MercadoScreen';
 import { TablaClienteScreen } from './modules/pricing/TablaClienteScreen';
 import { DashboardScreen } from './modules/pricing/DashboardScreen';
+import { hasPermission } from './types/auth';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
@@ -152,13 +153,19 @@ export default function App() {
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
           {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
-          {screen === 'pricing_cotizador' && <CotizadorScreen  onToast={showToast} />}
-          {screen === 'pricing_costos'    && <CostosBaseScreen onToast={showToast} />}
-          {screen === 'pricing_tablas'    && <TablasScreen     onToast={showToast} />}
-          {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
-          {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
-          {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
-          {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
+          {screen === 'settings'  && <SettingsScreen  onToast={showToast} />}
+          {screen.startsWith('pricing_') && (
+            hasPermission(session.user.role, 'billing:manage') ? (
+              <>
+                {screen === 'pricing_cotizador'     && <CotizadorScreen     onToast={showToast} />}
+                {screen === 'pricing_costos'        && <CostosBaseScreen    onToast={showToast} />}
+                {screen === 'pricing_tablas'        && <TablasScreen        onToast={showToast} />}
+                {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
+                {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
+                {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
+              </>
+            ) : <TeamsScreen onToast={showToast} />
+          )}
         </div>
       </main>
 
