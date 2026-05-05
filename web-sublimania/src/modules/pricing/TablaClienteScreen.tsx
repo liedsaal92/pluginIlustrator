@@ -208,6 +208,7 @@ function HistoryRow({ entry, onDelete }: { entry: TablaExportEntry; onDelete: ()
 function useComputeRows(
   segment: CustomerSegment,
   profileId: string,
+  savingsTransferRate: number,
   serviceMode: 'sublimation' | 'full_service',
   fabricCamisetaId: string | null,
   fabricPantalonetaId: string | null,
@@ -240,7 +241,7 @@ function useComputeRows(
               customerSegment: segment, gender, productId, size: row.size, quantity: 1,
               profileId, profiles: printProfiles,
               basePrices, basePricesCompleto, supplies, machines, operations, volumeTiers,
-              savingsTransferRate: 0, config, tallaDims,
+              savingsTransferRate, config, tallaDims,
               serviceMode, fabrics,
               selectedFabricIdCamiseta: fabricCamisetaId,
               selectedFabricIdPantaloneta: fabricPantalonetaId,
@@ -255,7 +256,7 @@ function useComputeRows(
     }
     setLiveRows(rows);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segment, profileId, serviceMode, fabricCamisetaId, fabricPantalonetaId, basePrices, supplies, machines, operations, volumeTiers, config, refClienteId, refGender, tallasPorCliente, ...deps]);
+  }, [segment, profileId, savingsTransferRate, serviceMode, fabricCamisetaId, fabricPantalonetaId, basePrices, basePricesCompleto, supplies, machines, operations, volumeTiers, printProfiles, fabrics, config, refClienteId, refGender, tallasPorCliente, ...deps]);
 
   return liveRows;
 }
@@ -293,8 +294,8 @@ export function TablaClienteScreen({ onToast }: Props) {
   const profileName   = printProfiles.find(p => p.id === profileId)?.name ?? profileId;
 
   // Computed rows for each tab
-  const liveRowsSublimado = useComputeRows(segment, profileId, 'sublimation', null, null, []);
-  const liveRowsCompleto  = useComputeRows(segment, profileId, 'full_service', fabricCamisetaId, fabricPantalonetaId, []);
+  const liveRowsSublimado = useComputeRows(segment, profileId, transferRate, 'sublimation', null, null, []);
+  const liveRowsCompleto  = useComputeRows(segment, profileId, transferRate, 'full_service', fabricCamisetaId, fabricPantalonetaId, []);
 
   const today = new Date().toLocaleDateString('es-EC', {
     day: '2-digit', month: 'long', year: 'numeric',

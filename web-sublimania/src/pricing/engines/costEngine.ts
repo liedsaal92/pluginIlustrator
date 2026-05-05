@@ -1,6 +1,6 @@
 import { sizeMeasurements } from '../data/sizeMeasurements';
 import type {
-  BasePrice, CostBreakdown, FabricType, MachineCost, OperationCost,
+  BasePrice, CostBreakdown, FabricType, Gender, MachineCost, OperationCost,
   PricingConfig, PrintProfile, PrintProfileId, ProductId, CustomerSegment, Supply,
 } from '../types';
 
@@ -64,9 +64,11 @@ export function getSizeMeasurement(size: number) {
   return measurement;
 }
 
-function getBasePrice(basePrices: BasePrice[], segment: CustomerSegment, size: number) {
-  const price = basePrices.find(item => item.segment === segment && item.size === size);
-  if (!price) throw new Error(`Precio base no configurado: ${segment} ${size}`);
+function getBasePriceRow(basePrices: BasePrice[], segment: CustomerSegment, gender: Gender, size: number) {
+  const price = basePrices.find(item =>
+    item.segment === segment && item.gender === gender && item.size === size
+  ) ?? basePrices.find(item => item.segment === segment && item.size === size);
+  if (!price) throw new Error(`Precio base no configurado: ${segment} ${gender} ${size}`);
   return price;
 }
 
@@ -74,6 +76,7 @@ function getMetersForProduct(
   productId: ProductId,
   basePrices: BasePrice[],
   segment: CustomerSegment,
+  gender: Gender,
   size: number,
   plotterWidthCm: number,
   linearCm?: number,
@@ -95,8 +98,8 @@ function getMetersForProduct(
     return { meters: shirtMeters, camisetaMeters: shirtMeters, pantalonetaMeters: 0, source, notes };
   }
 
-  const prices = getBasePrice(basePrices, segment, size);
-  const ratio = prices.pantaloneta / prices.camiseta;
+  const prices = getBasePriceRow(basePrices, segment, gender, size);
+  const ratio = prices.camiseta > 0 ? prices.pantaloneta / prices.camiseta : 1;
 
   if (productId === 'pantaloneta') {
     if (!tallaDims) notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
@@ -119,6 +122,7 @@ function getMetersForProduct(
 export function calculateCost(input: {
   productId: ProductId;
   segment: CustomerSegment;
+  gender: Gender;
   size: number;
   quantity: number;
   profileId: PrintProfileId;
@@ -139,7 +143,7 @@ export function calculateCost(input: {
   // baseline is always inkFactor=1 (full ink), independent of which profile is 'normal'
   const normalCostPerMeter = computeCostWithInkFactor(1, input.config, input.supplies, input.machines, input.operations);
   const productMeters = getMetersForProduct(
-    input.productId, input.basePrices, input.segment, input.size,
+    input.productId, input.basePrices, input.segment, input.gender, input.size,
     input.config.rollWidthCm, input.linearCm, input.tallaDims,
   );
   const wasteRate = input.config.wasteRate;

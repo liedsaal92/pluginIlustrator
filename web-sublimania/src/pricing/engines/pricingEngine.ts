@@ -48,6 +48,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   const cost = calculateCost({
     productId: normalizedInput.productId,
     segment: normalizedInput.customerSegment,
+    gender: normalizedInput.gender,
     size: normalizedInput.size,
     quantity,
     profileId: normalizedInput.profileId,
