@@ -25,10 +25,14 @@ interface Props {
 
 export function PlayerCard({ idx }: Props) {
   const { players, overrides, getPlayerRules, hasOverride, setOverride, clearOverride, removePlayer, updatePlayer, expandedPlayer, setExpandedPlayer } = useTeamStore();
+  const teamTallas       = useTeamStore(s => s.tallas);
   const tallasPorCliente = useTallasStore(s => s.tallasPorCliente);
-  const tallaOptions = sortTallas([...new Set(
-    Object.values(tallasPorCliente).flatMap(t => Object.keys(t))
-  )]);
+  const tallaOptions = sortTallas([...new Set([
+    ...teamTallas,
+    ...Object.values(tallasPorCliente).flatMap(byMolde =>
+      Object.values(byMolde).flatMap(byTalla => Object.keys(byTalla))
+    ),
+  ])]);
   const hTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'H');
   const mTallas    = tallaOptions.filter(t => getGeneroTalla(t) === 'M');
   const otraTallas = tallaOptions.filter(t => getGeneroTalla(t) === 'other');

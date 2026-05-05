@@ -177,7 +177,59 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
               <span className="sidebar-no-team-hint">Seleccioná uno en<br/>Mis Equipos ↑</span>
             </div>
           )}
+        </div>        <div className="sidebar-section">
+          <div className="sidebar-section-label sidebar-nav-text">PRECIOS</div>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_cotizador' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_cotizador'); })}
+            title="Cotizador"
+          >
+            <span className="sidebar-nav-item-icon">$</span>
+            <span className="sidebar-nav-text">COTIZADOR</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_costos' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_costos'); })}
+            title="Costos Base"
+          >
+            <span className="sidebar-nav-item-icon">◎</span>
+            <span className="sidebar-nav-text">COSTOS BASE</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_tablas' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_tablas'); })}
+            title="Tablas de Precios"
+          >
+            <span className="sidebar-nav-item-icon">≡</span>
+            <span className="sidebar-nav-text">PRECIOS BASE</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_mercado' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_mercado'); })}
+            title="Mercado"
+          >
+            <span className="sidebar-nav-item-icon">◎</span>
+            <span className="sidebar-nav-text">MERCADO</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_tabla_cliente' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_tabla_cliente'); })}
+            title="Tabla para cliente"
+          >
+            <span className="sidebar-nav-item-icon">↗</span>
+            <span className="sidebar-nav-text">TABLAS DE PRECIOS</span>
+          </button>
+          <button
+            className={`sidebar-nav-item sub ${screen === 'pricing_dashboard' ? 'active' : ''}`}
+            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('pricing_dashboard'); })}
+            title="Dashboard de Precios"
+          >
+            <span className="sidebar-nav-item-icon">▦</span>
+            <span className="sidebar-nav-text">DASHBOARD</span>
+          </button>
         </div>
+
+
 
         <div className="sidebar-section">
           <button

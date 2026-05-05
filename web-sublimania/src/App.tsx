@@ -20,6 +20,12 @@ import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
 import { PreviewScreen } from './modules/preview/PreviewScreen';
 import { ClienteScreen } from './modules/cliente/ClienteScreen';
+import { CotizadorScreen } from './modules/pricing/CotizadorScreen';
+import { CostosBaseScreen } from './modules/pricing/CostosBaseScreen';
+import { TablasScreen } from './modules/pricing/TablasScreen';
+import { MercadoScreen } from './modules/pricing/MercadoScreen';
+import { TablaClienteScreen } from './modules/pricing/TablaClienteScreen';
+import { DashboardScreen } from './modules/pricing/DashboardScreen';
 
 interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
@@ -146,6 +152,12 @@ export default function App() {
           {screen === 'configure' && <ConfigureScreen onToast={showToast} />}
           {screen === 'export'    && <ExportScreen    onToast={showToast} />}
           {screen === 'preview'   && <PreviewScreen   onToast={showToast} />}
+          {screen === 'pricing_cotizador' && <CotizadorScreen  onToast={showToast} />}
+          {screen === 'pricing_costos'    && <CostosBaseScreen onToast={showToast} />}
+          {screen === 'pricing_tablas'    && <TablasScreen     onToast={showToast} />}
+          {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
+          {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
+          {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
           {screen === 'settings'  && <SettingsScreen onToast={showToast} />}
         </div>
       </main>

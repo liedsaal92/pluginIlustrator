@@ -112,8 +112,15 @@ export interface PortalInfo {
   playerCount: number;
 }
 
+// ── TIPO DE CLIENTE ───────────────────────────────────────────
+export interface TipoCliente {
+  id: string;
+  nombre: string;
+  segmento: 'normal' | 'vip';
+}
+
 // ── PANTALLAS ─────────────────────────────────────────────────
-export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings';
+export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings' | 'pricing_cotizador' | 'pricing_costos' | 'pricing_tablas' | 'pricing_mercado' | 'pricing_tabla_cliente' | 'pricing_dashboard';
 export type ConfigTab = 'rules' | 'players';
-export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'users';
+export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'tipos' | 'users';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';

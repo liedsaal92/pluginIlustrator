@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
+import { useTiposClienteStore } from '../../store/useTiposClienteStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 
 interface Props {
@@ -16,6 +17,7 @@ const EMPTY = { nombre: '', casaCosturera: '' };
 export function ClientesTab({ onToast }: Props) {
   const { clientes, addCliente, updateCliente, removeCliente } = useClientesStore();
   const { initClienteFromDefault, removeCliente: removeTallasCliente } = useTallasStore();
+  const { tipos, clienteTipos, assignTipo, unassignTipo } = useTiposClienteStore();
 
   const [form, setForm]         = useState({ ...EMPTY });
   const [editId, setEditId]     = useState<string | null>(null);
@@ -82,13 +84,14 @@ export function ClientesTab({ onToast }: Props) {
             <tr>
               <th className="col-cliente-nombre">NOMBRE</th>
               <th className="col-cliente-casa">CASA COSTURERA</th>
+              <th className="col-cliente-tipo">TIPO</th>
               <th className="col-del"></th>
             </tr>
           </thead>
           <tbody>
             {clientes.length === 0 ? (
               <tr>
-                <td colSpan={3} style={{ textAlign: 'center', padding: '16px', color: '#888', fontSize: '12px' }}>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '16px', color: '#888', fontSize: '12px' }}>
                   Sin clientes registrados — agregá uno arriba
                 </td>
               </tr>
@@ -115,6 +118,16 @@ export function ClientesTab({ onToast }: Props) {
                         onKeyDown={e => e.key === 'Enter' && handleEditSave(c.id)}
                       />
                     </td>
+                    <td className="col-cliente-tipo">
+                      <select
+                        className="tallas-cliente-select"
+                        value={clienteTipos[c.id] ?? ''}
+                        onChange={e => e.target.value ? assignTipo(c.id, e.target.value) : unassignTipo(c.id)}
+                      >
+                        <option value="">— Sin tipo —</option>
+                        {tipos.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                      </select>
+                    </td>
                     <td className="col-del col-cliente-actions">
                       <button className="btn-del-talla" title="Guardar" onClick={() => handleEditSave(c.id)}>✓</button>
                       <button className="btn-del-talla" title="Cancelar" onClick={() => setEditId(null)}>✕</button>
@@ -127,6 +140,16 @@ export function ClientesTab({ onToast }: Props) {
                     </td>
                     <td className="col-cliente-casa">
                       <span className="cliente-casa-cell">{c.casaCosturera || '—'}</span>
+                    </td>
+                    <td className="col-cliente-tipo">
+                      <select
+                        className="tallas-cliente-select"
+                        value={clienteTipos[c.id] ?? ''}
+                        onChange={e => e.target.value ? assignTipo(c.id, e.target.value) : unassignTipo(c.id)}
+                      >
+                        <option value="">— Sin tipo —</option>
+                        {tipos.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                      </select>
                     </td>
                     <td className="col-del col-cliente-actions">
                       <button
