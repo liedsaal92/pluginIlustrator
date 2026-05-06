@@ -20,7 +20,7 @@ function tallaColor(size: number): string {
 const FIELDS: { key: BasePriceField; label: string }[] = [
   { key: 'camiseta',    label: 'CAMISETA'    },
   { key: 'pantaloneta', label: 'PANTALONETA' },
-  { key: 'equipo',      label: 'EQUIPO'      },
+  { key: 'equipo',      label: 'UNIFORME'    },
 ];
 
 const GROUPS: { gender: Gender; label: string; badgeClass: string }[] = [
@@ -118,14 +118,15 @@ export function TablasScreen({ onToast: _onToast }: Props) {
       {/* ── Tabs ────────────────────────────────────────────── */}
       <div className="pricing-transfer-btns" style={{ marginTop: '1rem', maxWidth: '520px' }}>
         <button
+          className={`pricing-transfer-btn pricing-transfer-btn--own${tab === 'completo' ? ' active' : ''}`}
+          onClick={() => setTab('completo')}>
+          <span className="pricing-transfer-badge">MIS PRODUCTOS</span>
+          UNIFORME COMPLETO
+        </button>
+        <button
           className={`pricing-transfer-btn${tab === 'sublimado' ? ' active' : ''}`}
           onClick={() => setTab('sublimado')}>
           SUBLIMADO
-        </button>
-        <button
-          className={`pricing-transfer-btn${tab === 'completo' ? ' active' : ''}`}
-          onClick={() => setTab('completo')}>
-          EQUIPO COMPLETO
         </button>
         <button
           className={`pricing-transfer-btn${tab === 'por_cm' ? ' active' : ''}`}
@@ -233,8 +234,8 @@ export function TablasScreen({ onToast: _onToast }: Props) {
 
           {isCompleto && (
             <div className="pricing-table-sub" style={{ marginBottom: '1rem' }}>
-              Precios de lista para <strong>servicio completo</strong> (sublimado + tela + costura + polines).
-              El cotizador usa estos precios cuando el modo es <strong>SERVICIO COMPLETO</strong>.
+              Precios de lista para <strong>uniforme completo</strong> (sublimado + tela + costura + polines).
+              El cotizador usa estos precios cuando el modo es <strong>UNIFORME COMPLETO</strong>.
             </div>
           )}
 

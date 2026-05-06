@@ -16,7 +16,7 @@ function toNum(v: string) { const n = Number(v); return Number.isFinite(n) ? n :
 
 export function CostosBaseScreen({ onToast }: Props) {
   const {
-    config, supplies, machines, operations, volumeTiers,
+    config, supplies, machines, operations, volumeTiersByProduct,
     printProfiles, updatePrintProfile, addPrintProfile, removePrintProfile,
     fabrics, updateFabric, addFabric, removeFabric,
     refClienteId, refGender, setRefCliente, setRefGender,
@@ -262,57 +262,86 @@ export function CostosBaseScreen({ onToast }: Props) {
 
       {/* ── Reglas de precio ─────────────────────────────────── */}
       <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">ORGANIZACIÓN</div>
+        <div className="pricing-form-grid" style={{ marginBottom: '1.25rem' }}>
+          <label className="pricing-field">
+            <span>NOMBRE EN COTIZACIONES</span>
+            <input className="field-input" type="text" maxLength={60}
+              value={config.orgNombre ?? ''}
+              onChange={e => updateConfig('orgNombre', e.target.value)}
+              placeholder="SUBLIMANIA" />
+          </label>
+        </div>
+      </section>
+
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
         <div className="pricing-panel-title">REGLAS DE PRECIO</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
           Restricciones financieras que garantizan rentabilidad mínima en cada cotización.
         </div>
-        {/* Volume discount tiers */}
+        {/* Volume discount tiers — per product */}
         <div className="pricing-panel-title pricing-panel-title-spaced">DESCUENTOS POR VOLUMEN</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
-          Descuento sobre el precio tabla según cantidad total de la línea. El mínimo financiero siempre prevalece.
+          Descuento sobre el precio tabla según cantidad por línea. Configurable por producto. Sin tramos = sin descuento.
         </div>
-        <div className="pricing-price-table-wrap">
-          <table className="pricing-costs-table">
-            <thead>
-              <tr>
-                <th>DESDE (u)</th>
-                <th>HASTA (u)</th>
-                <th>DESCUENTO %</th>
-                <th>PRECIO TABLA</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {volumeTiers.map(t => (
-                <tr key={t.id}>
-                  <td>
-                    <input className="pricing-price-input" type="number" min="1" step="1"
-                      value={t.from}
-                      onChange={e => updateVolumeTier(t.id, { from: Math.max(1, Number(e.target.value)) })} />
-                  </td>
-                  <td>
-                    <input className="pricing-price-input" type="number" min="1" step="1"
-                      placeholder="∞"
-                      value={t.to ?? ''}
-                      onChange={e => updateVolumeTier(t.id, { to: e.target.value === '' ? null : Math.max(1, Number(e.target.value)) })} />
-                  </td>
-                  <td>
-                    <input className="pricing-price-input" type="number" min="0" max="99" step="1"
-                      value={Math.round(t.discount * 100)}
-                      onChange={e => updateVolumeTier(t.id, { discount: Math.min(0.99, Number(e.target.value) / 100) })} />
-                  </td>
-                  <td className="pricing-costs-derived">
-                    {t.discount === 0 ? 'Precio tabla' : `−${Math.round(t.discount * 100)}%`}
-                  </td>
-                  <td>
-                    <button className="pricing-order-remove" onClick={() => removeVolumeTier(t.id)}>✕</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button className="pricing-order-add" onClick={addVolumeTier}>+ AGREGAR TRAMO</button>
+        {([ ['camiseta', 'CAMISETA'], ['pantaloneta', 'PANTALONETA'], ['equipo', 'EQUIPO'], ['por_cm', 'POR CM'] ] as const).map(([pid, label]) => {
+          const tiers = volumeTiersByProduct[pid] ?? [];
+          return (
+            <div key={pid} style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', opacity: 0.55, marginBottom: '0.4rem' }}>
+                {label}
+              </div>
+              {tiers.length === 0 ? (
+                <div className="pricing-table-sub" style={{ marginBottom: '0.4rem', opacity: 0.4, fontStyle: 'italic' }}>
+                  Sin descuentos por volumen
+                </div>
+              ) : (
+                <div className="pricing-price-table-wrap">
+                  <table className="pricing-costs-table">
+                    <thead>
+                      <tr>
+                        <th>DESDE (u)</th>
+                        <th>HASTA (u)</th>
+                        <th>DESCUENTO %</th>
+                        <th>PRECIO TABLA</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tiers.map(t => (
+                        <tr key={t.id}>
+                          <td>
+                            <input className="pricing-price-input" type="number" min="1" step="1"
+                              value={t.from}
+                              onChange={e => updateVolumeTier(pid, t.id, { from: Math.max(1, Number(e.target.value)) })} />
+                          </td>
+                          <td>
+                            <input className="pricing-price-input" type="number" min="1" step="1"
+                              placeholder="∞"
+                              value={t.to ?? ''}
+                              onChange={e => updateVolumeTier(pid, t.id, { to: e.target.value === '' ? null : Math.max(1, Number(e.target.value)) })} />
+                          </td>
+                          <td>
+                            <input className="pricing-price-input" type="number" min="0" max="99" step="1"
+                              value={Math.round(t.discount * 100)}
+                              onChange={e => updateVolumeTier(pid, t.id, { discount: Math.min(0.99, Number(e.target.value) / 100) })} />
+                          </td>
+                          <td className="pricing-costs-derived">
+                            {t.discount === 0 ? 'Precio tabla' : `−${Math.round(t.discount * 100)}%`}
+                          </td>
+                          <td>
+                            <button className="pricing-order-remove" onClick={() => removeVolumeTier(pid, t.id)}>✕</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <button className="pricing-order-add" onClick={() => addVolumeTier(pid)}>+ AGREGAR TRAMO</button>
+            </div>
+          );
+        })}
 
         <div className="pricing-panel-title pricing-panel-title-spaced">RESTRICCIONES FINANCIERAS</div>
         <div className="pricing-form-grid">
@@ -388,7 +417,7 @@ export function CostosBaseScreen({ onToast }: Props) {
       <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
         <div className="pricing-panel-title">TELAS</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
-          Telas compradas por kilo. El precio/metro se calcula automáticamente. Usadas en cotizaciones de servicio completo.
+          Telas compradas por kilo. El precio/metro se calcula automáticamente. Usadas en cotizaciones de uniforme completo.
         </div>
         <div className="pricing-price-table-wrap">
           <table className="pricing-costs-table">
@@ -454,7 +483,7 @@ export function CostosBaseScreen({ onToast }: Props) {
       <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
         <div className="pricing-panel-title">CONFECCIÓN</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
-          Costos fijos por prenda cuando el servicio incluye costura. Solo aplican en cotizaciones de servicio completo.
+          Costos fijos por prenda cuando el servicio incluye costura. Solo aplican en cotizaciones de uniforme completo.
         </div>
         <div className="pricing-form-grid">
           <label className="pricing-field">
@@ -474,6 +503,30 @@ export function CostosBaseScreen({ onToast }: Props) {
             <input className="field-input" type="number" min="0" step="0.01"
               value={config.polinesCost ?? 0}
               onChange={e => updateConfig('polinesCost', toNum(e.target.value))} />
+          </label>
+          <label className="pricing-field">
+            <span>TELA POR DEFECTO — CAMISETA</span>
+            {fabrics.length === 0
+              ? <span className="pricing-table-sub">Configura telas primero</span>
+              : <select className="field-input field-select"
+                  value={config.defaultFabricCamisetaId ?? ''}
+                  onChange={e => updateConfig('defaultFabricCamisetaId', e.target.value || null)}>
+                  <option value="">-- Ninguna --</option>
+                  {fabrics.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+            }
+          </label>
+          <label className="pricing-field">
+            <span>TELA POR DEFECTO — PANTALONETA</span>
+            {fabrics.length === 0
+              ? <span className="pricing-table-sub">Configura telas primero</span>
+              : <select className="field-input field-select"
+                  value={config.defaultFabricPantalonetaId ?? ''}
+                  onChange={e => updateConfig('defaultFabricPantalonetaId', e.target.value || null)}>
+                  <option value="">-- Ninguna --</option>
+                  {fabrics.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+            }
           </label>
         </div>
       </section>

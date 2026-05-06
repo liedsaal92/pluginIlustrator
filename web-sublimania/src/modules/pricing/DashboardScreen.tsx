@@ -2,6 +2,7 @@
 //  DashboardScreen — Análisis de márgenes y ahorros por talla
 // ============================================================
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis,
   Tooltip, Legend, ResponsiveContainer, Cell,
@@ -11,7 +12,7 @@ import { compareProfiles } from '../../pricing/engines/simulator';
 import { usePricingStore } from '../../store/usePricingStore';
 import { sizeMeasurements } from '../../pricing/data/sizeMeasurements';
 import type {
-  CustomerSegment, Gender, ProductId, QuoteInput, QuoteResult,
+  CustomerSegment, Gender, ProductId, QuoteInput, QuoteResult, BasePriceField,
 } from '../../pricing/types';
 
 // ── tipos locales ────────────────────────────────────────────
@@ -41,7 +42,7 @@ const SIZES = sizeMeasurements.map(s => s.size);
 const PRODUCTS: { id: DashboardProductId; label: string }[] = [
   { id: 'camiseta',    label: 'CAMISETA' },
   { id: 'pantaloneta', label: 'PANTALONETA' },
-  { id: 'equipo',      label: 'EQUIPO' },
+  { id: 'equipo',      label: 'UNIFORME' },
 ];
 
 const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -53,7 +54,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
   const {
     config, basePrices, basePricesCompleto,
     supplies, machines, operations,
-    volumeTiers, printProfiles, fabrics,
+    volumeTiersByProduct, printProfiles, fabrics,
   } = usePricingStore();
 
   return useMemo(() => {
@@ -77,11 +78,13 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
           supplies,
           machines,
           operations,
-          volumeTiers,
+          volumeTiers: volumeTiersByProduct[controls.productId] ?? [],
           savingsTransferRate,
           config,
           serviceMode:      controls.serviceMode,
           fabrics,
+          selectedFabricIdCamiseta:    controls.serviceMode === 'full_service' ? (config.defaultFabricCamisetaId ?? null)    : null,
+          selectedFabricIdPantaloneta: controls.serviceMode === 'full_service' ? (config.defaultFabricPantalonetaId ?? null) : null,
         };
         const quote = calculateQuote(input);
 
@@ -108,7 +111,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     controls.segment, controls.gender, controls.productId,
     controls.profileId, controls.quantity, controls.serviceMode,
     basePrices, basePricesCompleto, supplies, machines,
-    operations, volumeTiers, printProfiles, fabrics, config,
+    operations, volumeTiersByProduct, printProfiles, fabrics, config,
   ]);
 }
 
@@ -139,7 +142,7 @@ function marginHex(margin: number, minMargin: number) {
 interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
 export function DashboardScreen({ onToast: _onToast }: Props) {
-  const { config, printProfiles } = usePricingStore();
+  const { config, printProfiles, fabrics, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
 
   const [controls, setControls] = useState<DashboardControls>({
@@ -156,6 +159,8 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
   const [sortKey, setSortKey]   = useState<SortKey>('size');
   const [sortDir, setSortDir]   = useState<'asc' | 'desc'>('asc');
   const [selectedSize, setSelectedSize] = useState<number | null>(null);
+  const [editingBase, setEditingBase] = useState<{ size: number; value: number } | null>(null);
+  const [editValue, setEditValue]     = useState('');
 
   const rows = useDashboardData(controls);
   const kpis = useMemo(() => computeKPIs(rows, config.minMargin), [rows, config.minMargin]);
@@ -225,7 +230,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       supplies:         state.supplies,
       machines:         state.machines,
       operations:       state.operations,
-      volumeTiers:      state.volumeTiers,
+      volumeTiers:      (state.volumeTiersByProduct[controls.productId] ?? []),
       savingsTransferRate,
       config:           state.config,
       serviceMode:      controls.serviceMode,
@@ -292,9 +297,21 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
             <select className="field-input field-select" value={controls.serviceMode}
               onChange={e => set('serviceMode', e.target.value as ServiceMode)}>
               <option value="sublimation">Sublimado</option>
-              <option value="full_service">Servicio completo</option>
+              <option value="full_service">Uniforme completo</option>
             </select>
           </label>
+          {controls.serviceMode === 'full_service' && (
+            <div className="pricing-table-sub" style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+              Tela camiseta: <strong>{fabrics.find(f => f.id === config.defaultFabricCamisetaId)?.name ?? '—'}</strong>
+              {' · '}
+              Tela pantaloneta: <strong>{fabrics.find(f => f.id === config.defaultFabricPantalonetaId)?.name ?? '—'}</strong>
+              {(!config.defaultFabricCamisetaId && !config.defaultFabricPantalonetaId) && (
+                <span style={{ color: 'var(--pricing-bad, #ef4444)', marginLeft: 4 }}>
+                  (configurar en Costos Base → Confección)
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -368,7 +385,15 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                     )}
                   </td>
                   <td className={row.suggestedBase !== null ? 'db-suggested' : ''}>
-                    {row.suggestedBase !== null ? money(row.suggestedBase) : '—'}
+                    {row.suggestedBase !== null
+                      ? <button className="db-suggested-btn" onClick={() => {
+                          setEditingBase({ size: row.size, value: row.suggestedBase! });
+                          setEditValue(String(row.suggestedBase!));
+                        }}>
+                          {money(row.suggestedBase)}
+                        </button>
+                      : '—'
+                    }
                   </td>
                 </tr>
               ))}
@@ -471,6 +496,67 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
         </section>
       )}
 
+      {editingBase && (
+        <BasePricePopup
+          editing={editingBase}
+          editValue={editValue}
+          controls={controls}
+          onChange={setEditValue}
+          onConfirm={confirmEditBase}
+          onClose={() => setEditingBase(null)}
+        />
+      )}
     </div>
+  );
+
+  function confirmEditBase() {
+    if (!editingBase) return;
+    const val = parseFloat(editValue);
+    if (!Number.isFinite(val) || val <= 0) return;
+    const field = controls.productId as BasePriceField;
+    if (controls.serviceMode === 'full_service') {
+      updateBasePriceCompleto(controls.segment, controls.gender, editingBase.size, field, val);
+    } else {
+      updateBasePrice(controls.segment, controls.gender, editingBase.size, field, val);
+    }
+    setEditingBase(null);
+  }
+}
+
+function BasePricePopup({ editing, editValue, controls, onChange, onConfirm, onClose }: {
+  editing: { size: number; value: number };
+  editValue: string;
+  controls: { gender: string; serviceMode: string; segment: string; productId: string };
+  onChange: (v: string) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return createPortal(
+    <div className="db-popup-overlay" onClick={onClose}>
+      <div className="db-popup" onClick={e => e.stopPropagation()}>
+        <div className="db-popup-title">EDITAR PRECIO BASE — TALLA {editing.size}{controls.gender}</div>
+        <div className="db-popup-sub">
+          {controls.serviceMode === 'full_service' ? 'Tabla: Uniforme Completo' : 'Tabla: Sublimado'} · {controls.segment.toUpperCase()} · {controls.productId.toUpperCase()}
+        </div>
+        <input
+          className="field-input db-popup-input"
+          type="number"
+          step="0.01"
+          min="0"
+          value={editValue}
+          onChange={e => onChange(e.target.value)}
+          autoFocus
+          onKeyDown={e => {
+            if (e.key === 'Enter') onConfirm();
+            if (e.key === 'Escape') onClose();
+          }}
+        />
+        <div className="db-popup-actions">
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>CANCELAR</button>
+          <button className="btn btn-primary btn-sm" onClick={onConfirm}>CONFIRMAR</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }

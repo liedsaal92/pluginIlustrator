@@ -5,15 +5,15 @@ import { defaultFabrics } from '../pricing/data/fabrics';
 import { defaultSupplies } from '../pricing/data/supplies';
 import { machines as defaultMachines } from '../pricing/data/machines';
 import { operations as defaultOperations } from '../pricing/data/operations';
-import { defaultVolumeTiers } from '../pricing/data/volumeTiers';
+import { defaultVolumeTiersByProduct } from '../pricing/data/volumeTiers';
 import { defaultCompetitors } from '../pricing/data/competitors';
 import { defaultPrintProfiles } from '../pricing/data/printProfiles';
 import { defaultCmPriceTiers } from '../pricing/data/cmPriceTiers';
 import { defaultPaperPriceTiers } from '../pricing/data/paperPriceTiers';
 import type {
-  BasePrice, BasePriceField, CmPriceTier, Competitor, CustomerSegment, FabricType, Gender,
-  MachineCost, OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
-  Supply, TablaExportEntry, VolumeTier,
+  BasePrice, BasePriceField, CmPriceTier, Competitor, CotizacionHistoryEntry, CustomerSegment,
+  FabricType, Gender, MachineCost, OperationCost, PricingConfig, PrintProfile, ProductId,
+  QuoteHistoryEntry, QuoteResult, Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
 const FABRICS_KEY           = 'subliflow_pricing_fabrics';
@@ -25,11 +25,12 @@ const PRICES_COMPLETO_KEY   = 'subliflow_pricing_base_prices_completo';
 const SUPPLIES_KEY          = 'subliflow_pricing_supplies';
 const MACHINES_KEY          = 'subliflow_pricing_machines';
 const OPS_KEY               = 'subliflow_pricing_operations';
-const TIERS_KEY             = 'subliflow_pricing_volume_tiers';
+const TIERS_KEY             = 'subliflow_pricing_volume_tiers_v2';
 const COMPETITORS_KEY       = 'subliflow_pricing_competitors';
 const CM_TIERS_KEY          = 'subliflow_pricing_cm_price_tiers';
 const PAPER_TIERS_KEY       = 'subliflow_pricing_paper_price_tiers';
 const PROFILES_KEY          = 'subliflow_pricing_print_profiles';
+const COTIZACIONES_KEY      = 'subliflow_cotizaciones';
 const REF_CLIENTE_KEY       = 'subliflow_pricing_ref_cliente';
 const REF_GENDER_KEY        = 'subliflow_pricing_ref_gender';
 
@@ -104,10 +105,10 @@ interface PricingState {
   addOperation: () => void;
   removeOperation: (id: string) => void;
 
-  volumeTiers: VolumeTier[];
-  updateVolumeTier: (id: string, patch: Partial<Omit<VolumeTier, 'id'>>) => void;
-  addVolumeTier: () => void;
-  removeVolumeTier: (id: string) => void;
+  volumeTiersByProduct: Record<ProductId, VolumeTier[]>;
+  updateVolumeTier: (productId: ProductId, id: string, patch: Partial<Omit<VolumeTier, 'id'>>) => void;
+  addVolumeTier: (productId: ProductId) => void;
+  removeVolumeTier: (productId: ProductId, id: string) => void;
 
   fabrics: FabricType[];
   updateFabric: (id: string, patch: Partial<Omit<FabricType, 'id'>>) => void;
@@ -146,6 +147,10 @@ interface PricingState {
   tablaExports: TablaExportEntry[];
   saveTablaExport: (entry: Omit<TablaExportEntry, 'id' | 'createdAt'>) => void;
   removeTablaExport: (id: string) => void;
+
+  cotizaciones: CotizacionHistoryEntry[];
+  saveCotizacion: (entry: CotizacionHistoryEntry) => void;
+  removeCotizacion: (id: string) => void;
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
@@ -155,7 +160,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   supplies:       loadJson(SUPPLIES_KEY,    defaultSupplies),
   machines:       loadJson(MACHINES_KEY,    defaultMachines),
   operations:     loadJson(OPS_KEY,         defaultOperations),
-  volumeTiers:    loadJson(TIERS_KEY,       defaultVolumeTiers),
+  volumeTiersByProduct: loadJson(TIERS_KEY, defaultVolumeTiersByProduct),
   fabrics:        loadJson(FABRICS_KEY,     defaultFabrics),
   competitors:    loadJson(COMPETITORS_KEY, defaultCompetitors),
   cmPriceTiers:    loadJson(CM_TIERS_KEY,    defaultCmPriceTiers),
@@ -163,6 +168,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
   history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
   tablaExports:   loadJson(TABLA_EXPORTS_KEY, [] as TablaExportEntry[]),
+  cotizaciones:   loadJson(COTIZACIONES_KEY,  [] as CotizacionHistoryEntry[]),
   refClienteId:  localStorage.getItem(REF_CLIENTE_KEY) || null,
   refGender:     (localStorage.getItem(REF_GENDER_KEY) as Gender | null) || null,
 
@@ -246,22 +252,34 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     set({ operations });
   },
 
-  updateVolumeTier: (id, patch) => {
-    const volumeTiers = get().volumeTiers.map(t => t.id === id ? { ...t, ...patch } : t);
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
+  updateVolumeTier: (productId, id, patch) => {
+    const prev = get().volumeTiersByProduct;
+    const volumeTiersByProduct = {
+      ...prev,
+      [productId]: (prev[productId] ?? []).map(t => t.id === id ? { ...t, ...patch } : t),
+    };
+    persist(TIERS_KEY, volumeTiersByProduct);
+    set({ volumeTiersByProduct });
   },
-  addVolumeTier: () => {
-    const tiers = get().volumeTiers;
+  addVolumeTier: (productId) => {
+    const prev = get().volumeTiersByProduct;
+    const tiers = prev[productId] ?? [];
     const lastTo = tiers.length > 0 ? (tiers[tiers.length - 1].to ?? 99) : 0;
-    const volumeTiers = [...tiers, { id: genId(), from: lastTo + 1, to: null, discount: 0 }];
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
+    const volumeTiersByProduct = {
+      ...prev,
+      [productId]: [...tiers, { id: genId(), from: lastTo + 1, to: null, discount: 0 }],
+    };
+    persist(TIERS_KEY, volumeTiersByProduct);
+    set({ volumeTiersByProduct });
   },
-  removeVolumeTier: (id) => {
-    const volumeTiers = get().volumeTiers.filter(t => t.id !== id);
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
+  removeVolumeTier: (productId, id) => {
+    const prev = get().volumeTiersByProduct;
+    const volumeTiersByProduct = {
+      ...prev,
+      [productId]: (prev[productId] ?? []).filter(t => t.id !== id),
+    };
+    persist(TIERS_KEY, volumeTiersByProduct);
+    set({ volumeTiersByProduct });
   },
 
   updateFabric: (id, patch) => {
@@ -369,7 +387,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     persist(SUPPLIES_KEY,  defaultSupplies);
     persist(MACHINES_KEY,  defaultMachines);
     persist(OPS_KEY,       defaultOperations);
-    persist(TIERS_KEY,     defaultVolumeTiers);
+    persist(TIERS_KEY,     defaultVolumeTiersByProduct);
     persist(PROFILES_KEY,  defaultPrintProfiles);
     set({
       config:         defaultPricingConfig,
@@ -377,7 +395,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       supplies:       defaultSupplies,
       machines:       defaultMachines,
       operations:     defaultOperations,
-      volumeTiers:    defaultVolumeTiers,
+      volumeTiersByProduct: defaultVolumeTiersByProduct,
       printProfiles:  defaultPrintProfiles,
     });
   },
@@ -412,5 +430,16 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const tablaExports = get().tablaExports.filter(e => e.id !== id);
     persist(TABLA_EXPORTS_KEY, tablaExports);
     set({ tablaExports });
+  },
+
+  saveCotizacion: (entry) => {
+    const cotizaciones = [entry, ...get().cotizaciones].slice(0, 50);
+    persist(COTIZACIONES_KEY, cotizaciones);
+    set({ cotizaciones });
+  },
+  removeCotizacion: (id) => {
+    const cotizaciones = get().cotizaciones.filter(c => c.id !== id);
+    persist(COTIZACIONES_KEY, cotizaciones);
+    set({ cotizaciones });
   },
 }));
