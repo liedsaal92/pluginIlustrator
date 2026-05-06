@@ -48,7 +48,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)
@@ -84,7 +84,8 @@ export function CotizadorScreen({ onToast }: Props) {
         customerSegment, gender, productId: line.productId, size,
         quantity: Math.max(1, line.quantity), profileId,
         profiles: printProfiles,
-        basePrices, supplies, machines, operations, volumeTiers,
+        basePrices, supplies, machines, operations,
+        volumeTiers: volumeTiersByProduct[line.productId] ?? [],
         linearCm: line.linearCm,
         widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
@@ -97,7 +98,7 @@ export function CotizadorScreen({ onToast }: Props) {
       try { return calculateQuote(input); } catch { return null; }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -125,7 +126,8 @@ export function CotizadorScreen({ onToast }: Props) {
           customerSegment, gender, productId: line.productId, size,
           quantity: Math.max(1, line.quantity), profileId: profile.id,
           profiles: printProfiles,
-          basePrices, supplies, machines, operations, volumeTiers,
+          basePrices, supplies, machines, operations,
+          volumeTiers: volumeTiersByProduct[line.productId] ?? [],
           linearCm: line.linearCm,
           widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
@@ -140,7 +142,7 @@ export function CotizadorScreen({ onToast }: Props) {
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine(config.rollWidthCm)]); }
@@ -162,7 +164,8 @@ export function CotizadorScreen({ onToast }: Props) {
         customerSegment, gender, productId: line.productId, size,
         quantity: Math.max(1, line.quantity), profileId,
         profiles: printProfiles,
-        basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers,
+        basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations,
+        volumeTiers: volumeTiersByProduct[line.productId] ?? [],
         linearCm: line.linearCm,
         widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
@@ -223,14 +226,15 @@ export function CotizadorScreen({ onToast }: Props) {
         <div className="pricing-panel-title" style={{ marginBottom: '0.6rem' }}>MODO DE SERVICIO</div>
         <div className="pricing-transfer-btns">
           <button
+            className={`pricing-transfer-btn pricing-transfer-btn--own${serviceMode === 'full_service' ? ' active' : ''}`}
+            onClick={() => setServiceMode('full_service')}>
+            <span className="pricing-transfer-badge">MIS PRODUCTOS</span>
+            UNIFORME COMPLETO
+          </button>
+          <button
             className={`pricing-transfer-btn${serviceMode === 'sublimation' ? ' active' : ''}`}
             onClick={() => setServiceMode('sublimation')}>
             SOLO SUBLIMADO
-          </button>
-          <button
-            className={`pricing-transfer-btn${serviceMode === 'full_service' ? ' active' : ''}`}
-            onClick={() => setServiceMode('full_service')}>
-            SERVICIO COMPLETO
           </button>
           <button
             className={`pricing-transfer-btn${serviceMode === 'paper' ? ' active' : ''}`}
@@ -310,7 +314,7 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-order-wrap">
             <table className="pricing-order-table">
               <thead>
-                <tr><th>PRODUCTO</th><th>TALLA / CM</th><th>CANT.</th><th title="Dejá vacío para usar el precio calculado">PRECIO ($)</th><th>GANANCIA/U</th><th></th></tr>
+                <tr><th>PRODUCTO</th><th>{serviceMode === 'sublimation' ? 'ALTO CM / ANCHO CM' : 'TALLA / CM'}</th><th>CANT.</th><th title="Dejá vacío para usar el precio calculado">PRECIO ($)</th><th>GANANCIA/U</th><th></th></tr>
               </thead>
               <tbody>
                 {orderLines.map((line, i) => {

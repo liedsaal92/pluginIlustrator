@@ -14,7 +14,7 @@ import type {
 const PRODUCTS: { id: 'camiseta' | 'pantaloneta' | 'equipo'; label: string }[] = [
   { id: 'camiseta',    label: 'CAMISETA' },
   { id: 'pantaloneta', label: 'PANTALONETA' },
-  { id: 'equipo',      label: 'EQUIPO' },
+  { id: 'equipo',      label: 'UNIFORME' },
 ];
 
 const GENDERS: { id: Gender; label: string }[] = [
@@ -45,7 +45,7 @@ function generatePrintHtml(entry: TablaExportEntry): string {
   const dateTag = new Date(entry.createdAt)
     .toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' })
     .replace(/\//g, '');
-  const modeTag = entry.serviceMode === 'full_service' ? 'Completo' : 'Sublimado';
+  const modeTag = entry.serviceMode === 'full_service' ? 'Uniforme completo' : 'Sublimado';
   const docTitle = `TablaDePreciosPara${safeName}_${modeTag}_${dateTag}`;
 
   const tableSection = (rows: TablaExportRow[], genderLabel: string) => {
@@ -113,7 +113,7 @@ function generatePrintHtml(entry: TablaExportEntry): string {
       <div class="date">${date}</div>
       ${fabricLine}
     </div>
-    <div class="mode-badge">${entry.serviceMode === 'full_service' ? 'EQUIPO COMPLETO' : 'SUBLIMADO'}</div>
+    <div class="mode-badge">${entry.serviceMode === 'full_service' ? 'UNIFORME COMPLETO' : 'SUBLIMADO'}</div>
   </div>
   ${hSection}
   ${mSection}
@@ -215,7 +215,7 @@ function useComputeRows(
   deps: unknown[],
 ) {
   const {
-    config, basePrices, basePricesCompleto, supplies, machines, operations, volumeTiers, printProfiles, fabrics,
+    config, basePrices, basePricesCompleto, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics,
     refClienteId, refGender,
   } = usePricingStore();
   const { tallasPorCliente } = useTallasStore();
@@ -240,7 +240,8 @@ function useComputeRows(
             const input: QuoteInput = {
               customerSegment: segment, gender, productId, size: row.size, quantity: 1,
               profileId, profiles: printProfiles,
-              basePrices, basePricesCompleto, supplies, machines, operations, volumeTiers,
+              basePrices, basePricesCompleto, supplies, machines, operations,
+              volumeTiers: volumeTiersByProduct[productId] ?? [],
               savingsTransferRate, config, tallaDims,
               serviceMode, fabrics,
               selectedFabricIdCamiseta: fabricCamisetaId,
@@ -256,7 +257,7 @@ function useComputeRows(
     }
     setLiveRows(rows);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segment, profileId, savingsTransferRate, serviceMode, fabricCamisetaId, fabricPantalonetaId, basePrices, basePricesCompleto, supplies, machines, operations, volumeTiers, printProfiles, fabrics, config, refClienteId, refGender, tallasPorCliente, ...deps]);
+  }, [segment, profileId, savingsTransferRate, serviceMode, fabricCamisetaId, fabricPantalonetaId, basePrices, basePricesCompleto, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, config, refClienteId, refGender, tallasPorCliente, ...deps]);
 
   return liveRows;
 }
@@ -387,14 +388,15 @@ export function TablaClienteScreen({ onToast }: Props) {
       {/* ── Tabs ──────────────────────────────────────────────── */}
       <div className="pricing-transfer-btns" style={{ marginTop: '1rem', maxWidth: '480px' }}>
         <button
+          className={`pricing-transfer-btn pricing-transfer-btn--own${activeTab === 'completo' ? ' active' : ''}`}
+          onClick={() => setActiveTab('completo')}>
+          <span className="pricing-transfer-badge">MIS PRODUCTOS</span>
+          UNIFORME COMPLETO
+        </button>
+        <button
           className={`pricing-transfer-btn${activeTab === 'sublimado' ? ' active' : ''}`}
           onClick={() => setActiveTab('sublimado')}>
           SUBLIMADO
-        </button>
-        <button
-          className={`pricing-transfer-btn${activeTab === 'completo' ? ' active' : ''}`}
-          onClick={() => setActiveTab('completo')}>
-          EQUIPO COMPLETO
         </button>
         <button
           className={`pricing-transfer-btn${activeTab === 'historial' ? ' active' : ''}`}
@@ -445,47 +447,14 @@ export function TablaClienteScreen({ onToast }: Props) {
         </>
       )}
 
-      {/* ── Tab: EQUIPO COMPLETO ──────────────────────────────── */}
+      {/* ── Tab: UNIFORME COMPLETO ──────────────────────────────── */}
       {activeTab === 'completo' && (
         <>
           {renderClienteSelector()}
 
           <section className="pricing-panel" style={{ padding: '1.25rem', marginTop: '1rem' }}>
-            <div className="pricing-panel-title" style={{ marginBottom: '0.75rem' }}>TELAS</div>
-            {fabrics.length === 0 ? (
-              <div className="pricing-table-sub" style={{ color: 'var(--red, #f44336)' }}>
-                Sin telas configuradas — ir a <strong>COSTOS BASE → TELAS</strong>.
-              </div>
-            ) : (
-              <div className="pricing-form-grid">
-                <label className="pricing-field">
-                  <span>TELA CAMISETA</span>
-                  <select className="field-input field-select" value={fabricCamisetaId ?? ''}
-                    onChange={e => setFabricCamisetaId(e.target.value || null)}>
-                    <option value="">— Sin tela —</option>
-                    {fabrics.map(f => {
-                      const eff = f.metersPerKg * (f.tubular ? 2 : 1);
-                      const ppm = eff > 0 ? f.costPerKg / eff : 0;
-                      return <option key={f.id} value={f.id}>{f.name}{f.tubular ? ' (tubular)' : ''} — ${ppm.toFixed(2)}/m</option>;
-                    })}
-                  </select>
-                </label>
-                <label className="pricing-field">
-                  <span>TELA PANTALONETA</span>
-                  <select className="field-input field-select" value={fabricPantalonetaId ?? ''}
-                    onChange={e => setFabricPantalonetaId(e.target.value || null)}>
-                    <option value="">— Sin tela —</option>
-                    {fabrics.map(f => {
-                      const eff = f.metersPerKg * (f.tubular ? 2 : 1);
-                      const ppm = eff > 0 ? f.costPerKg / eff : 0;
-                      return <option key={f.id} value={f.id}>{f.name}{f.tubular ? ' (tubular)' : ''} — ${ppm.toFixed(2)}/m</option>;
-                    })}
-                  </select>
-                </label>
-              </div>
-            )}
 
-            <div className="tabla-cliente-info-chips" style={{ marginTop: '0.75rem' }}>
+            <div className="tabla-cliente-info-chips" style={{ marginTop: 0 }}>
               <div className="tabla-cliente-chip">
                 <span className="tabla-cliente-chip-label">PERFIL</span>
                 <span className="tabla-cliente-chip-value">{profileName}</span>
@@ -530,7 +499,7 @@ export function TablaClienteScreen({ onToast }: Props) {
       {activeTab === 'historial' && (
         <section className="pricing-panel" style={{ marginTop: '1rem', padding: '1.25rem' }}>
           {tablaExports.length === 0 ? (
-            <div className="pricing-table-sub">Sin exportaciones aún. Generá tu primera tabla desde SUBLIMADO o EQUIPO COMPLETO.</div>
+            <div className="pricing-table-sub">Sin exportaciones aún. Generá tu primera tabla desde SUBLIMADO o UNIFORME COMPLETO.</div>
           ) : (
             <>
               <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>

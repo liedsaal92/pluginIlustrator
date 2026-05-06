@@ -41,7 +41,7 @@ const SIZES = sizeMeasurements.map(s => s.size);
 const PRODUCTS: { id: DashboardProductId; label: string }[] = [
   { id: 'camiseta',    label: 'CAMISETA' },
   { id: 'pantaloneta', label: 'PANTALONETA' },
-  { id: 'equipo',      label: 'EQUIPO' },
+  { id: 'equipo',      label: 'UNIFORME' },
 ];
 
 const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -53,7 +53,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
   const {
     config, basePrices, basePricesCompleto,
     supplies, machines, operations,
-    volumeTiers, printProfiles, fabrics,
+    volumeTiersByProduct, printProfiles, fabrics,
   } = usePricingStore();
 
   return useMemo(() => {
@@ -77,7 +77,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
           supplies,
           machines,
           operations,
-          volumeTiers,
+          volumeTiers: volumeTiersByProduct[controls.productId] ?? [],
           savingsTransferRate,
           config,
           serviceMode:      controls.serviceMode,
@@ -108,7 +108,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     controls.segment, controls.gender, controls.productId,
     controls.profileId, controls.quantity, controls.serviceMode,
     basePrices, basePricesCompleto, supplies, machines,
-    operations, volumeTiers, printProfiles, fabrics, config,
+    operations, volumeTiersByProduct, printProfiles, fabrics, config,
   ]);
 }
 
@@ -225,7 +225,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       supplies:         state.supplies,
       machines:         state.machines,
       operations:       state.operations,
-      volumeTiers:      state.volumeTiers,
+      volumeTiers:      (state.volumeTiersByProduct[controls.productId] ?? []),
       savingsTransferRate,
       config:           state.config,
       serviceMode:      controls.serviceMode,
@@ -292,7 +292,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
             <select className="field-input field-select" value={controls.serviceMode}
               onChange={e => set('serviceMode', e.target.value as ServiceMode)}>
               <option value="sublimation">Sublimado</option>
-              <option value="full_service">Servicio completo</option>
+              <option value="full_service">Uniforme completo</option>
             </select>
           </label>
         </div>

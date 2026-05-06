@@ -14,7 +14,7 @@ const pct   = new Intl.NumberFormat('es-EC', { style: 'percent', maximumFraction
 const PRODUCTS: { id: MarketProductId; label: string }[] = [
   { id: 'camiseta',    label: 'CAMISETA' },
   { id: 'pantaloneta', label: 'PANTALONETA' },
-  { id: 'equipo',      label: 'EQUIPO' },
+  { id: 'equipo',      label: 'UNIFORME' },
   { id: 'por_cm',      label: 'POR CM (100cm)' },
 ];
 
@@ -33,7 +33,7 @@ function positionLabel(myPrice: number, avgComp: number): { label: string; cls: 
 export function MercadoScreen({ onToast: _onToast }: Props) {
   const {
     competitors, addCompetitor, updateCompetitor, removeCompetitor,
-    basePrices, supplies, machines, operations, volumeTiers, config, printProfiles,
+    basePrices, supplies, machines, operations, volumeTiersByProduct, config, printProfiles,
   } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
 
@@ -55,7 +55,6 @@ export function MercadoScreen({ onToast: _onToast }: Props) {
       supplies,
       machines,
       operations,
-      volumeTiers,
       savingsTransferRate,
       config,
     };
@@ -67,12 +66,13 @@ export function MercadoScreen({ onToast: _onToast }: Props) {
           productId: id,
           size: refSize,
           linearCm: 100,
+          volumeTiers: volumeTiersByProduct[id] ?? [],
         };
         out[id] = calculateQuote(input).finalUnitPrice;
       } catch { /* skip */ }
     }
     return out;
-  }, [refSegment, refSize, refQty, profileId, savingsTransferRate, basePrices, supplies, machines, operations, volumeTiers, config, printProfiles]);
+  }, [refSegment, refSize, refQty, profileId, savingsTransferRate, basePrices, supplies, machines, operations, volumeTiersByProduct, config, printProfiles]);
 
   return (
     <div className="screen pricing-screen">
@@ -208,7 +208,9 @@ export function MercadoScreen({ onToast: _onToast }: Props) {
               const base: Omit<QuoteInput, 'productId' | 'size' | 'linearCm'> = {
                 customerSegment: refSegment, gender: refGender, quantity: refQty, profileId: p.id,
                 profiles: printProfiles,
-                basePrices, supplies, machines, operations, volumeTiers, savingsTransferRate, config,
+                basePrices, supplies, machines, operations,
+                volumeTiers: volumeTiersByProduct['camiseta'] ?? [],
+                savingsTransferRate, config,
               };
               let price = 0;
               try { price = calculateQuote({ ...base, productId: 'camiseta', size: refSize, linearCm: 100 }).finalUnitPrice; } catch { /* */ }
