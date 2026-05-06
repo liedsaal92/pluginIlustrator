@@ -15,4 +15,6 @@ export const defaultPricingConfig: PricingConfig = {
   tailoringCamiseta: 0,
   tailoringPantaloneta: 0,
   polinesCost: 0,
+  defaultFabricCamisetaId: null,
+  defaultFabricPantalonetaId: null,
 };

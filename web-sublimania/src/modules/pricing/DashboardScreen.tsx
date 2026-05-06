@@ -82,6 +82,8 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
           config,
           serviceMode:      controls.serviceMode,
           fabrics,
+          selectedFabricIdCamiseta:    controls.serviceMode === 'full_service' ? (config.defaultFabricCamisetaId ?? null)    : null,
+          selectedFabricIdPantaloneta: controls.serviceMode === 'full_service' ? (config.defaultFabricPantalonetaId ?? null) : null,
         };
         const quote = calculateQuote(input);
 
@@ -139,7 +141,7 @@ function marginHex(margin: number, minMargin: number) {
 interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
 export function DashboardScreen({ onToast: _onToast }: Props) {
-  const { config, printProfiles } = usePricingStore();
+  const { config, printProfiles, fabrics } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
 
   const [controls, setControls] = useState<DashboardControls>({
@@ -295,6 +297,18 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
               <option value="full_service">Uniforme completo</option>
             </select>
           </label>
+          {controls.serviceMode === 'full_service' && (
+            <div className="pricing-table-sub" style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+              Tela camiseta: <strong>{fabrics.find(f => f.id === config.defaultFabricCamisetaId)?.name ?? '—'}</strong>
+              {' · '}
+              Tela pantaloneta: <strong>{fabrics.find(f => f.id === config.defaultFabricPantalonetaId)?.name ?? '—'}</strong>
+              {(!config.defaultFabricCamisetaId && !config.defaultFabricPantalonetaId) && (
+                <span style={{ color: 'var(--pricing-bad, #ef4444)', marginLeft: 4 }}>
+                  (configurar en Costos Base → Confección)
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

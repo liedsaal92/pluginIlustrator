@@ -491,6 +491,30 @@ export function CostosBaseScreen({ onToast }: Props) {
               value={config.polinesCost ?? 0}
               onChange={e => updateConfig('polinesCost', toNum(e.target.value))} />
           </label>
+          <label className="pricing-field">
+            <span>TELA POR DEFECTO — CAMISETA</span>
+            {fabrics.length === 0
+              ? <span className="pricing-table-sub">Configura telas primero</span>
+              : <select className="field-input field-select"
+                  value={config.defaultFabricCamisetaId ?? ''}
+                  onChange={e => updateConfig('defaultFabricCamisetaId', e.target.value || null)}>
+                  <option value="">-- Ninguna --</option>
+                  {fabrics.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+            }
+          </label>
+          <label className="pricing-field">
+            <span>TELA POR DEFECTO — PANTALONETA</span>
+            {fabrics.length === 0
+              ? <span className="pricing-table-sub">Configura telas primero</span>
+              : <select className="field-input field-select"
+                  value={config.defaultFabricPantalonetaId ?? ''}
+                  onChange={e => updateConfig('defaultFabricPantalonetaId', e.target.value || null)}>
+                  <option value="">-- Ninguna --</option>
+                  {fabrics.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                </select>
+            }
+          </label>
         </div>
       </section>
 

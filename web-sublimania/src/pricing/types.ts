@@ -19,6 +19,8 @@ export interface PricingConfig {
   tailoringCamiseta: number;
   tailoringPantaloneta: number;
   polinesCost: number;
+  defaultFabricCamisetaId: string | null;
+  defaultFabricPantalonetaId: string | null;
 }
 
 export interface FabricType {
