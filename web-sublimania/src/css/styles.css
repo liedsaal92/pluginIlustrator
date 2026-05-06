@@ -5526,6 +5526,29 @@ body {
 }
 .pricing-history-row:last-child { border-bottom: none; }
 
+/* ── Cotizaciones historial ─────────────────────────────────── */
+.cot-history-list { display: flex; flex-direction: column; border: 2px solid var(--black); }
+.cot-history-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.2fr 0.7fr 0.8fr auto;
+  gap: 0.75rem; align-items: center;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  font-family: var(--mono); font-size: 0.68rem;
+}
+.cot-history-row:last-child { border-bottom: none; }
+.cot-history-date  { opacity: 0.55; }
+.cot-history-cliente { font-weight: 700; }
+.cot-history-lines { opacity: 0.6; }
+.cot-history-total { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cot-history-actions { display: flex; gap: 0.3rem; justify-content: flex-end; }
+.cot-delete-btn { color: var(--red, #ef4444) !important; }
+[data-theme="dark"] .cot-history-row { border-bottom-color: rgba(226,228,244,0.1); }
+@media (max-width: 980px) {
+  .cot-history-row { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  .cot-history-actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
 [data-theme="dark"] .pricing-kpi,
 [data-theme="dark"] .pricing-profile-card { background: rgba(226,228,244,0.05); }
 [data-theme="dark"] .pricing-profile-card.active { background: var(--cyan); color: #0d0d0d; }

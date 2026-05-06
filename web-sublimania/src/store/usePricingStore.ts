@@ -11,9 +11,9 @@ import { defaultPrintProfiles } from '../pricing/data/printProfiles';
 import { defaultCmPriceTiers } from '../pricing/data/cmPriceTiers';
 import { defaultPaperPriceTiers } from '../pricing/data/paperPriceTiers';
 import type {
-  BasePrice, BasePriceField, CmPriceTier, Competitor, CustomerSegment, FabricType, Gender,
-  MachineCost, OperationCost, PricingConfig, PrintProfile, ProductId, QuoteHistoryEntry, QuoteResult,
-  Supply, TablaExportEntry, VolumeTier,
+  BasePrice, BasePriceField, CmPriceTier, Competitor, CotizacionHistoryEntry, CustomerSegment,
+  FabricType, Gender, MachineCost, OperationCost, PricingConfig, PrintProfile, ProductId,
+  QuoteHistoryEntry, QuoteResult, Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
 const FABRICS_KEY           = 'subliflow_pricing_fabrics';
@@ -30,6 +30,7 @@ const COMPETITORS_KEY       = 'subliflow_pricing_competitors';
 const CM_TIERS_KEY          = 'subliflow_pricing_cm_price_tiers';
 const PAPER_TIERS_KEY       = 'subliflow_pricing_paper_price_tiers';
 const PROFILES_KEY          = 'subliflow_pricing_print_profiles';
+const COTIZACIONES_KEY      = 'subliflow_cotizaciones';
 const REF_CLIENTE_KEY       = 'subliflow_pricing_ref_cliente';
 const REF_GENDER_KEY        = 'subliflow_pricing_ref_gender';
 
@@ -146,6 +147,10 @@ interface PricingState {
   tablaExports: TablaExportEntry[];
   saveTablaExport: (entry: Omit<TablaExportEntry, 'id' | 'createdAt'>) => void;
   removeTablaExport: (id: string) => void;
+
+  cotizaciones: CotizacionHistoryEntry[];
+  saveCotizacion: (entry: CotizacionHistoryEntry) => void;
+  removeCotizacion: (id: string) => void;
 }
 
 export const usePricingStore = create<PricingState>()((set, get) => ({
@@ -163,6 +168,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
   history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
   tablaExports:   loadJson(TABLA_EXPORTS_KEY, [] as TablaExportEntry[]),
+  cotizaciones:   loadJson(COTIZACIONES_KEY,  [] as CotizacionHistoryEntry[]),
   refClienteId:  localStorage.getItem(REF_CLIENTE_KEY) || null,
   refGender:     (localStorage.getItem(REF_GENDER_KEY) as Gender | null) || null,
 
@@ -424,5 +430,16 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const tablaExports = get().tablaExports.filter(e => e.id !== id);
     persist(TABLA_EXPORTS_KEY, tablaExports);
     set({ tablaExports });
+  },
+
+  saveCotizacion: (entry) => {
+    const cotizaciones = [entry, ...get().cotizaciones].slice(0, 50);
+    persist(COTIZACIONES_KEY, cotizaciones);
+    set({ cotizaciones });
+  },
+  removeCotizacion: (id) => {
+    const cotizaciones = get().cotizaciones.filter(c => c.id !== id);
+    persist(COTIZACIONES_KEY, cotizaciones);
+    set({ cotizaciones });
   },
 }));

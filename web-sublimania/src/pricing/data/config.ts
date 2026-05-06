@@ -17,4 +17,5 @@ export const defaultPricingConfig: PricingConfig = {
   polinesCost: 0,
   defaultFabricCamisetaId: null,
   defaultFabricPantalonetaId: null,
+  orgNombre: 'SUBLIMANIA',
 };

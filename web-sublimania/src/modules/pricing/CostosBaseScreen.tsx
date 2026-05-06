@@ -262,6 +262,19 @@ export function CostosBaseScreen({ onToast }: Props) {
 
       {/* ── Reglas de precio ─────────────────────────────────── */}
       <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">ORGANIZACIÓN</div>
+        <div className="pricing-form-grid" style={{ marginBottom: '1.25rem' }}>
+          <label className="pricing-field">
+            <span>NOMBRE EN COTIZACIONES</span>
+            <input className="field-input" type="text" maxLength={60}
+              value={config.orgNombre ?? ''}
+              onChange={e => updateConfig('orgNombre', e.target.value)}
+              placeholder="SUBLIMANIA" />
+          </label>
+        </div>
+      </section>
+
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
         <div className="pricing-panel-title">REGLAS DE PRECIO</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
           Restricciones financieras que garantizan rentabilidad mínima en cada cotización.

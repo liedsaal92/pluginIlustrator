@@ -7,17 +7,8 @@ import { useClientesStore } from '../../store/useClientesStore';
 import { useTiposClienteStore } from '../../store/useTiposClienteStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
-import type { CustomerSegment, Gender, MarketProductId, PrintProfileId, ProductId, QuoteInput, QuoteResult } from '../../pricing/types';
-
-interface OrderLine {
-  id: string;
-  productId: ProductId;
-  talla: string;   // "34H" | "34M" | etc.
-  quantity: number;
-  linearCm: number;
-  widthCm: number;
-  manualPrice: string;
-}
+import type { CotizacionHistoryEntry, CustomerSegment, Gender, MarketProductId, OrderLine, PrintProfileId, ProductId, QuoteInput, QuoteResult } from '../../pricing/types';
+import { openCotizacionPrintWindow } from '../../pricing/cotizacionPrint';
 
 function parseTalla(t: string): { size: number; gender: Gender } {
   return { size: parseInt(t), gender: t.slice(-1).toUpperCase() as Gender };
@@ -48,7 +39,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)
@@ -153,33 +144,75 @@ export function CotizadorScreen({ onToast }: Props) {
     setOrderLines(prev => prev.map(l => l.id === id ? { ...l, [key]: value } : l));
   }
 
-  function handleSaveQuote() {
-    const errors: string[] = [];
-    orderLines.forEach((line, i) => {
-      const { size, gender } = parseTalla(line.talla);
-      const tallaDims = (refClienteId && refGender)
-        ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
-        : undefined;
-      const input: QuoteInput = {
-        customerSegment, gender, productId: line.productId, size,
-        quantity: Math.max(1, line.quantity), profileId,
-        profiles: printProfiles,
-        basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations,
-        volumeTiers: volumeTiersByProduct[line.productId] ?? [],
-        linearCm: line.linearCm,
-        widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
-        manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
-        savingsTransferRate, config, tallaDims,
-        serviceMode, fabrics,
-        selectedFabricIdCamiseta: fabricCamisetaId,
-        selectedFabricIdPantaloneta: fabricPantalonetaId,
-      };
-      validateQuoteInput(input).forEach(e => errors.push(`L${i + 1}: ${e}`));
-    });
-    if (errors.length > 0) { onToast(errors[0], 'error'); return; }
-    let saved = 0;
-    lineQuotes.forEach(q => { if (q) { saveQuote(q); saved++; } });
-    onToast(`${saved} línea(s) guardadas`, 'ok');
+  function buildCotizacionEntry(): CotizacionHistoryEntry | null {
+    const validQuotes = lineQuotes.filter((q): q is NonNullable<typeof q> => q !== null);
+    if (validQuotes.length === 0) { onToast('Sin líneas válidas para guardar', 'error'); return null; }
+    const cliente = clientes.find(c => c.id === selectedClienteId);
+    const fabricC = fabrics.find(f => f.id === fabricCamisetaId);
+    const fabricP = fabrics.find(f => f.id === fabricPantalonetaId);
+    const entry: CotizacionHistoryEntry = {
+      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      createdAt: new Date().toISOString(),
+      clienteNombre: cliente?.nombre ?? '—',
+      orgNombre: config.orgNombre ?? 'SUBLIMANIA',
+      serviceMode: serviceMode === 'paper' ? 'paper' : serviceMode,
+      fabricCamisetaNombre: fabricC?.name ?? null,
+      fabricPantalonetaNombre: fabricP?.name ?? null,
+      lines: orderLines.map((line, i) => {
+        const q = lineQuotes[i];
+        return {
+          productId: line.productId,
+          talla: line.talla,
+          quantity: line.quantity,
+          volumeDiscount: q?.volumeDiscount ?? 0,
+          finalUnitPrice: q?.finalUnitPrice ?? 0,
+          totalPrice: q?.totalPrice ?? 0,
+        };
+      }),
+      totalUnits,
+      totalPrice,
+      totalProfit,
+      overallMargin,
+      editorState: {
+        orderLines,
+        selectedClienteId,
+        customerSegment,
+        profileId,
+        serviceMode,
+        fabricCamisetaId,
+        fabricPantalonetaId,
+      },
+    };
+    return entry;
+  }
+
+  function handleGuardarCotizacion() {
+    const entry = buildCotizacionEntry();
+    if (!entry) return;
+    saveCotizacion(entry);
+    lineQuotes.forEach(q => { if (q) saveQuote(q); });
+    onToast('Cotización guardada', 'ok');
+  }
+
+  function handleExportPdf() {
+    const entry = buildCotizacionEntry();
+    if (!entry) return;
+    saveCotizacion(entry);
+    lineQuotes.forEach(q => { if (q) saveQuote(q); });
+    openCotizacionPrintWindow(entry);
+  }
+
+  function handleCargarCotizacion(entry: CotizacionHistoryEntry) {
+    const s = entry.editorState;
+    setOrderLines(s.orderLines);
+    setSelectedClienteId(s.selectedClienteId);
+    setCustomerSegment(s.customerSegment);
+    setProfileId(s.profileId);
+    setServiceMode(s.serviceMode);
+    setFabricCamisetaId(s.fabricCamisetaId);
+    setFabricPantalonetaId(s.fabricPantalonetaId);
+    setSegmentOverridden(!!s.selectedClienteId);
+    onToast('Cotización cargada', 'ok');
   }
 
   const refMissing = !refClienteId || !refGender;
@@ -201,7 +234,8 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-subtitle">// Arma un pedido y obtén precios con márgenes</div>
         </div>
         <div className="pricing-header-actions">
-          <button className="btn btn-primary btn-sm" onClick={handleSaveQuote}>GUARDAR COTIZACION</button>
+          <button className="btn btn-ghost btn-sm" onClick={handleGuardarCotizacion}>GUARDAR COTIZACIÓN</button>
+          <button className="btn btn-primary btn-sm" onClick={handleExportPdf}>IMPRIMIR COTIZACIÓN</button>
         </div>
       </div>
 
@@ -543,23 +577,31 @@ export function CotizadorScreen({ onToast }: Props) {
         </section>
       </div>
 
-      {/* ── History ────────────────────────────────────────────── */}
+      {/* ── Historial de cotizaciones ──────────────────────────── */}
       <section className="pricing-panel pricing-history-panel">
         <div className="pricing-history-head">
-          <div className="pricing-panel-title">HISTORIAL LOCAL</div>
-          {history.length > 0 && <button className="btn btn-ghost btn-sm" onClick={clearHistory}>LIMPIAR</button>}
+          <div className="pricing-panel-title">COTIZACIONES GUARDADAS</div>
         </div>
-        {history.length === 0 ? (
-          <div className="pricing-empty-history">Sin cotizaciones guardadas todavia.</div>
+        {cotizaciones.length === 0 ? (
+          <div className="pricing-empty-history">Sin cotizaciones guardadas. Usá GUARDAR o EXPORTAR PDF.</div>
         ) : (
-          <div className="pricing-history-list">
-            {history.slice(0, 8).map(entry => (
-              <div key={entry.id} className="pricing-history-row">
-                <span>{new Date(entry.createdAt).toLocaleString('es-EC', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                <strong>{entry.input.productId.toUpperCase()} T{entry.input.size}</strong>
-                <span>{entry.input.quantity} u.</span>
-                <span>{fmt(entry.finalUnitPrice)}</span>
-                <span>{fmt(entry.totalProfit)}</span>
+          <div className="cot-history-list">
+            {cotizaciones.slice(0, 15).map(entry => (
+              <div key={entry.id} className="cot-history-row">
+                <span className="cot-history-date">
+                  {new Date(entry.createdAt).toLocaleString('es-EC', { dateStyle: 'short', timeStyle: 'short' })}
+                </span>
+                <span className="cot-history-cliente">{entry.clienteNombre}</span>
+                <span className="cot-history-lines">{entry.lines.length} línea{entry.lines.length !== 1 ? 's' : ''}</span>
+                <span className="cot-history-total">{fmt(entry.totalPrice)}</span>
+                <div className="cot-history-actions">
+                  <button className="btn btn-ghost btn-sm" title="Cargar cotización en el editor"
+                    onClick={() => handleCargarCotizacion(entry)}>CARGAR</button>
+                  <button className="btn btn-ghost btn-sm" title="Re-imprimir PDF"
+                    onClick={() => openCotizacionPrintWindow(entry)}>↓</button>
+                  <button className="btn btn-ghost btn-sm cot-delete-btn" title="Eliminar"
+                    onClick={() => removeCotizacion(entry.id)}>✕</button>
+                </div>
               </div>
             ))}
           </div>

@@ -21,6 +21,7 @@ export interface PricingConfig {
   polinesCost: number;
   defaultFabricCamisetaId: string | null;
   defaultFabricPantalonetaId: string | null;
+  orgNombre: string;
 }
 
 export interface FabricType {
@@ -176,6 +177,51 @@ export interface Competitor {
 export interface QuoteHistoryEntry extends QuoteResult {
   id: string;
   createdAt: string;
+}
+
+export interface OrderLine {
+  id: string;
+  productId: ProductId;
+  talla: string;
+  quantity: number;
+  linearCm: number;
+  widthCm: number;
+  manualPrice: string;
+}
+
+export interface CotizacionLine {
+  productId: string;
+  talla: string;
+  quantity: number;
+  volumeDiscount: number;
+  finalUnitPrice: number;
+  totalPrice: number;
+}
+
+export interface CotizacionEditorState {
+  orderLines: OrderLine[];
+  selectedClienteId: string | null;
+  customerSegment: CustomerSegment;
+  profileId: string;
+  serviceMode: 'sublimation' | 'full_service' | 'paper';
+  fabricCamisetaId: string | null;
+  fabricPantalonetaId: string | null;
+}
+
+export interface CotizacionHistoryEntry {
+  id: string;
+  createdAt: string;
+  clienteNombre: string;
+  orgNombre: string;
+  serviceMode: 'sublimation' | 'full_service' | 'paper';
+  fabricCamisetaNombre: string | null;
+  fabricPantalonetaNombre: string | null;
+  lines: CotizacionLine[];
+  totalUnits: number;
+  totalPrice: number;
+  totalProfit: number;
+  overallMargin: number;
+  editorState: CotizacionEditorState;
 }
 
 export interface TablaExportRow {
