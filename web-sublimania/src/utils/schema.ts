@@ -12,7 +12,7 @@ export const PLAYER_KEYS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA'];
 // Orden exacto de columnas del CSV final
 export const CSV_COLUMN_ORDER: string[] = [
   'NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TIENE_NUMERO', 'TALLA', 'ALTO', 'ANCHO',
-  'MANGA_ALTO', 'MANGA_ANCHO', 'EQUIPO', 'NOTAS',
+  'MANGA_ALTO', 'MANGA_ANCHO', 'PANT_ALTO', 'PANT_ANCHO', 'EQUIPO', 'NOTAS',
   // FRENTE — NOMBRE
   'LLEVA_NOMBRE_F', 'NOMBRE_F_ANCHO', 'NOMBRE_F_ALTO', 'NOMBRE_F_REF', 'NOMBRE_F_MARGIN_SUP',
   // FRENTE — NÚMERO
@@ -81,6 +81,26 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_LINEAS_ADIDAS_M_IZQ', 'LINEAS_ADIDAS_M_IZQ_ANCHO', 'LINEAS_ADIDAS_M_IZQ_REF', 'LINEAS_ADIDAS_M_IZQ_MARGIN_INF', 'MANGA_IZQ_ES_RANGLAN',
   // MANGA DER — LINEAS ADIDAS (ranglan)
   'LLEVA_LINEAS_ADIDAS_M_DER', 'LINEAS_ADIDAS_M_DER_ANCHO', 'LINEAS_ADIDAS_M_DER_REF', 'LINEAS_ADIDAS_M_DER_MARGIN_INF', 'MANGA_DER_ES_RANGLAN',
+  // PANT IZQ — NÚMERO
+  'LLEVA_NUMERO_P_IZQ', 'NUMERO_P_IZQ_ANCHO', 'NUMERO_P_IZQ_ALTO', 'NUMERO_P_IZQ_REF', 'NUMERO_P_IZQ_MARGIN_SUP',
+  // PANT IZQ — ESCUDO
+  'LLEVA_ESCUDO_P_IZQ', 'ESCUDO_P_IZQ_ANCHO', 'ESCUDO_P_IZQ_ALTO', 'ESCUDO_P_IZQ_REF', 'ESCUDO_P_IZQ_MARGIN_SUP', 'ESCUDO_P_IZQ_MARGIN_LAT',
+  // PANT IZQ — LOGO MARCA
+  'LLEVA_LOGO_MARCA_P_IZQ', 'LOGO_MARCA_P_IZQ_ANCHO', 'LOGO_MARCA_P_IZQ_ALTO', 'LOGO_MARCA_P_IZQ_REF', 'LOGO_MARCA_P_IZQ_MARGIN_SUP', 'LOGO_MARCA_P_IZQ_MARGIN_LAT',
+  // PANT IZQ — SPONSOR PRINCIPAL
+  'LLEVA_SPONSOR_PRINCIPAL_P_IZQ', 'SPONSOR_PRINCIPAL_P_IZQ_ANCHO', 'SPONSOR_PRINCIPAL_P_IZQ_ALTO', 'SPONSOR_PRINCIPAL_P_IZQ_REF', 'SPONSOR_PRINCIPAL_P_IZQ_MARGIN_SUP',
+  // PANT IZQ — SPONSOR SECUNDARIO
+  'LLEVA_SPONSOR_SECUNDARIO_P_IZQ', 'SPONSOR_SECUNDARIO_P_IZQ_ANCHO', 'SPONSOR_SECUNDARIO_P_IZQ_ALTO', 'SPONSOR_SECUNDARIO_P_IZQ_REF', 'SPONSOR_SECUNDARIO_P_IZQ_MARGIN_SUP',
+  // PANT DER — NÚMERO
+  'LLEVA_NUMERO_P_DER', 'NUMERO_P_DER_ANCHO', 'NUMERO_P_DER_ALTO', 'NUMERO_P_DER_REF', 'NUMERO_P_DER_MARGIN_SUP',
+  // PANT DER — ESCUDO
+  'LLEVA_ESCUDO_P_DER', 'ESCUDO_P_DER_ANCHO', 'ESCUDO_P_DER_ALTO', 'ESCUDO_P_DER_REF', 'ESCUDO_P_DER_MARGIN_SUP', 'ESCUDO_P_DER_MARGIN_LAT',
+  // PANT DER — LOGO MARCA
+  'LLEVA_LOGO_MARCA_P_DER', 'LOGO_MARCA_P_DER_ANCHO', 'LOGO_MARCA_P_DER_ALTO', 'LOGO_MARCA_P_DER_REF', 'LOGO_MARCA_P_DER_MARGIN_SUP', 'LOGO_MARCA_P_DER_MARGIN_LAT',
+  // PANT DER — SPONSOR PRINCIPAL
+  'LLEVA_SPONSOR_PRINCIPAL_P_DER', 'SPONSOR_PRINCIPAL_P_DER_ANCHO', 'SPONSOR_PRINCIPAL_P_DER_ALTO', 'SPONSOR_PRINCIPAL_P_DER_REF', 'SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP',
+  // PANT DER — SPONSOR SECUNDARIO
+  'LLEVA_SPONSOR_SECUNDARIO_P_DER', 'SPONSOR_SECUNDARIO_P_DER_ANCHO', 'SPONSOR_SECUNDARIO_P_DER_ALTO', 'SPONSOR_SECUNDARIO_P_DER_REF', 'SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP',
 ];
 
 const numField = (key: string, label: string): SchemaField => ({
@@ -227,6 +247,42 @@ export const SCHEMA: Schema = {
           numField('LINEAS_ADIDAS_M_DER_MARGIN_INF', 'Margen inf'),
           { key: 'MANGA_DER_ES_RANGLAN', label: 'Ranglan', type: 'select' as const, options: ['SI', 'NO'] },
         ] },
+    ],
+  },
+
+  pant_izq: {
+    label: 'PANT IZQ',
+    color: '#2AB87A',
+    category: 'pantaloneta',
+    elements: [
+      { id: 'numero_p_izq', label: 'NÚMERO', icon: '#', group: 'identificacion', toggleKey: 'LLEVA_NUMERO_P_IZQ',
+        fields: [numField('NUMERO_P_IZQ_ANCHO', 'Ancho'), numField('NUMERO_P_IZQ_ALTO', 'Alto'), refField('NUMERO_P_IZQ_REF'), numField('NUMERO_P_IZQ_MARGIN_SUP', 'Margen sup')] },
+      { id: 'escudo_p_izq', label: 'ESCUDO', icon: '⬡', group: 'logos', toggleKey: 'LLEVA_ESCUDO_P_IZQ',
+        fields: [numField('ESCUDO_P_IZQ_ANCHO', 'Ancho'), numField('ESCUDO_P_IZQ_ALTO', 'Alto'), refField('ESCUDO_P_IZQ_REF'), numField('ESCUDO_P_IZQ_MARGIN_SUP', 'Margen sup'), numField('ESCUDO_P_IZQ_MARGIN_LAT', 'Margen lat')] },
+      { id: 'logo_marca_p_izq', label: 'LOGO MARCA', icon: '◈', group: 'logos', toggleKey: 'LLEVA_LOGO_MARCA_P_IZQ',
+        fields: [numField('LOGO_MARCA_P_IZQ_ANCHO', 'Ancho'), numField('LOGO_MARCA_P_IZQ_ALTO', 'Alto'), refField('LOGO_MARCA_P_IZQ_REF'), numField('LOGO_MARCA_P_IZQ_MARGIN_SUP', 'Margen sup'), numField('LOGO_MARCA_P_IZQ_MARGIN_LAT', 'Margen lat')] },
+      { id: 'sponsor_principal_p_izq', label: 'SPONSOR PRINCIPAL', icon: '★', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_P_IZQ',
+        fields: [numField('SPONSOR_PRINCIPAL_P_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_P_IZQ_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_P_IZQ_REF'), numField('SPONSOR_PRINCIPAL_P_IZQ_MARGIN_SUP', 'Margen sup')] },
+      { id: 'sponsor_secundario_p_izq', label: 'SPONSOR SECUNDARIO', icon: '☆', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_P_IZQ',
+        fields: [numField('SPONSOR_SECUNDARIO_P_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_P_IZQ_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_P_IZQ_REF'), numField('SPONSOR_SECUNDARIO_P_IZQ_MARGIN_SUP', 'Margen sup')] },
+    ],
+  },
+
+  pant_der: {
+    label: 'PANT DER',
+    color: '#E8962A',
+    category: 'pantaloneta',
+    elements: [
+      { id: 'numero_p_der', label: 'NÚMERO', icon: '#', group: 'identificacion', toggleKey: 'LLEVA_NUMERO_P_DER',
+        fields: [numField('NUMERO_P_DER_ANCHO', 'Ancho'), numField('NUMERO_P_DER_ALTO', 'Alto'), refField('NUMERO_P_DER_REF'), numField('NUMERO_P_DER_MARGIN_SUP', 'Margen sup')] },
+      { id: 'escudo_p_der', label: 'ESCUDO', icon: '⬡', group: 'logos', toggleKey: 'LLEVA_ESCUDO_P_DER',
+        fields: [numField('ESCUDO_P_DER_ANCHO', 'Ancho'), numField('ESCUDO_P_DER_ALTO', 'Alto'), refField('ESCUDO_P_DER_REF'), numField('ESCUDO_P_DER_MARGIN_SUP', 'Margen sup'), numField('ESCUDO_P_DER_MARGIN_LAT', 'Margen lat')] },
+      { id: 'logo_marca_p_der', label: 'LOGO MARCA', icon: '◈', group: 'logos', toggleKey: 'LLEVA_LOGO_MARCA_P_DER',
+        fields: [numField('LOGO_MARCA_P_DER_ANCHO', 'Ancho'), numField('LOGO_MARCA_P_DER_ALTO', 'Alto'), refField('LOGO_MARCA_P_DER_REF'), numField('LOGO_MARCA_P_DER_MARGIN_SUP', 'Margen sup'), numField('LOGO_MARCA_P_DER_MARGIN_LAT', 'Margen lat')] },
+      { id: 'sponsor_principal_p_der', label: 'SPONSOR PRINCIPAL', icon: '★', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_PRINCIPAL_P_DER',
+        fields: [numField('SPONSOR_PRINCIPAL_P_DER_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_P_DER_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_P_DER_REF'), numField('SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP', 'Margen sup')] },
+      { id: 'sponsor_secundario_p_der', label: 'SPONSOR SECUNDARIO', icon: '☆', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_P_DER',
+        fields: [numField('SPONSOR_SECUNDARIO_P_DER_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_P_DER_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_P_DER_REF'), numField('SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP', 'Margen sup')] },
     ],
   },
 };

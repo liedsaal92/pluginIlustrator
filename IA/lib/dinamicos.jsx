@@ -856,6 +856,155 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 " hidden=" + (_pInf.hidden ? "SI" : "NO"));
         }
     }
+
+    // ── PANT_IZQ / PANT_DER ──────────────────────────────────
+    if (nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") {
+        var sufPant = (nombrePieza === "PANT_IZQ") ? "P_IZQ" : "P_DER";
+
+        // 1. NUMERO
+        if (itemNumero) {
+            if (jugador["LLEVA_NUMERO_" + sufPant] !== "SI" || jugador.TIENE_NUMERO === "NO") {
+                itemNumero.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": NUMERO (pant) ocultado");
+            } else {
+                escalarConRef(
+                    itemNumero,
+                    jugador["NUMERO_" + sufPant + "_ANCHO"],
+                    jugador["NUMERO_" + sufPant + "_ALTO"],
+                    jugador["NUMERO_" + sufPant + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": NUMERO (pant)"
+                );
+                centrarHorizontalmente(itemNumero, grupoCopia);
+                var numPantMarginSup = parseFloat(jugador["NUMERO_" + sufPant + "_MARGIN_SUP"]);
+                if (!isNaN(numPantMarginSup) && numPantMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemNumero, grupoCopia,
+                        numPantMarginSup,
+                        jugador.NOMBRE, nombrePieza, "NUMERO"
+                    );
+                }
+            }
+        }
+
+        // 2. ESCUDO
+        var itemEscudoPant = findGroupByNameRecursivo(dinamico, CONFIG.itemEscudo)
+                           || findItemByNameRecursivo(dinamico, CONFIG.itemEscudo);
+        if (itemEscudoPant) {
+            if (jugador["LLEVA_ESCUDO_" + sufPant] !== "SI") {
+                itemEscudoPant.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (pant) ocultado");
+            } else {
+                escalarConRef(
+                    itemEscudoPant,
+                    jugador["ESCUDO_" + sufPant + "_ANCHO"],
+                    jugador["ESCUDO_" + sufPant + "_ALTO"],
+                    jugador["ESCUDO_" + sufPant + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": ESCUDO (pant)"
+                );
+                var escPantMarginSup = parseFloat(jugador["ESCUDO_" + sufPant + "_MARGIN_SUP"]);
+                if (!isNaN(escPantMarginSup) && escPantMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemEscudoPant, grupoCopia,
+                        escPantMarginSup,
+                        jugador.NOMBRE, nombrePieza, "ESCUDO"
+                    );
+                }
+                var escPantMarginLat = parseFloat(jugador["ESCUDO_" + sufPant + "_MARGIN_LAT"]);
+                if (!isNaN(escPantMarginLat) && escPantMarginLat >= 0) {
+                    posicionarItemDesdeLatMasCercano(
+                        itemEscudoPant, grupoCopia,
+                        escPantMarginLat,
+                        jugador.NOMBRE, nombrePieza, "ESCUDO", null
+                    );
+                }
+            }
+        }
+
+        // 3. LOGO_MARCA
+        var itemLogoMarcaPant = findItemByNameRecursivo(dinamico, "LOGO_MARCA");
+        if (itemLogoMarcaPant) {
+            if (jugador["LLEVA_LOGO_MARCA_" + sufPant] !== "SI") {
+                itemLogoMarcaPant.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": LOGO_MARCA (pant) ocultado");
+            } else {
+                escalarConRef(
+                    itemLogoMarcaPant,
+                    jugador["LOGO_MARCA_" + sufPant + "_ANCHO"],
+                    jugador["LOGO_MARCA_" + sufPant + "_ALTO"],
+                    jugador["LOGO_MARCA_" + sufPant + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": LOGO_MARCA (pant)"
+                );
+                var logoPantMarginSup = parseFloat(jugador["LOGO_MARCA_" + sufPant + "_MARGIN_SUP"]);
+                if (!isNaN(logoPantMarginSup) && logoPantMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemLogoMarcaPant, grupoCopia,
+                        logoPantMarginSup,
+                        jugador.NOMBRE, nombrePieza, "LOGO_MARCA"
+                    );
+                }
+                var logoPantMarginLat = parseFloat(jugador["LOGO_MARCA_" + sufPant + "_MARGIN_LAT"]);
+                if (!isNaN(logoPantMarginLat) && logoPantMarginLat >= 0) {
+                    posicionarItemDesdeLatMasCercano(
+                        itemLogoMarcaPant, grupoCopia,
+                        logoPantMarginLat,
+                        jugador.NOMBRE, nombrePieza, "LOGO_MARCA", null
+                    );
+                }
+            }
+        }
+
+        // 4. SPONSOR_PRINCIPAL
+        var itemSpPrincipalPant = findItemByNameRecursivo(dinamico, "SPONSOR_PRINCIPAL");
+        if (itemSpPrincipalPant) {
+            if (jugador["LLEVA_SPONSOR_PRINCIPAL_" + sufPant] !== "SI") {
+                itemSpPrincipalPant.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL (pant) ocultado");
+            } else {
+                escalarConRef(
+                    itemSpPrincipalPant,
+                    jugador["SPONSOR_PRINCIPAL_" + sufPant + "_ANCHO"],
+                    jugador["SPONSOR_PRINCIPAL_" + sufPant + "_ALTO"],
+                    jugador["SPONSOR_PRINCIPAL_" + sufPant + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_PRINCIPAL (pant)"
+                );
+                centrarHorizontalmente(itemSpPrincipalPant, grupoCopia);
+                var spPantMarginSup = parseFloat(jugador["SPONSOR_PRINCIPAL_" + sufPant + "_MARGIN_SUP"]);
+                if (!isNaN(spPantMarginSup) && spPantMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSpPrincipalPant, grupoCopia,
+                        spPantMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_PRINCIPAL"
+                    );
+                }
+            }
+        }
+
+        // 5. SPONSOR_SECUNDARIO
+        var itemSpSecundarioPant = findItemByNameRecursivo(dinamico, "SPONSOR_SECUNDARIO");
+        if (itemSpSecundarioPant) {
+            if (jugador["LLEVA_SPONSOR_SECUNDARIO_" + sufPant] !== "SI") {
+                itemSpSecundarioPant.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (pant) ocultado");
+            } else {
+                escalarConRef(
+                    itemSpSecundarioPant,
+                    jugador["SPONSOR_SECUNDARIO_" + sufPant + "_ANCHO"],
+                    jugador["SPONSOR_SECUNDARIO_" + sufPant + "_ALTO"],
+                    jugador["SPONSOR_SECUNDARIO_" + sufPant + "_REF"],
+                    nombrePieza + " | " + jugador.NOMBRE + ": SPONSOR_SECUNDARIO (pant)"
+                );
+                centrarHorizontalmente(itemSpSecundarioPant, grupoCopia);
+                var sssPantMarginSup = parseFloat(jugador["SPONSOR_SECUNDARIO_" + sufPant + "_MARGIN_SUP"]);
+                if (!isNaN(sssPantMarginSup) && sssPantMarginSup >= 0) {
+                    posicionarItemDesdeTop(
+                        itemSpSecundarioPant, grupoCopia,
+                        sssPantMarginSup,
+                        jugador.NOMBRE, nombrePieza, "SPONSOR_SECUNDARIO"
+                    );
+                }
+            }
+        }
+    }
 }
 
 // ============================================================
@@ -902,6 +1051,12 @@ function llevaElemento(jugador, nombrePieza, elemento) {
         if (elemento === "NOMBRE") return jugador.LLEVA_NOMBRE_E    === "SI";
         if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_M_DER === "SI";
     }
+    if (nombrePieza === "PANT_IZQ") {
+        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_P_IZQ === "SI";
+    }
+    if (nombrePieza === "PANT_DER") {
+        if (elemento === "NUMERO") return jugador.LLEVA_NUMERO_P_DER === "SI";
+    }
     return false;
 }
 
@@ -911,6 +1066,8 @@ function inicialPieza(nombrePieza) {
     if (nombrePieza === "ESPALDA")   return "E";
     if (nombrePieza === "MANGA_IZQ") return "M";
     if (nombrePieza === "MANGA_DER") return "M";
+    if (nombrePieza === "PANT_IZQ")  return "P_IZQ";
+    if (nombrePieza === "PANT_DER")  return "P_DER";
     return "?";
 }
 

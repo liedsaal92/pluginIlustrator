@@ -42,6 +42,24 @@ const MangaDerIcon = () => (
   </svg>
 );
 
+const PantIzqIcon = () => (
+  <svg viewBox="0 0 32 32" fill="none" className="pieza-svg" aria-hidden="true">
+    <path
+      d="M3 5 L18 5 L16 29 L1 29 Z"
+      stroke="currentColor" strokeWidth="2" strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const PantDerIcon = () => (
+  <svg viewBox="0 0 32 32" fill="none" className="pieza-svg" aria-hidden="true">
+    <path
+      d="M14 5 L29 5 L31 29 L16 29 Z"
+      stroke="currentColor" strokeWidth="2" strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const DefaultPiezaIcon = () => (
   <svg viewBox="0 0 32 32" fill="none" className="pieza-svg" aria-hidden="true">
     <rect x="4" y="4" width="24" height="24" stroke="currentColor" strokeWidth="2"/>
@@ -54,6 +72,8 @@ const PIEZA_ICONS: Partial<Record<string, FC>> = {
   espalda:   EspaldaIcon,
   manga_izq: MangaIzqIcon,
   manga_der: MangaDerIcon,
+  pant_izq:  PantIzqIcon,
+  pant_der:  PantDerIcon,
 };
 
 // ── Component ─────────────────────────────────────────────────
@@ -61,14 +81,17 @@ interface Props {
   active: PiezaKey;
   onChange: (pieza: PiezaKey) => void;
   size?: 'normal' | 'sm';
+  piezas?: PiezaKey[];
 }
 
-export function PiezaTabs({ active, onChange, size = 'normal' }: Props) {
+export function PiezaTabs({ active, onChange, size = 'normal', piezas }: Props) {
+  const keys = (piezas ?? (Object.keys(SCHEMA) as PiezaKey[]));
+
   // Compact mode inside player cards
   if (size === 'sm') {
     return (
       <div className="pieza-tabs">
-        {(Object.keys(SCHEMA) as PiezaKey[]).map(pieza => (
+        {keys.map(pieza => (
           <button
             key={pieza}
             className={`pieza-tab-sm ${active === pieza ? 'active' : ''}`}
@@ -85,7 +108,7 @@ export function PiezaTabs({ active, onChange, size = 'normal' }: Props) {
   // Full card selector (normal mode)
   return (
     <div className="pieza-selector">
-      {(Object.keys(SCHEMA) as PiezaKey[]).map(pieza => {
+      {keys.map(pieza => {
         const schema = SCHEMA[pieza];
         const isActive = active === pieza;
         const Icon = PIEZA_ICONS[pieza] ?? DefaultPiezaIcon;

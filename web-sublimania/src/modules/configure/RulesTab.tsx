@@ -10,8 +10,11 @@ import { PiezaPreviewPanel } from './PiezaPreviewPanel';
 import { PiezaPreviewModal } from './PiezaPreviewModal';
 import type { PiezaKey, SchemaElement } from '../../types';
 
+const CAMISETA_PIEZAS: PiezaKey[] = ['frente', 'espalda', 'manga_izq', 'manga_der'];
+
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
+  piezas?: PiezaKey[];
 }
 
 // ── Talla sidebar buttons ─────────────────────────────────────
@@ -107,7 +110,9 @@ function ElementGroup({ groupKey, elements, rules, piezaColor, expanded, onToggl
 }
 
 // ── Main component ────────────────────────────────────────────
-export function RulesTab({ onToast }: Props) {
+export function RulesTab({ onToast, piezas: piezasProp }: Props) {
+  const activePiezas = piezasProp ?? CAMISETA_PIEZAS;
+
   const {
     tallas, players, tallaRules,
     activeTalla, activePieza,
@@ -130,6 +135,15 @@ export function RulesTab({ onToast }: Props) {
   const undoFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const rules = activeTalla ? (tallaRules[activeTalla] ?? {}) : {};
+
+  // Auto-switch to first valid pieza when entering a tab whose piezas don't include the current one
+  useEffect(() => {
+    if (!activePiezas.includes(activePieza)) {
+      setActivePieza(activePiezas[0]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePiezas.join(',')]);
+
   const schema = SCHEMA[activePieza];
 
   // Group elements by their group key, preserving order of first occurrence
@@ -380,7 +394,7 @@ export function RulesTab({ onToast }: Props) {
       {/* ── Main rules area ── */}
       <div className="rules-main">
         <div className="rules-main-topbar">
-          <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
+          <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} piezas={activePiezas} />
           {activeTalla && (
             <button
               className={`rules-preview-trigger${showPreviewPanel ? ' active' : ''}`}

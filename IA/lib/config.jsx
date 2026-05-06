@@ -21,7 +21,7 @@ var CONFIG = {
     gapSeccion: 50, // separación entre secciones de piezas
 
     // Nombres exactos de grupos en la plantilla
-    piezas: ["FRENTE", "ESPALDA", "MANGA_IZQ", "MANGA_DER"],
+    piezas: ["FRENTE", "ESPALDA", "MANGA_IZQ", "MANGA_DER", "PANT_IZQ", "PANT_DER"],
 
     // Nombres de items dinámicos dentro de DINAMICO
     itemNombre: "NOMBRE",

@@ -67,7 +67,7 @@ export function ConfigureScreen({ onToast }: Props) {
           <div className="config-stats">
             <span className="stat-badge stat-players">{players.length} JUG.</span>
             <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
-            {configTab === 'rules' && activeTalla && (
+            {(configTab === 'rules' || configTab === 'pantaloneta') && activeTalla && (
               <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
             )}
           </div>
@@ -83,6 +83,12 @@ export function ConfigureScreen({ onToast }: Props) {
           ⚙ REGLAS DE CAMISETAS
         </button>
         <button
+          className={`tab-btn ${configTab === 'pantaloneta' ? 'active' : ''}`}
+          onClick={() => setConfigTab('pantaloneta')}
+        >
+          ⚙ REGLAS DE PANTALONETAS
+        </button>
+        <button
           className={`tab-btn ${configTab === 'players' ? 'active' : ''}`}
           onClick={() => setConfigTab('players')}
         >
@@ -93,6 +99,7 @@ export function ConfigureScreen({ onToast }: Props) {
 
       <div className="config-body">
         {configTab === 'rules' && <RulesTab onToast={onToast} />}
+        {configTab === 'pantaloneta' && <RulesTab onToast={onToast} piezas={['pant_izq', 'pant_der']} />}
         {configTab === 'players' && (
           <div className="players-layout">
             <AddPlayerForm />

@@ -242,6 +242,14 @@ function main() {
             Log.ok(nombrePieza + ": base deducida de talla template (" +
                    _tallaTemplate.TALLA + ") → " +
                    basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
+        } else if ((nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") && _tallaTemplate) {
+            basePieza = {
+                ancho: parseFloat(_tallaTemplate.PANT_ANCHO),
+                alto:  parseFloat(_tallaTemplate.PANT_ALTO)
+            };
+            Log.ok(nombrePieza + ": base deducida de talla template (" +
+                   _tallaTemplate.TALLA + ") → " +
+                   basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         } else {
             basePieza = {
                 ancho: ptToCm(Math.abs(grupoTemplate.width)),

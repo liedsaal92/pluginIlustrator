@@ -312,6 +312,12 @@ function getDimensiones(jugador, nombrePieza) {
         if (isNaN(ma) || ma <= 0 || isNaN(mh) || mh <= 0) return null;
         return { ancho: ma, alto: mh };
     }
+    if (nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") {
+        var pa = parseFloat(jugador.PANT_ANCHO);
+        var ph = parseFloat(jugador.PANT_ALTO);
+        if (isNaN(pa) || pa <= 0 || isNaN(ph) || ph <= 0) return null;
+        return { ancho: pa, alto: ph };
+    }
     return null;
 }
 
