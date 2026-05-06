@@ -123,6 +123,7 @@ export interface QuoteInput {
   operations: OperationCost[];
   volumeTiers: VolumeTier[];
   linearCm?: number;
+  widthCm?: number;
   manualPrice?: number;
   savingsTransferRate: number;
   config: PricingConfig;

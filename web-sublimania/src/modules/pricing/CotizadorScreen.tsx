@@ -15,6 +15,7 @@ interface OrderLine {
   talla: string;   // "34H" | "34M" | etc.
   quantity: number;
   linearCm: number;
+  widthCm: number;
   manualPrice: string;
 }
 
@@ -31,8 +32,8 @@ const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD
 const pct   = new Intl.NumberFormat('es-EC', { style: 'percent', maximumFractionDigits: 0 });
 function fmt(v: number) { return money.format(v); }
 function newId()        { return Math.random().toString(36).slice(2, 9); }
-function newLine(): OrderLine {
-  return { id: newId(), productId: 'camiseta', talla: '34H', quantity: 1, linearCm: 100, manualPrice: '' };
+function newLine(rollWidthCm = 130): OrderLine {
+  return { id: newId(), productId: 'camiseta', talla: '34H', quantity: 1, linearCm: 100, widthCm: rollWidthCm, manualPrice: '' };
 }
 
 export function CotizadorScreen({ onToast }: Props) {
@@ -40,7 +41,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const [profileId, setProfileId]             = useState<PrintProfileId>(
     () => usePricingStore.getState().config.defaultProfileId ?? 'normal'
   );
-  const [orderLines, setOrderLines]           = useState<OrderLine[]>([newLine()]);
+  const [orderLines, setOrderLines]           = useState<OrderLine[]>(() => [newLine(usePricingStore.getState().config.rollWidthCm)]);
   const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null);
   const [segmentOverridden, setSegmentOverridden] = useState(false);
   const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service' | 'paper'>('sublimation');
@@ -85,6 +86,7 @@ export function CotizadorScreen({ onToast }: Props) {
         profiles: printProfiles,
         basePrices, supplies, machines, operations, volumeTiers,
         linearCm: line.linearCm,
+        widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims,
         serviceMode, fabrics,
@@ -125,6 +127,7 @@ export function CotizadorScreen({ onToast }: Props) {
           profiles: printProfiles,
           basePrices, supplies, machines, operations, volumeTiers,
           linearCm: line.linearCm,
+          widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
           savingsTransferRate, config, tallaDims,
           serviceMode, fabrics,
@@ -140,7 +143,7 @@ export function CotizadorScreen({ onToast }: Props) {
     [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
   );
 
-  function addLine()    { setOrderLines(prev => [...prev, newLine()]); }
+  function addLine()    { setOrderLines(prev => [...prev, newLine(config.rollWidthCm)]); }
   function removeLine(id: string) {
     setOrderLines(prev => prev.length > 1 ? prev.filter(l => l.id !== id) : prev);
   }
@@ -161,6 +164,7 @@ export function CotizadorScreen({ onToast }: Props) {
         profiles: printProfiles,
         basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiers,
         linearCm: line.linearCm,
+        widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims,
         serviceMode, fabrics,
@@ -322,8 +326,22 @@ export function CotizadorScreen({ onToast }: Props) {
                     </td>
                     <td>
                       {line.productId === 'por_cm' ? (
-                        <input className="pricing-order-input" type="number" min="1" value={line.linearCm}
-                          onChange={e => updateLine(line.id, 'linearCm', Number(e.target.value))} placeholder="CM" />
+                        serviceMode === 'sublimation' ? (
+                          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+                            <input className="pricing-order-input" type="number" min="1"
+                              value={line.linearCm} placeholder="ALTO" title="Alto (cm)"
+                              style={{ width: '3.8rem' }}
+                              onChange={e => updateLine(line.id, 'linearCm', Number(e.target.value))} />
+                            <span style={{ fontSize: '0.65rem', opacity: 0.45, flexShrink: 0 }}>×</span>
+                            <input className="pricing-order-input" type="number" min="1"
+                              value={line.widthCm} placeholder="ANCHO" title="Ancho (cm)"
+                              style={{ width: '3.8rem' }}
+                              onChange={e => updateLine(line.id, 'widthCm', Number(e.target.value))} />
+                          </div>
+                        ) : (
+                          <input className="pricing-order-input" type="number" min="1" value={line.linearCm}
+                            onChange={e => updateLine(line.id, 'linearCm', Number(e.target.value))} placeholder="CM" />
+                        )
                       ) : (
                         <select className="input-player" value={line.talla}
                           onChange={e => updateLine(line.id, 'talla', e.target.value)}>
@@ -462,7 +480,12 @@ export function CotizadorScreen({ onToast }: Props) {
                     <tr key={orderLines[i].id} className={q === null ? 'pricing-breakdown-error' : ''}>
                       <td>{i + 1}</td>
                       <td>{orderLines[i].productId.toUpperCase()}</td>
-                      <td>{orderLines[i].productId === 'por_cm' ? `${orderLines[i].linearCm}cm` : orderLines[i].talla}</td>
+                      <td>{orderLines[i].productId === 'por_cm'
+                        ? (serviceMode === 'sublimation'
+                          ? `${orderLines[i].linearCm}×${orderLines[i].widthCm}cm`
+                          : `${orderLines[i].linearCm}cm`)
+                        : orderLines[i].talla}
+                      </td>
                       <td>{orderLines[i].quantity}</td>
                       <td>{q ? fmt(q.cost.unitCost) : '—'}</td>
                       <td className={q && q.volumeDiscount > 0 ? 'pricing-discount-cell' : ''}>

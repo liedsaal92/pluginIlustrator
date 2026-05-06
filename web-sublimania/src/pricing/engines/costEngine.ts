@@ -80,13 +80,16 @@ function getMetersForProduct(
   size: number,
   plotterWidthCm: number,
   linearCm?: number,
+  widthCm?: number,
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
 ) {
   const notes: string[] = [];
 
   if (productId === 'por_cm') {
-    const cm = Math.max(0, linearCm ?? 0);
-    return { meters: cm / 100, camisetaMeters: 0, pantalonetaMeters: 0, source: 'real' as const, notes };
+    const heightCm = Math.max(0, linearCm ?? 0);
+    const effectiveWidth = widthCm !== undefined ? widthCm : plotterWidthCm;
+    const widthRatio = plotterWidthCm > 0 ? effectiveWidth / plotterWidthCm : 1;
+    return { meters: (heightCm / 100) * widthRatio, camisetaMeters: 0, pantalonetaMeters: 0, source: 'real' as const, notes };
   }
 
   const shirtMeters = tallaDims
@@ -132,6 +135,7 @@ export function calculateCost(input: {
   machines: MachineCost[];
   operations: OperationCost[];
   linearCm?: number;
+  widthCm?: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   serviceMode?: 'sublimation' | 'full_service' | 'paper';
@@ -144,7 +148,7 @@ export function calculateCost(input: {
   const normalCostPerMeter = computeCostWithInkFactor(1, input.config, input.supplies, input.machines, input.operations);
   const productMeters = getMetersForProduct(
     input.productId, input.basePrices, input.segment, input.gender, input.size,
-    input.config.rollWidthCm, input.linearCm, input.tallaDims,
+    input.config.rollWidthCm, input.linearCm, input.widthCm, input.tallaDims,
   );
   const wasteRate = input.config.wasteRate;
   const metersUnit = productMeters.meters * (1 + wasteRate);
