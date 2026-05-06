@@ -276,8 +276,8 @@ export function TablaClienteScreen({ onToast }: Props) {
   const [showCosto, setShowCosto]                 = useState(false);
 
   // Completo-specific state
-  const [fabricCamisetaId, setFabricCamisetaId]         = useState<string | null>(null);
-  const [fabricPantalonetaId, setFabricPantalonetaId]   = useState<string | null>(null);
+  const [fabricCamisetaId]       = useState<string | null>(null);
+  const [fabricPantalonetaId]    = useState<string | null>(null);
 
   const profileId         = config.defaultProfileId ?? 'normal';
   const roundingEnabled   = config.roundingEnabled;

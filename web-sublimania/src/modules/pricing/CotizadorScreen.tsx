@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { products } from '../../pricing/data/products';
 import { calculateQuote } from '../../pricing/engines/pricingEngine';
-import { validateQuoteInput } from '../../pricing/validation';
 import { usePricingStore } from '../../store/usePricingStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTiposClienteStore } from '../../store/useTiposClienteStore';
@@ -39,7 +38,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, history, saveQuote, clearHistory, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, saveQuote, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)

@@ -45,7 +45,7 @@ export function MercadoScreen({ onToast: _onToast }: Props) {
   const [refQty, setRefQty]                     = useState(1);
 
   const myPrices = useMemo<Partial<Record<MarketProductId, number>>>(() => {
-    const base: Omit<QuoteInput, 'productId' | 'size' | 'linearCm'> = {
+    const base: Omit<QuoteInput, 'productId' | 'size' | 'linearCm' | 'volumeTiers'> = {
       customerSegment: refSegment,
       profiles: printProfiles,
       gender: refGender,
