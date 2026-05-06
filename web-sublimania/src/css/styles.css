@@ -6420,3 +6420,33 @@ body {
   .db-controls-grid { grid-template-columns: 1fr 1fr; }
 }
 .mkt-legend-sep { color: var(--text-muted); margin: 0 0.1rem; }
+
+/* ── MigrateDataBanner ───────────────────────────────────── */
+.migrate-banner {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-primary));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.migrate-banner-icon { font-size: 1.25rem; line-height: 1; flex-shrink: 0; margin-top: 2px; color: var(--accent); }
+.migrate-banner-body { flex: 1; min-width: 0; }
+.migrate-banner-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem;
+}
+.migrate-banner-title.migrate-banner-ok  { color: var(--success, #4caf50); }
+.migrate-banner-title.migrate-banner-err { color: var(--danger,  #f44336); }
+.migrate-banner-desc  { font-size: 0.78rem; color: var(--text-secondary); margin: 0 0 0.75rem; line-height: 1.5; }
+.migrate-banner-step  { font-size: 0.75rem; color: var(--text-muted); margin: 0.35rem 0 0; }
+.migrate-banner-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.migrate-banner-errors  { font-size: 0.75rem; color: var(--danger, #f44336); margin: 0 0 0.75rem; padding-left: 1rem; }
+.migrate-progress-bar   { height: 6px; border-radius: 3px; background: var(--bg-tertiary, rgba(0,0,0,0.15)); overflow: hidden; margin-bottom: 0.4rem; }
+.migrate-progress-fill  { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.2s ease; }

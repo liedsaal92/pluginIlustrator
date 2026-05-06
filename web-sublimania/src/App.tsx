@@ -8,6 +8,8 @@ import { useAuthStore } from './store/useAuthStore';
 import { useClientesStore } from './store/useClientesStore';
 import { useMoldesStore } from './store/useMoldesStore';
 import { useTallasStore } from './store/useTallasStore';
+import { usePricingStore } from './store/usePricingStore';
+import { useTiposClienteStore } from './store/useTiposClienteStore';
 import { supabase } from './utils/supabase';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
@@ -85,6 +87,8 @@ export default function App() {
     useClientesStore.getState().init();
     useMoldesStore.getState().init();
     useTallasStore.getState().init();
+    usePricingStore.getState().init();
+    useTiposClienteStore.getState().init();
     useTeamsStore.getState().init().then(() => {
       const { teams, activeTeamId } = useTeamsStore.getState();
       const workingStore = useTeamStore.getState();
