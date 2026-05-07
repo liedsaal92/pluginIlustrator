@@ -160,7 +160,7 @@ function detectarTallaTemplate(jugadores, gruposDisponibles) {
         if (diff < mejorDiff) { mejorDiff = diff; tallaTemplate = tj; }
     }
     if (tallaTemplate && mejorDiff < 2) {
-        Log.ok("Template detectado: talla " + tallaTemplate.TALLA +
+        Log.ok("Template detectado: talla " + tallaTemplate.TALLA_CAMI +
                " (" + fAncho.toFixed(1) + " x " + fAlto.toFixed(1) + " cm)");
     } else {
         tallaTemplate = null;

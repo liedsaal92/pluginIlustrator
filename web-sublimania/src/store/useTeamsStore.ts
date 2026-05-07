@@ -53,7 +53,8 @@ async function persistTeam(id: string, orgId: string, entry: TeamEntry): Promise
         nombre:          p.NOMBRE,
         nombre_camiseta: p.NOMBRE_CAMISETA,
         numero:          p.NUMERO,
-        talla:           p.TALLA,
+        talla:           p.TALLA_CAMI,
+        talla_pant:      p.TALLA_PANT,
       }))
     );
   }
@@ -82,7 +83,7 @@ async function persistTeam(id: string, orgId: string, entry: TeamEntry): Promise
 // Reconstruye TeamEntry[] desde las 4 tablas
 function buildTeams(
   teamsData:     { id: string; nombre: string; notas: string; base_team_id: string | null; created_at: string; updated_at: string; portal_status: string | null; created_by: string | null }[],
-  playersData:   { team_id: string; position: number; nombre: string; nombre_camiseta: string; numero: string; talla: string }[],
+  playersData:   { team_id: string; position: number; nombre: string; nombre_camiseta: string; numero: string; talla: string; talla_pant?: string }[],
   rulesData:     { team_id: string; talla: string; rules: Rules }[],
   overridesData: { team_id: string; player_position: number; overrides: Overrides[number] }[],
   portalLinksData: { team_id: string; token: string; expires_at: string | null; status: string }[],
@@ -95,7 +96,7 @@ function buildTeams(
   return teamsData.map(t => {
     const players = (playersByTeam[t.id] ?? [])
       .sort((a, b) => a.position - b.position)
-      .map(p => ({ NOMBRE: p.nombre, NOMBRE_CAMISETA: p.nombre_camiseta, NUMERO: p.numero, TALLA: p.talla }));
+      .map(p => ({ NOMBRE: p.nombre, NOMBRE_CAMISETA: p.nombre_camiseta, NUMERO: p.numero, TALLA_CAMI: p.talla, TALLA_PANT: p.talla_pant ?? '' }));
 
     const tallaRules: Record<string, Rules> = {};
     (rulesByTeam[t.id] ?? []).forEach(r => { tallaRules[r.talla] = r.rules; });
@@ -103,7 +104,7 @@ function buildTeams(
     const overrides: Overrides = {};
     (overridesByTeam[t.id] ?? []).forEach(o => { overrides[o.player_position] = o.overrides; });
 
-    const tallas   = [...new Set(players.map(p => p.TALLA))];
+    const tallas   = [...new Set(players.map(p => p.TALLA_CAMI))];
     const portal   = (portalByTeam[t.id] ?? [])[0] ?? null;
 
     return {

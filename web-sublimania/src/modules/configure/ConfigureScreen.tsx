@@ -17,7 +17,7 @@ export function ConfigureScreen({ onToast }: Props) {
   const {
     players, tallas,
     configTab, globalConfig,
-    activeTalla,
+    activeTalla, activeTallaPant,
     setConfigTab, setGlobalConfig,
   } = useTeamStore();
 
@@ -67,8 +67,11 @@ export function ConfigureScreen({ onToast }: Props) {
           <div className="config-stats">
             <span className="stat-badge stat-players">{players.length} JUG.</span>
             <span className="stat-badge stat-tallas">{tallas.length} TALLAS</span>
-            {(configTab === 'rules' || configTab === 'pantaloneta') && activeTalla && (
+            {configTab === 'rules' && activeTalla && (
               <span className="stat-badge stat-talla-active">✎ {activeTalla}</span>
+            )}
+            {configTab === 'pantaloneta' && activeTallaPant && (
+              <span className="stat-badge stat-talla-active">✎ {activeTallaPant}</span>
             )}
           </div>
         </div>
@@ -121,15 +124,15 @@ export function ConfigureScreen({ onToast }: Props) {
             )}
             {(() => {
               const sorted = [...players.keys()].sort((a, b) => {
-                const ga = getGeneroTalla(players[a].TALLA);
-                const gb = getGeneroTalla(players[b].TALLA);
+                const ga = getGeneroTalla(players[a].TALLA_CAMI);
+                const gb = getGeneroTalla(players[b].TALLA_CAMI);
                 const order = { H: 0, M: 1, other: 2 } as const;
                 if (ga !== gb) return order[ga] - order[gb];
-                return getNumeroTalla(players[a].TALLA) - getNumeroTalla(players[b].TALLA);
+                return getNumeroTalla(players[a].TALLA_CAMI) - getNumeroTalla(players[b].TALLA_CAMI);
               });
               let lastGenero: string | null = null;
               return sorted.map(idx => {
-                const genero = getGeneroTalla(players[idx].TALLA);
+                const genero = getGeneroTalla(players[idx].TALLA_CAMI);
                 const header = genero !== lastGenero
                   ? (() => { lastGenero = genero; return (
                     <div key={`hdr-${genero}`} className={`players-gender-header players-gender-header--${genero.toLowerCase()}`}>

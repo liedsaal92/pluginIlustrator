@@ -2527,6 +2527,12 @@ body {
   color: var(--white);
   flex-shrink: 0;
 }
+.player-talla-tipo {
+  font-size: 0.48rem;
+  font-weight: 400;
+  opacity: 0.75;
+  letter-spacing: 0.03em;
+}
 
 .player-actions {
   display: flex;

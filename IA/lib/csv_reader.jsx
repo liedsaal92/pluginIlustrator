@@ -177,7 +177,7 @@ function leerXlsx(csvFile) {
 
             Log._linea("-----",
                 "CSV | " + obj.NOMBRE +
-                " | T:" + obj.TALLA +
+                " | T:" + obj.TALLA_CAMI +
                 " | Num:" + (obj.NUMERO !== "" ? obj.NUMERO : "--") +
                 " | Logo:" + obj.LOGO_ANCHO + "cm"
             );

@@ -120,7 +120,7 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
   const [zoom,      setZoom]      = useState(90);
 
   const player = players[playerIdx];
-  const talla  = player?.TALLA ?? tallas[0] ?? '';
+  const talla  = player?.TALLA_CAMI ?? tallas[0] ?? '';
 
   const tallaDimsMap = useMemo(
     () => (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {},
@@ -211,7 +211,7 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
             ) : (
               <select className="preview-select" value={playerIdx} onChange={e => setPlayerIdx(Number(e.target.value))}>
                 {players.map((p, i) => (
-                  <option key={i} value={i}>{p.NOMBRE_CAMISETA || p.NOMBRE} — {p.TALLA}</option>
+                  <option key={i} value={i}>{p.NOMBRE_CAMISETA || p.NOMBRE} — {p.TALLA_CAMI}</option>
                 ))}
               </select>
             )}

@@ -111,7 +111,7 @@ function main() {
     var _tallasVistas = {};
     var _tallasOrden  = [];
     for (var _ti = 0; _ti < jugadores.length; _ti++) {
-        var _talla = trim(jugadores[_ti].TALLA + "");
+        var _talla = trim(jugadores[_ti].TALLA_CAMI + "");
         if (_talla !== "" && !_tallasVistas[_talla]) {
             _tallasVistas[_talla] = true;
             _tallasOrden.push(_talla);
@@ -240,7 +240,7 @@ function main() {
                 alto:  parseFloat(_tallaTemplate.MANGA_ALTO)
             };
             Log.ok(nombrePieza + ": base deducida de talla template (" +
-                   _tallaTemplate.TALLA + ") → " +
+                   _tallaTemplate.TALLA_CAMI + ") → " +
                    basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         } else if ((nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") && _tallaTemplate) {
             basePieza = {
@@ -248,7 +248,7 @@ function main() {
                 alto:  parseFloat(_tallaTemplate.PANT_ALTO)
             };
             Log.ok(nombrePieza + ": base deducida de talla template (" +
-                   _tallaTemplate.TALLA + ") → " +
+                   _tallaTemplate.TALLA_CAMI + ") → " +
                    basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         } else {
             basePieza = {
@@ -271,7 +271,7 @@ function main() {
             var progValor = 20 + Math.round((pasoActual / totalPasos) * 75);
             progActualizar(
                 nombrePieza + "  (" + pasoActual + "/" + totalPasos + ")",
-                j.NOMBRE + "  —  " + j.TALLA,
+                j.NOMBRE + "  —  " + j.TALLA_CAMI,
                 progValor
             );
 
@@ -317,7 +317,7 @@ function main() {
 
                 // Nombrar
                 var numStr = (j.TIENE_NUMERO === "SI" && j.NUMERO !== "") ? j.NUMERO : "SN";
-                copia.name = nombrePieza + "_" + sanitizar(j.NOMBRE) + "_" + numStr + "_" + j.TALLA;
+                copia.name = nombrePieza + "_" + sanitizar(j.NOMBRE) + "_" + numStr + "_" + j.TALLA_CAMI;
 
                 // Layout
                 var gW = Math.abs(copia.width);
@@ -342,7 +342,7 @@ function main() {
                 offsetX      += gW + CONFIG.gapX;
 
                 Log.ok(nombrePieza + " | " + j.NOMBRE +
-                       " | T:" + j.TALLA +
+                       " | T:" + j.TALLA_CAMI +
                        " | " + dims.ancho.toFixed(1) + "x" + dims.alto.toFixed(1) + "cm");
 
             } catch (e) {

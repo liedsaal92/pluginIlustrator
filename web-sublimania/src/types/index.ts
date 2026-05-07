@@ -7,7 +7,8 @@ export interface Player {
   NOMBRE: string;
   NOMBRE_CAMISETA: string;
   NUMERO: string;
-  TALLA: string;
+  TALLA_CAMI: string;
+  TALLA_PANT: string;
 }
 
 // ── REGLAS (valores configurables por talla o por jugador) ────

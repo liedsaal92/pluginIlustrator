@@ -51,10 +51,11 @@ export function PlayerCard({ idx }: Props) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     updatePlayer(idx, {
-      NOMBRE: String(fd.get('NOMBRE') ?? '').trim(),
+      NOMBRE:          String(fd.get('NOMBRE') ?? '').trim(),
       NOMBRE_CAMISETA: String(fd.get('NOMBRE_CAMISETA') ?? '').trim(),
-      NUMERO: String(fd.get('NUMERO') ?? '').trim(),
-      TALLA: String(fd.get('TALLA') ?? '').trim().toUpperCase(),
+      NUMERO:          String(fd.get('NUMERO') ?? '').trim(),
+      TALLA_CAMI:      String(fd.get('TALLA_CAMI') ?? '').trim().toUpperCase(),
+      TALLA_PANT:      String(fd.get('TALLA_PANT') ?? '').trim().toUpperCase(),
     });
     setEditing(false);
   }
@@ -79,9 +80,14 @@ export function PlayerCard({ idx }: Props) {
 
         {/* Right meta + actions */}
         <div className="player-meta">
-          <span className="player-talla-badge" style={{ background: tallaColor(player.TALLA) }}>
-            {player.TALLA || '—'}
+          <span className="player-talla-badge" style={{ background: tallaColor(player.TALLA_CAMI) }}>
+            {player.TALLA_CAMI || '—'}{player.TALLA_PANT ? <span className="player-talla-tipo"> CAM</span> : null}
           </span>
+          {player.TALLA_PANT && (
+            <span className="player-talla-badge player-talla-badge--pant" style={{ background: tallaColor(player.TALLA_PANT) }}>
+              {player.TALLA_PANT}<span className="player-talla-tipo"> PAN</span>
+            </span>
+          )}
           {hasOverride(idx) && <span className="override-badge">✎</span>}
           <div className="player-actions" onClick={e => e.stopPropagation()}>
             <button
@@ -118,8 +124,18 @@ export function PlayerCard({ idx }: Props) {
               <input className="input-player" name="NUMERO" defaultValue={player.NUMERO} maxLength={3} />
             </div>
             <div className="player-edit-field player-edit-field--sm">
-              <label>TALLA</label>
-              <select className="input-player" name="TALLA" defaultValue={player.TALLA}>
+              <label>T. CAMISETA *</label>
+              <select className="input-player" name="TALLA_CAMI" defaultValue={player.TALLA_CAMI} required>
+                <option value="">— elegir —</option>
+                {hTallas.length > 0 && <optgroup label="♂ HOMBRES" style={{ color: '#4A9BE8' }}>{hTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+                {mTallas.length > 0 && <optgroup label="♀ MUJERES" style={{ color: '#F050A0' }}>{mTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+                {otraTallas.length > 0 && <optgroup label="OTROS">{otraTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
+              </select>
+            </div>
+            <div className="player-edit-field player-edit-field--sm">
+              <label>T. PANTALONETA</label>
+              <select className="input-player" name="TALLA_PANT" defaultValue={player.TALLA_PANT}>
+                <option value="">— sin pantaloneta —</option>
                 {hTallas.length > 0 && <optgroup label="♂ HOMBRES" style={{ color: '#4A9BE8' }}>{hTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
                 {mTallas.length > 0 && <optgroup label="♀ MUJERES" style={{ color: '#F050A0' }}>{mTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}
                 {otraTallas.length > 0 && <optgroup label="OTROS">{otraTallas.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>}

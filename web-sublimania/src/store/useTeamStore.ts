@@ -17,6 +17,7 @@ interface TeamState {
   screen: Screen;
   configTab: ConfigTab;
   activeTalla: string | null;
+  activeTallaPant: string | null;
   activePieza: PiezaKey;
   expandedPlayer: number | null;
   expandedPlayerPieza: PiezaKey;
@@ -39,6 +40,7 @@ interface TeamState {
   setScreen: (screen: Screen) => void;
   setConfigTab: (tab: ConfigTab) => void;
   setActiveTalla: (talla: string) => void;
+  setActiveTallaPant: (talla: string) => void;
   setActivePieza: (pieza: PiezaKey) => void;
   setExpandedPlayer: (idx: number | null) => void;
   setExpandedPlayerPieza: (pieza: PiezaKey) => void;
@@ -61,6 +63,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       screen: 'upload',
       configTab: 'rules',
       activeTalla: null,
+      activeTallaPant: null,
       activePieza: 'frente',
       expandedPlayer: null,
       expandedPlayerPieza: 'frente',
@@ -87,9 +90,10 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       addPlayer: (player) => {
         const { players, tallas, tallaRules } = get();
         const newPlayers = [...players, player];
-        const newTallas = tallas.includes(player.TALLA) ? tallas : [...tallas, player.TALLA];
+        const newTallas = tallas.includes(player.TALLA_CAMI) ? tallas : [...tallas, player.TALLA_CAMI];
         const newRules = { ...tallaRules };
-        if (!newRules[player.TALLA]) newRules[player.TALLA] = buildEmptyRules();
+        if (!newRules[player.TALLA_CAMI]) newRules[player.TALLA_CAMI] = buildEmptyRules();
+        if (player.TALLA_PANT && !newRules[player.TALLA_PANT]) newRules[player.TALLA_PANT] = buildEmptyRules();
         set({ players: newPlayers, tallas: newTallas, tallaRules: newRules });
       },
 
@@ -103,16 +107,20 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
           if (i < idx) newOverrides[i] = v;
           else if (i > idx) newOverrides[i - 1] = v;
         });
-        const newTallas = [...new Set(newPlayers.map(p => p.TALLA))];
+        const newTallas = [...new Set(newPlayers.map(p => p.TALLA_CAMI))];
         set({ players: newPlayers, overrides: newOverrides, tallas: newTallas });
       },
 
       updatePlayer: (idx, fields) => {
         const { players, tallaRules } = get();
         const newPlayers = players.map((p, i) => i === idx ? { ...p, ...fields } : p);
-        const newTallas = [...new Set(newPlayers.map(p => p.TALLA))];
+        const newTallas = [...new Set(newPlayers.map(p => p.TALLA_CAMI))];
         const newRules = { ...tallaRules };
         newTallas.forEach(t => { if (!newRules[t]) newRules[t] = buildEmptyRules(); });
+        // Ensure pant talla also has a rule entry
+        newPlayers.forEach(p => {
+          if (p.TALLA_PANT && !newRules[p.TALLA_PANT]) newRules[p.TALLA_PANT] = buildEmptyRules();
+        });
         set({ players: newPlayers, tallas: newTallas, tallaRules: newRules });
       },
 
@@ -125,8 +133,12 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
 
       setOverride: (idx, key, value) => {
         const { overrides, players, tallaRules } = get();
-        const talla = players[idx]?.TALLA ?? '';
-        const base = tallaRules[talla] ?? {};
+        const tallaCami = players[idx]?.TALLA_CAMI ?? '';
+        const tallaPant = players[idx]?.TALLA_PANT ?? '';
+        const base: Rules = {
+          ...(tallaRules[tallaCami] ?? {}),
+          ...(tallaPant ? (tallaRules[tallaPant] ?? {}) : {}),
+        };
         const current = { ...(overrides[idx] ?? {}) };
 
         if (String(value) === String(base[key] ?? '')) {
@@ -154,7 +166,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
         const { players, overrides } = get();
         const next = { ...overrides };
         players.forEach((p, idx) => {
-          if (String(p.TALLA ?? '') === talla) delete next[idx];
+          if (String(p.TALLA_CAMI ?? '') === talla) delete next[idx];
         });
         set({ overrides: next });
       },
@@ -184,6 +196,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       setScreen: (screen) => set({ screen }),
       setConfigTab: (configTab) => set({ configTab }),
       setActiveTalla: (activeTalla) => set({ activeTalla }),
+      setActiveTallaPant: (activeTallaPant) => set({ activeTallaPant }),
       setActivePieza: (activePieza) => set({ activePieza }),
       setExpandedPlayer: (expandedPlayer) => set({ expandedPlayer }),
       setExpandedPlayerPieza: (expandedPlayerPieza) => set({ expandedPlayerPieza }),
@@ -191,9 +204,11 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       // ── Getters ─────────────────────────────────────────────
       getPlayerRules: (idx) => {
         const { players, tallaRules, overrides } = get();
-        const talla = players[idx]?.TALLA ?? '';
-        const base = tallaRules[talla] ?? {};
-        return { ...base, ...(overrides[idx] ?? {}) };
+        const tallaCami = players[idx]?.TALLA_CAMI ?? '';
+        const tallaPant = players[idx]?.TALLA_PANT ?? '';
+        const baseCami = tallaRules[tallaCami] ?? {};
+        const basePant = tallaPant ? (tallaRules[tallaPant] ?? {}) : {};
+        return { ...baseCami, ...basePant, ...(overrides[idx] ?? {}) };
       },
 
       hasOverride: (idx) => {
@@ -203,14 +218,15 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
 
       loadFromEntry: (entry, targetScreen = 'configure') => {
         set({
-          players:      entry.players,
-          tallas:       entry.tallas,
-          tallaRules:   entry.tallaRules,
-          overrides:    entry.overrides,
-          globalConfig: entry.globalConfig,
-          screen:       targetScreen,
-          configTab:    'rules',
-          activeTalla:  entry.tallas[0] ?? '24H',
+          players:        entry.players,
+          tallas:         entry.tallas,
+          tallaRules:     entry.tallaRules,
+          overrides:      entry.overrides,
+          globalConfig:   entry.globalConfig,
+          screen:         targetScreen,
+          configTab:      'rules',
+          activeTalla:    entry.tallas[0] ?? '24H',
+          activeTallaPant: null,
           expandedPlayer: null,
         });
       },
