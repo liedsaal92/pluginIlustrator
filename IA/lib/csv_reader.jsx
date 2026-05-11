@@ -139,7 +139,17 @@ function leerXlsx(csvFile) {
                     hdr === "ESCUDO_P_DER_ANCHO"             || hdr === "ESCUDO_P_DER_ALTO"             || hdr === "ESCUDO_P_DER_MARGIN_SUP"             || hdr === "ESCUDO_P_DER_MARGIN_LAT"             ||
                     hdr === "LOGO_MARCA_P_DER_ANCHO"         || hdr === "LOGO_MARCA_P_DER_ALTO"         || hdr === "LOGO_MARCA_P_DER_MARGIN_SUP"         || hdr === "LOGO_MARCA_P_DER_MARGIN_LAT"         ||
                     hdr === "SPONSOR_PRINCIPAL_P_DER_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_P_DER_ALTO"  || hdr === "SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP"  ||
-                    hdr === "SPONSOR_SECUNDARIO_P_DER_ANCHO" || hdr === "SPONSOR_SECUNDARIO_P_DER_ALTO" || hdr === "SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP") {
+                    hdr === "SPONSOR_SECUNDARIO_P_DER_ANCHO" || hdr === "SPONSOR_SECUNDARIO_P_DER_ALTO" || hdr === "SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP" ||
+                    // LÍNEAS PANT IZQ
+                    hdr === "PANT_IZQ_LINEA_IZQ_ANCHO" || hdr === "PANT_IZQ_LINEA_IZQ_ALTO" ||
+                    hdr === "PANT_IZQ_LINEA_DER_ANCHO" || hdr === "PANT_IZQ_LINEA_DER_ALTO" ||
+                    hdr === "PANT_IZQ_LINEA_INF_ANCHO" || hdr === "PANT_IZQ_LINEA_INF_ALTO" ||
+                    hdr === "LINEAS_ADIDAS_P_IZQ_ANCHO" || hdr === "LINEAS_ADIDAS_P_IZQ_MARGIN_INF" ||
+                    // LÍNEAS PANT DER
+                    hdr === "PANT_DER_LINEA_IZQ_ANCHO" || hdr === "PANT_DER_LINEA_IZQ_ALTO" ||
+                    hdr === "PANT_DER_LINEA_DER_ANCHO" || hdr === "PANT_DER_LINEA_DER_ALTO" ||
+                    hdr === "PANT_DER_LINEA_INF_ANCHO" || hdr === "PANT_DER_LINEA_INF_ALTO" ||
+                    hdr === "LINEAS_ADIDAS_P_DER_ANCHO" || hdr === "LINEAS_ADIDAS_P_DER_MARGIN_INF") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -183,7 +193,13 @@ function leerXlsx(csvFile) {
                 "LLEVA_SPONSOR_PRINCIPAL_P_IZQ", "LLEVA_SPONSOR_SECUNDARIO_P_IZQ",
                 // PANTALONETA DER
                 "LLEVA_NUMERO_P_DER", "LLEVA_ESCUDO_P_DER", "LLEVA_LOGO_MARCA_P_DER",
-                "LLEVA_SPONSOR_PRINCIPAL_P_DER", "LLEVA_SPONSOR_SECUNDARIO_P_DER"
+                "LLEVA_SPONSOR_PRINCIPAL_P_DER", "LLEVA_SPONSOR_SECUNDARIO_P_DER",
+                // LÍNEAS PANT IZQ
+                "LLEVA_PANT_IZQ_LINEA_IZQ", "LLEVA_PANT_IZQ_LINEA_DER", "LLEVA_PANT_IZQ_LINEA_INF",
+                "LLEVA_LINEAS_ADIDAS_P_IZQ",
+                // LÍNEAS PANT DER
+                "LLEVA_PANT_DER_LINEA_IZQ", "LLEVA_PANT_DER_LINEA_DER", "LLEVA_PANT_DER_LINEA_INF",
+                "LLEVA_LINEAS_ADIDAS_P_DER"
             ];
             for (var lf = 0; lf < llevaFields.length; lf++) {
                 var campo = llevaFields[lf];

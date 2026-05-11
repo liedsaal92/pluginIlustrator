@@ -1004,6 +1004,63 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 }
             }
         }
+
+        // ── LÍNEAS DE PANT ────────────────────────────────────
+        var sufPantL = (nombrePieza === "PANT_IZQ") ? "IZQ" : "DER";
+
+        var itemPantLineaIzq = findItemByNameRecursivo(dinamico, "PANT_LINEA_IZQ");
+        if (itemPantLineaIzq && jugador["LLEVA_PANT_" + sufPantL + "_LINEA_IZQ"] !== "SI") {
+            itemPantLineaIzq.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": PANT_LINEA_IZQ ocultada (LLEVA=NO)");
+        } else if (itemPantLineaIzq) {
+            var pLineaIzqAncho = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_IZQ_ANCHO"]);
+            var pLineaIzqAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_IZQ_ALTO"]);
+            var pLineaIzqRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_IZQ_REF"] || "") + "").toUpperCase();
+            procesarLineaManga(itemPantLineaIzq, "IZQ", pLineaIzqAncho, pLineaIzqAlto, pLineaIzqRef,
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+        }
+
+        var itemPantLineaDer = findItemByNameRecursivo(dinamico, "PANT_LINEA_DER");
+        if (itemPantLineaDer && jugador["LLEVA_PANT_" + sufPantL + "_LINEA_DER"] !== "SI") {
+            itemPantLineaDer.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": PANT_LINEA_DER ocultada (LLEVA=NO)");
+        } else if (itemPantLineaDer) {
+            var pLineaDerAncho = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_DER_ANCHO"]);
+            var pLineaDerAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_DER_ALTO"]);
+            var pLineaDerRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_DER_REF"] || "") + "").toUpperCase();
+            procesarLineaManga(itemPantLineaDer, "DER", pLineaDerAncho, pLineaDerAlto, pLineaDerRef,
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+        }
+
+        var itemPantLineaInf = findItemByNameRecursivo(dinamico, "PANT_LINEA_INF");
+        if (itemPantLineaInf && jugador["LLEVA_PANT_" + sufPantL + "_LINEA_INF"] !== "SI") {
+            itemPantLineaInf.hidden = true;
+            Log.info(nombrePieza + " | " + jugador.NOMBRE + ": PANT_LINEA_INF ocultada (LLEVA=NO)");
+        } else if (itemPantLineaInf) {
+            var pLineaInfAncho = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_INF_ANCHO"]);
+            var pLineaInfAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_INF_ALTO"]);
+            var pLineaInfRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
+            procesarLineaMangaInf(itemPantLineaInf, pLineaInfAncho, pLineaInfAlto, pLineaInfRef,
+                                  jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+        }
+
+        // ── LINEAS ADIDAS (pant) ──────────────────────────────
+        var itemLineasAdidasPant = findItemByNameRecursivo(dinamico, "LINEAS_ADIDAS");
+        if (itemLineasAdidasPant) {
+            if (jugador["LLEVA_LINEAS_ADIDAS_P_" + sufPantL] !== "SI") {
+                itemLineasAdidasPant.hidden = true;
+                Log.info(nombrePieza + " | " + jugador.NOMBRE + ": LINEAS_ADIDAS (pant) ocultadas (LLEVA=NO)");
+            } else {
+                var laAnchoP    = parseFloat(jugador["LINEAS_ADIDAS_P_" + sufPantL + "_ANCHO"]);
+                var laRefP      = trim((jugador["LINEAS_ADIDAS_P_" + sufPantL + "_REF"] || "") + "").toUpperCase();
+                var laMarginInfP = parseFloat(jugador["LINEAS_ADIDAS_P_" + sufPantL + "_MARGIN_INF"]);
+                procesarLineasAdidas(
+                    itemLineasAdidasPant, sufPantL,
+                    laAnchoP, laRefP, laMarginInfP, "NO",
+                    grupoCopia, jugador.NOMBRE, nombrePieza
+                );
+            }
+        }
     }
 }
 

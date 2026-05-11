@@ -101,6 +101,18 @@ export const CSV_COLUMN_ORDER: string[] = [
   'LLEVA_SPONSOR_PRINCIPAL_P_DER', 'SPONSOR_PRINCIPAL_P_DER_ANCHO', 'SPONSOR_PRINCIPAL_P_DER_ALTO', 'SPONSOR_PRINCIPAL_P_DER_REF', 'SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP',
   // PANT DER — SPONSOR SECUNDARIO
   'LLEVA_SPONSOR_SECUNDARIO_P_DER', 'SPONSOR_SECUNDARIO_P_DER_ANCHO', 'SPONSOR_SECUNDARIO_P_DER_ALTO', 'SPONSOR_SECUNDARIO_P_DER_REF', 'SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP',
+  // PANT IZQ — LÍNEAS
+  'LLEVA_PANT_IZQ_LINEA_IZQ', 'PANT_IZQ_LINEA_IZQ_ANCHO', 'PANT_IZQ_LINEA_IZQ_ALTO', 'PANT_IZQ_LINEA_IZQ_REF',
+  'LLEVA_PANT_IZQ_LINEA_DER', 'PANT_IZQ_LINEA_DER_ANCHO', 'PANT_IZQ_LINEA_DER_ALTO', 'PANT_IZQ_LINEA_DER_REF',
+  'LLEVA_PANT_IZQ_LINEA_INF', 'PANT_IZQ_LINEA_INF_ANCHO', 'PANT_IZQ_LINEA_INF_ALTO', 'PANT_IZQ_LINEA_INF_REF',
+  // PANT IZQ — LINEAS ADIDAS
+  'LLEVA_LINEAS_ADIDAS_P_IZQ', 'LINEAS_ADIDAS_P_IZQ_ANCHO', 'LINEAS_ADIDAS_P_IZQ_REF', 'LINEAS_ADIDAS_P_IZQ_MARGIN_INF',
+  // PANT DER — LÍNEAS
+  'LLEVA_PANT_DER_LINEA_IZQ', 'PANT_DER_LINEA_IZQ_ANCHO', 'PANT_DER_LINEA_IZQ_ALTO', 'PANT_DER_LINEA_IZQ_REF',
+  'LLEVA_PANT_DER_LINEA_DER', 'PANT_DER_LINEA_DER_ANCHO', 'PANT_DER_LINEA_DER_ALTO', 'PANT_DER_LINEA_DER_REF',
+  'LLEVA_PANT_DER_LINEA_INF', 'PANT_DER_LINEA_INF_ANCHO', 'PANT_DER_LINEA_INF_ALTO', 'PANT_DER_LINEA_INF_REF',
+  // PANT DER — LINEAS ADIDAS
+  'LLEVA_LINEAS_ADIDAS_P_DER', 'LINEAS_ADIDAS_P_DER_ANCHO', 'LINEAS_ADIDAS_P_DER_REF', 'LINEAS_ADIDAS_P_DER_MARGIN_INF',
 ];
 
 const numField = (key: string, label: string): SchemaField => ({
@@ -265,6 +277,14 @@ export const SCHEMA: Schema = {
         fields: [numField('SPONSOR_PRINCIPAL_P_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_P_IZQ_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_P_IZQ_REF'), numField('SPONSOR_PRINCIPAL_P_IZQ_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_secundario_p_izq', label: 'SPONSOR SECUNDARIO', icon: '☆', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_P_IZQ',
         fields: [numField('SPONSOR_SECUNDARIO_P_IZQ_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_P_IZQ_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_P_IZQ_REF'), numField('SPONSOR_SECUNDARIO_P_IZQ_MARGIN_SUP', 'Margen sup')] },
+      { id: 'linea_p_izq_lat_izq', label: 'LÍNEA LATERAL IZQ', icon: '|', group: 'lineas', toggleKey: 'LLEVA_PANT_IZQ_LINEA_IZQ',
+        fields: [numField('PANT_IZQ_LINEA_IZQ_ANCHO', 'Ancho'), numField('PANT_IZQ_LINEA_IZQ_ALTO', 'Alto'), refField('PANT_IZQ_LINEA_IZQ_REF')] },
+      { id: 'linea_p_izq_lat_der', label: 'LÍNEA LATERAL DER', icon: '|', group: 'lineas', toggleKey: 'LLEVA_PANT_IZQ_LINEA_DER',
+        fields: [numField('PANT_IZQ_LINEA_DER_ANCHO', 'Ancho'), numField('PANT_IZQ_LINEA_DER_ALTO', 'Alto'), refField('PANT_IZQ_LINEA_DER_REF')] },
+      { id: 'linea_p_izq_inf', label: 'LÍNEA INFERIOR', icon: '—', group: 'lineas', toggleKey: 'LLEVA_PANT_IZQ_LINEA_INF',
+        fields: [numField('PANT_IZQ_LINEA_INF_ANCHO', 'Ancho'), numField('PANT_IZQ_LINEA_INF_ALTO', 'Alto'), refField('PANT_IZQ_LINEA_INF_REF')] },
+      { id: 'lineas_adidas_p_izq', label: 'LINEAS ADIDAS', icon: '≡', group: 'lineas', toggleKey: 'LLEVA_LINEAS_ADIDAS_P_IZQ',
+        fields: [numField('LINEAS_ADIDAS_P_IZQ_ANCHO', 'Ancho'), refField('LINEAS_ADIDAS_P_IZQ_REF'), numField('LINEAS_ADIDAS_P_IZQ_MARGIN_INF', 'Margen inf')] },
     ],
   },
 
@@ -283,6 +303,14 @@ export const SCHEMA: Schema = {
         fields: [numField('SPONSOR_PRINCIPAL_P_DER_ANCHO', 'Ancho'), numField('SPONSOR_PRINCIPAL_P_DER_ALTO', 'Alto'), refField('SPONSOR_PRINCIPAL_P_DER_REF'), numField('SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP', 'Margen sup')] },
       { id: 'sponsor_secundario_p_der', label: 'SPONSOR SECUNDARIO', icon: '☆', group: 'sponsors', toggleKey: 'LLEVA_SPONSOR_SECUNDARIO_P_DER',
         fields: [numField('SPONSOR_SECUNDARIO_P_DER_ANCHO', 'Ancho'), numField('SPONSOR_SECUNDARIO_P_DER_ALTO', 'Alto'), refField('SPONSOR_SECUNDARIO_P_DER_REF'), numField('SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP', 'Margen sup')] },
+      { id: 'linea_p_der_lat_izq', label: 'LÍNEA LATERAL IZQ', icon: '|', group: 'lineas', toggleKey: 'LLEVA_PANT_DER_LINEA_IZQ',
+        fields: [numField('PANT_DER_LINEA_IZQ_ANCHO', 'Ancho'), numField('PANT_DER_LINEA_IZQ_ALTO', 'Alto'), refField('PANT_DER_LINEA_IZQ_REF')] },
+      { id: 'linea_p_der_lat_der', label: 'LÍNEA LATERAL DER', icon: '|', group: 'lineas', toggleKey: 'LLEVA_PANT_DER_LINEA_DER',
+        fields: [numField('PANT_DER_LINEA_DER_ANCHO', 'Ancho'), numField('PANT_DER_LINEA_DER_ALTO', 'Alto'), refField('PANT_DER_LINEA_DER_REF')] },
+      { id: 'linea_p_der_inf', label: 'LÍNEA INFERIOR', icon: '—', group: 'lineas', toggleKey: 'LLEVA_PANT_DER_LINEA_INF',
+        fields: [numField('PANT_DER_LINEA_INF_ANCHO', 'Ancho'), numField('PANT_DER_LINEA_INF_ALTO', 'Alto'), refField('PANT_DER_LINEA_INF_REF')] },
+      { id: 'lineas_adidas_p_der', label: 'LINEAS ADIDAS', icon: '≡', group: 'lineas', toggleKey: 'LLEVA_LINEAS_ADIDAS_P_DER',
+        fields: [numField('LINEAS_ADIDAS_P_DER_ANCHO', 'Ancho'), refField('LINEAS_ADIDAS_P_DER_REF'), numField('LINEAS_ADIDAS_P_DER_MARGIN_INF', 'Margen inf')] },
     ],
   },
 };
