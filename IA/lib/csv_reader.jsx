@@ -127,7 +127,19 @@ function leerXlsx(csvFile) {
                     // LÍNEAS DE MANGA DER
                     hdr === "MANGA_DER_LINEA_IZQ_ANCHO" || hdr === "MANGA_DER_LINEA_IZQ_ALTO" ||
                     hdr === "MANGA_DER_LINEA_DER_ANCHO" || hdr === "MANGA_DER_LINEA_DER_ALTO" ||
-                    hdr === "MANGA_DER_LINEA_INF_ANCHO" || hdr === "MANGA_DER_LINEA_INF_ALTO") {
+                    hdr === "MANGA_DER_LINEA_INF_ANCHO" || hdr === "MANGA_DER_LINEA_INF_ALTO" ||
+                    // PANTALONETA IZQ
+                    hdr === "NUMERO_P_IZQ_ANCHO"             || hdr === "NUMERO_P_IZQ_ALTO"             || hdr === "NUMERO_P_IZQ_MARGIN_SUP"             ||
+                    hdr === "ESCUDO_P_IZQ_ANCHO"             || hdr === "ESCUDO_P_IZQ_ALTO"             || hdr === "ESCUDO_P_IZQ_MARGIN_SUP"             || hdr === "ESCUDO_P_IZQ_MARGIN_LAT"             ||
+                    hdr === "LOGO_MARCA_P_IZQ_ANCHO"         || hdr === "LOGO_MARCA_P_IZQ_ALTO"         || hdr === "LOGO_MARCA_P_IZQ_MARGIN_SUP"         || hdr === "LOGO_MARCA_P_IZQ_MARGIN_LAT"         ||
+                    hdr === "SPONSOR_PRINCIPAL_P_IZQ_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_P_IZQ_ALTO"  || hdr === "SPONSOR_PRINCIPAL_P_IZQ_MARGIN_SUP"  ||
+                    hdr === "SPONSOR_SECUNDARIO_P_IZQ_ANCHO" || hdr === "SPONSOR_SECUNDARIO_P_IZQ_ALTO" || hdr === "SPONSOR_SECUNDARIO_P_IZQ_MARGIN_SUP" ||
+                    // PANTALONETA DER
+                    hdr === "NUMERO_P_DER_ANCHO"             || hdr === "NUMERO_P_DER_ALTO"             || hdr === "NUMERO_P_DER_MARGIN_SUP"             ||
+                    hdr === "ESCUDO_P_DER_ANCHO"             || hdr === "ESCUDO_P_DER_ALTO"             || hdr === "ESCUDO_P_DER_MARGIN_SUP"             || hdr === "ESCUDO_P_DER_MARGIN_LAT"             ||
+                    hdr === "LOGO_MARCA_P_DER_ANCHO"         || hdr === "LOGO_MARCA_P_DER_ALTO"         || hdr === "LOGO_MARCA_P_DER_MARGIN_SUP"         || hdr === "LOGO_MARCA_P_DER_MARGIN_LAT"         ||
+                    hdr === "SPONSOR_PRINCIPAL_P_DER_ANCHO"  || hdr === "SPONSOR_PRINCIPAL_P_DER_ALTO"  || hdr === "SPONSOR_PRINCIPAL_P_DER_MARGIN_SUP"  ||
+                    hdr === "SPONSOR_SECUNDARIO_P_DER_ANCHO" || hdr === "SPONSOR_SECUNDARIO_P_DER_ALTO" || hdr === "SPONSOR_SECUNDARIO_P_DER_MARGIN_SUP") {
                     var num = parseFloat(val);
                     obj[hdr] = isNaN(num) ? "" : num;
                 } else {
@@ -165,7 +177,13 @@ function leerXlsx(csvFile) {
                 // MANGA DER
                 "LLEVA_NUMERO_M_DER",
                 "LLEVA_ESCUDO_M_DER", "LLEVA_SPONSOR_SECUNDARIO_M_DER",
-                "LLEVA_MANGA_DER_LINEA_IZQ", "LLEVA_MANGA_DER_LINEA_DER", "LLEVA_MANGA_DER_LINEA_INF"
+                "LLEVA_MANGA_DER_LINEA_IZQ", "LLEVA_MANGA_DER_LINEA_DER", "LLEVA_MANGA_DER_LINEA_INF",
+                // PANTALONETA IZQ
+                "LLEVA_NUMERO_P_IZQ", "LLEVA_ESCUDO_P_IZQ", "LLEVA_LOGO_MARCA_P_IZQ",
+                "LLEVA_SPONSOR_PRINCIPAL_P_IZQ", "LLEVA_SPONSOR_SECUNDARIO_P_IZQ",
+                // PANTALONETA DER
+                "LLEVA_NUMERO_P_DER", "LLEVA_ESCUDO_P_DER", "LLEVA_LOGO_MARCA_P_DER",
+                "LLEVA_SPONSOR_PRINCIPAL_P_DER", "LLEVA_SPONSOR_SECUNDARIO_P_DER"
             ];
             for (var lf = 0; lf < llevaFields.length; lf++) {
                 var campo = llevaFields[lf];

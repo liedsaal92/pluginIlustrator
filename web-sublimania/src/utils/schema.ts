@@ -305,7 +305,7 @@ export function buildEmptyRules(): Rules {
 }
 
 export function getDefaultGlobal(): GlobalConfig {
-  return { EQUIPO: '', NOTAS: '' };
+  return { EQUIPO: '', NOTAS: '', clienteIdPant: '', moldeIdPant: '' };
 }
 
 // ── Helpers de talla ─────────────────────────────────────────

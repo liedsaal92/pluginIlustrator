@@ -4,7 +4,6 @@
 import { useTeamStore } from '../../store/useTeamStore';
 import { GLOBAL_FIELDS, getGeneroTalla, getNumeroTalla } from '../../utils/schema';
 import { useSaveStatus } from '../../components/ui/SaveStatus';
-
 import { RulesTab } from './RulesTab';
 import { PlayerCard } from './PlayerCard';
 import { AddPlayerForm } from './AddPlayerForm';

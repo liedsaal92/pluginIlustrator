@@ -6,15 +6,9 @@ import { useState, useRef } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useMoldesStore } from '../../store/useMoldesStore';
+import { useMoldeTiposStore } from '../../store/useMoldeTiposStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
-
-const FIELDS: { key: keyof TallaDims; label: string }[] = [
-  { key: 'ALTO',        label: 'ALTO'        },
-  { key: 'ANCHO',       label: 'ANCHO'       },
-  { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
-  { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
-];
 
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
 const colorMap: Record<string, string> = {};
@@ -33,9 +27,23 @@ export function TallasSettingsTab({ onToast }: Props) {
   const { clientes } = useClientesStore();
   const { moldes } = useMoldesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
+  const { getTipo } = useMoldeTiposStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
   const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
+
+  const isPantMolde = !!moldeId && getTipo(moldeId) === 'pantaloneta';
+  const FIELDS: { key: keyof TallaDims; label: string }[] = isPantMolde
+    ? [
+        { key: 'ALTO',  label: 'PANT ALTO'  },
+        { key: 'ANCHO', label: 'PANT ANCHO' },
+      ]
+    : [
+        { key: 'ALTO',        label: 'ALTO'        },
+        { key: 'ANCHO',       label: 'ANCHO'       },
+        { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
+        { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
+      ];
   const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [dimSaved, setDimSaved] = useState(false);

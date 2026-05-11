@@ -2232,6 +2232,20 @@ body {
   font-weight: 700;
   letter-spacing: 0.08em;
 }
+.molde-tipo-select {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 6px;
+  border: var(--border);
+  background: var(--cream);
+  color: var(--ink);
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+}
+.molde-tipo-select:focus { border-color: var(--accent); }
 .molde-actions {
   display: flex;
   gap: 0.4rem;

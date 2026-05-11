@@ -3,6 +3,7 @@
 // ============================================================
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
+import { useTallasStore } from '../../store/useTallasStore';
 import { SCHEMA, ELEMENT_GROUPS, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
@@ -115,11 +116,13 @@ export function RulesTab({ onToast, piezas: piezasProp }: Props) {
   const isPantMode = activePiezas.some(p => p === 'pant_izq' || p === 'pant_der');
 
   const {
-    tallas, players, tallaRules,
+    tallas, players, tallaRules, globalConfig,
     activeTalla, activeTallaPant, activePieza,
     setActiveTalla, setActiveTallaPant, setActivePieza,
     setTallaRule, applyTallaToAll, copyTallaRules,
   } = useTeamStore();
+
+  const { getTallas } = useTallasStore();
 
   const currentTalla = isPantMode ? activeTallaPant : activeTalla;
   const setCurrentTalla = isPantMode ? setActiveTallaPant : setActiveTalla;
@@ -224,9 +227,11 @@ export function RulesTab({ onToast, piezas: piezasProp }: Props) {
   // Talla lists
   let todasLasTallas: string[];
   if (isPantMode) {
-    const pantTallasJugadores = [...new Set(players.map(p => p.TALLA_PANT).filter(Boolean))];
-    const pantExtras = pantTallasJugadores.filter(t => !TALLAS_ESTANDAR.includes(t));
-    todasLasTallas = sortTallas([...new Set([...pantTallasJugadores, ...TALLAS_ESTANDAR, ...pantExtras])]);
+    const pantTallas      = [...new Set(players.map(p => p.TALLA_PANT).filter(Boolean))];
+    const pantExtras      = pantTallas.filter(t => !TALLAS_ESTANDAR.includes(t));
+    const pantConJug      = pantTallas;
+    const pantSinJug      = [...TALLAS_ESTANDAR, ...pantExtras].filter(t => !pantConJug.includes(t));
+    todasLasTallas        = [...pantConJug, ...pantSinJug];
   } else {
     const tallasExtras = tallas.filter(t => !TALLAS_ESTANDAR.includes(t));
     const tallasConJugadores = [...tallas, ...tallasExtras.filter(t => !tallas.includes(t))];
@@ -239,6 +244,21 @@ export function RulesTab({ onToast, piezas: piezasProp }: Props) {
   const otros   = todasLasTallas.filter(t => !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M'));
 
   useEffect(() => { setCopyToSet(new Set()); }, [currentTalla]);
+
+  // Auto-populate PANT_ALTO/PANT_ANCHO desde molde cuando la talla no tiene dims configuradas
+  useEffect(() => {
+    if (!isPantMode || !currentTalla) return;
+    const clienteIdPant = globalConfig.clienteIdPant ?? '';
+    const moldeIdPant   = globalConfig.moldeIdPant   ?? '';
+    if (!clienteIdPant || !moldeIdPant) return;
+    const existingRules = tallaRules[currentTalla] ?? {};
+    if (existingRules.PANT_ALTO && existingRules.PANT_ALTO !== '') return;
+    const dims = getTallas(clienteIdPant, moldeIdPant)[currentTalla];
+    if (!dims) return;
+    if (dims.ALTO)  setTallaRule(currentTalla, 'PANT_ALTO',  dims.ALTO);
+    if (dims.ANCHO) setTallaRule(currentTalla, 'PANT_ANCHO', dims.ANCHO);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTalla, isPantMode]);
 
   // Auto-expand the talla group containing the active talla
   useEffect(() => {

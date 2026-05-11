@@ -22,6 +22,8 @@ export type Overrides = Record<number, Rules>;
 export interface GlobalConfig {
   EQUIPO: string;
   NOTAS: string;
+  clienteIdPant: string; // cliente activo para tallas de pantaloneta
+  moldeIdPant:   string; // molde pantaloneta activo para este equipo
 }
 
 // ── SCHEMA ────────────────────────────────────────────────────
@@ -92,6 +94,7 @@ export interface Cliente {
 export interface Molde {
   id: string;
   nombre: string;
+  tipo?: 'camiseta' | 'pantaloneta'; // resuelto por useMoldeTiposStore (localStorage)
 }
 
 // ── PORTAL ────────────────────────────────────────────────────

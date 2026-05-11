@@ -222,7 +222,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
           tallas:         entry.tallas,
           tallaRules:     entry.tallaRules,
           overrides:      entry.overrides,
-          globalConfig:   entry.globalConfig,
+          globalConfig:   { ...getDefaultGlobal(), ...entry.globalConfig },
           screen:         targetScreen,
           configTab:      'rules',
           activeTalla:    entry.tallas[0] ?? '24H',
