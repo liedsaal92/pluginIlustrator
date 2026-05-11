@@ -20,10 +20,13 @@ function getCmTierPrice(cm: number, tiers: import('../types').CmPriceTier[]): nu
 function getBasePrice(input: QuoteInput): number {
   if (input.productId === 'por_cm') {
     const cm = input.linearCm ?? 0;
+    const rollWidth = input.config.rollWidthCm;
+    const effectiveWidth = input.widthCm !== undefined ? input.widthCm : rollWidth;
+    const widthRatio = rollWidth > 0 ? effectiveWidth / rollWidth : 1;
     if (input.serviceMode === 'paper' && input.paperPriceTiers?.length)
-      return roundMoney(getCmTierPrice(cm, input.paperPriceTiers));
-    if (input.cmPriceTiers?.length) return roundMoney(getCmTierPrice(cm, input.cmPriceTiers));
-    return roundMoney(cm * input.config.pricePerCm);
+      return roundMoney(getCmTierPrice(cm, input.paperPriceTiers) * widthRatio);
+    if (input.cmPriceTiers?.length) return roundMoney(getCmTierPrice(cm, input.cmPriceTiers) * widthRatio);
+    return roundMoney(cm * input.config.pricePerCm * widthRatio);
   }
   const pool = (input.serviceMode === 'full_service' && input.basePricesCompleto?.length)
     ? input.basePricesCompleto
@@ -58,6 +61,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     machines: normalizedInput.machines,
     operations: normalizedInput.operations,
     linearCm: normalizedInput.linearCm,
+    widthCm: normalizedInput.widthCm,
     config: normalizedInput.config,
     tallaDims: normalizedInput.tallaDims,
     serviceMode: normalizedInput.serviceMode,

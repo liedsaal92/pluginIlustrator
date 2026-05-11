@@ -1,50 +1,42 @@
+// ============================================================
+//  store/usePricingStore.ts — Cotizador / precios
+//  Backed by Supabase. Optimistic updates — UI responde instantáneo.
+//  Llamar init() después de que la sesión esté disponible.
+// ============================================================
 import { create } from 'zustand';
+import { supabase } from '../utils/supabase';
+import { useAuthStore } from './useAuthStore';
 import { defaultBasePrices } from '../pricing/data/basePrices';
 import { defaultPricingConfig } from '../pricing/data/config';
 import { defaultFabrics } from '../pricing/data/fabrics';
 import { defaultSupplies } from '../pricing/data/supplies';
 import { machines as defaultMachines } from '../pricing/data/machines';
 import { operations as defaultOperations } from '../pricing/data/operations';
-import { defaultVolumeTiers } from '../pricing/data/volumeTiers';
+import { defaultVolumeTiersByProduct } from '../pricing/data/volumeTiers';
 import { defaultCompetitors } from '../pricing/data/competitors';
 import { defaultPrintProfiles } from '../pricing/data/printProfiles';
 import { defaultCmPriceTiers } from '../pricing/data/cmPriceTiers';
 import { defaultPaperPriceTiers } from '../pricing/data/paperPriceTiers';
 import type {
-  BasePrice, BasePriceField, CmPriceTier, Competitor, CustomerSegment, FabricType, Gender,
-  MachineCost, OperationCost, PricingConfig, PrintProfile, QuoteHistoryEntry, QuoteResult,
-  Supply, TablaExportEntry, VolumeTier,
+  BasePrice, BasePriceField, CmPriceTier, Competitor, CotizacionHistoryEntry, CustomerSegment,
+  FabricType, Gender, MachineCost, OperationCost, PricingConfig, PrintProfile, ProductId,
+  QuoteHistoryEntry, QuoteResult, Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
-const FABRICS_KEY           = 'subliflow_pricing_fabrics';
-const HISTORY_KEY           = 'subliflow_pricing_history';
-const TABLA_EXPORTS_KEY     = 'subliflow_tabla_exports';
-const CONFIG_KEY            = 'subliflow_pricing_config';
-const PRICES_KEY            = 'subliflow_pricing_base_prices';
-const PRICES_COMPLETO_KEY   = 'subliflow_pricing_base_prices_completo';
-const SUPPLIES_KEY          = 'subliflow_pricing_supplies';
-const MACHINES_KEY          = 'subliflow_pricing_machines';
-const OPS_KEY               = 'subliflow_pricing_operations';
-const TIERS_KEY             = 'subliflow_pricing_volume_tiers';
-const COMPETITORS_KEY       = 'subliflow_pricing_competitors';
-const CM_TIERS_KEY          = 'subliflow_pricing_cm_price_tiers';
-const PAPER_TIERS_KEY       = 'subliflow_pricing_paper_price_tiers';
-const PROFILES_KEY          = 'subliflow_pricing_print_profiles';
-const REF_CLIENTE_KEY       = 'subliflow_pricing_ref_cliente';
-const REF_GENDER_KEY        = 'subliflow_pricing_ref_gender';
+// ── Helpers ──────────────────────────────────────────────────
 
-function loadJson<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) as T : fallback;
-  } catch {
-    return fallback;
-  }
+function getOrgId(): string {
+  const orgId = useAuthStore.getState().session?.user.orgId;
+  if (!orgId) throw new Error('No org_id — usuario no autenticado');
+  return orgId;
+}
+
+function genId(): string {
+  return `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 }
 
 function migrateConfig(raw: PricingConfig): PricingConfig {
   const out = { ...defaultPricingConfig, ...raw };
-  // migrate old single-rate field to per-segment
   const legacy = (raw as unknown as Record<string, unknown>)['defaultSavingsTransferRate'];
   if (typeof legacy === 'number' && !('savingsTransferRateNormal' in raw)) {
     out.savingsTransferRateNormal = legacy;
@@ -55,7 +47,6 @@ function migrateConfig(raw: PricingConfig): PricingConfig {
 
 function migrateBasePrices(raw: BasePrice[]): BasePrice[] {
   if (!raw.length) return defaultBasePrices;
-  // Old rows lack gender — duplicate: H from existing, M as copies
   if (!('gender' in raw[0])) {
     return [
       ...raw.map(r => ({ ...r, gender: 'H' as Gender })),
@@ -67,29 +58,119 @@ function migrateBasePrices(raw: BasePrice[]): BasePrice[] {
 
 function migratePrintProfiles(raw: PrintProfile[]): PrintProfile[] {
   if (!raw || !raw.length) return defaultPrintProfiles;
-  // older records may lack the `enabled` field — default to true
   return raw.map(p => ({ ...p, enabled: p.enabled ?? true }));
 }
 
-function persist<T>(key: string, value: T) {
-  localStorage.setItem(key, JSON.stringify(value));
+// Debounce para config (cambia en cada keystroke)
+let _configDebounce: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleConfigSave(
+  orgId: string,
+  config: PricingConfig,
+  refClienteId: string | null,
+  refGender: Gender | null,
+) {
+  if (_configDebounce) clearTimeout(_configDebounce);
+  _configDebounce = setTimeout(() => {
+    supabase.from('pricing_config').upsert({
+      org_id: orgId, config, ref_cliente_id: refClienteId,
+      ref_gender: refGender, updated_at: new Date().toISOString(),
+    }).then(({ error }) => {
+      if (error) console.error('pricing_config.save:', error);
+    });
+  }, 600);
 }
 
-function genId(): string {
-  return `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+// Seed de datos default para orgs nuevas
+async function seedDefaults(orgId: string): Promise<void> {
+  await Promise.allSettled([
+    supabase.from('pricing_config').insert({
+      org_id: orgId, config: defaultPricingConfig,
+      ref_cliente_id: null, ref_gender: null,
+    }),
+    supabase.from('pricing_base_prices').insert([
+      ...defaultBasePrices.map(r => ({ org_id: orgId, service_mode: 'parcial', segment: r.segment, gender: r.gender, size: r.size, camiseta: r.camiseta, pantaloneta: r.pantaloneta, equipo: r.equipo })),
+      ...defaultBasePrices.map(r => ({ org_id: orgId, service_mode: 'completo', segment: r.segment, gender: r.gender, size: r.size, camiseta: r.camiseta, pantaloneta: r.pantaloneta, equipo: r.equipo })),
+    ]),
+    supabase.from('pricing_supplies').insert(
+      defaultSupplies.map((s, i) => ({ id: s.id, org_id: orgId, name: s.name, total_cost: s.totalCost, quantity: s.quantity, unit: s.unit, apply_ink_factor: s.applyInkFactor, sort_order: i }))
+    ),
+    supabase.from('pricing_machines').insert(
+      defaultMachines.map((m, i) => ({ id: m.id, org_id: orgId, name: m.name, cost: m.cost, life_meters: m.lifeMeters, sort_order: i }))
+    ),
+    supabase.from('pricing_operations').insert(
+      defaultOperations.map((o, i) => ({ id: o.id, org_id: orgId, name: o.name, monthly_cost: o.monthlyCost, sort_order: i }))
+    ),
+    supabase.from('pricing_fabrics').insert(
+      defaultFabrics.map((f, i) => ({ id: f.id, org_id: orgId, name: f.name, cost_per_kg: f.costPerKg, meters_per_kg: f.metersPerKg, tubular: f.tubular, sort_order: i }))
+    ),
+    supabase.from('pricing_volume_tiers').insert(
+      Object.entries(defaultVolumeTiersByProduct).flatMap(([productId, tiers]) =>
+        tiers.map((t, i) => ({ id: t.id, org_id: orgId, product_id: productId, tier_from: t.from, tier_to: t.to ?? null, discount: t.discount, sort_order: i }))
+      )
+    ),
+    supabase.from('pricing_competitors').insert(
+      defaultCompetitors.map((c, i) => ({ id: c.id, org_id: orgId, name: c.name, prices: c.prices, sort_order: i }))
+    ),
+    supabase.from('pricing_print_profiles').insert(
+      defaultPrintProfiles.map((p, i) => ({ id: p.id, org_id: orgId, name: p.name, ink_factor: p.inkFactor, enabled: p.enabled, sort_order: i }))
+    ),
+    supabase.from('pricing_cm_price_tiers').insert([
+      ...defaultCmPriceTiers.map((t, i) => ({ id: t.id, org_id: orgId, tier_type: 'embroidery', max_cm: t.maxCm, price: t.price, sort_order: i })),
+      ...defaultPaperPriceTiers.map((t, i) => ({ id: t.id, org_id: orgId, tier_type: 'paper', max_cm: t.maxCm, price: t.price, sort_order: i })),
+    ]),
+  ]);
 }
+
+// Reset a defaults en Supabase (para resetPricingData)
+async function resetToDefaults(orgId: string): Promise<void> {
+  await supabase.from('pricing_config').upsert({
+    org_id: orgId, config: defaultPricingConfig,
+    ref_cliente_id: null, ref_gender: null, updated_at: new Date().toISOString(),
+  });
+  await supabase.from('pricing_base_prices').upsert([
+    ...defaultBasePrices.map(r => ({ org_id: orgId, service_mode: 'parcial', segment: r.segment, gender: r.gender, size: r.size, camiseta: r.camiseta, pantaloneta: r.pantaloneta, equipo: r.equipo })),
+    ...defaultBasePrices.map(r => ({ org_id: orgId, service_mode: 'completo', segment: r.segment, gender: r.gender, size: r.size, camiseta: r.camiseta, pantaloneta: r.pantaloneta, equipo: r.equipo })),
+  ]);
+  // Lista: delete all + insert defaults
+  const listTables = [
+    { table: 'pricing_supplies',      data: defaultSupplies.map((s, i) => ({ id: s.id, org_id: orgId, name: s.name, total_cost: s.totalCost, quantity: s.quantity, unit: s.unit, apply_ink_factor: s.applyInkFactor, sort_order: i })) },
+    { table: 'pricing_machines',      data: defaultMachines.map((m, i) => ({ id: m.id, org_id: orgId, name: m.name, cost: m.cost, life_meters: m.lifeMeters, sort_order: i })) },
+    { table: 'pricing_operations',    data: defaultOperations.map((o, i) => ({ id: o.id, org_id: orgId, name: o.name, monthly_cost: o.monthlyCost, sort_order: i })) },
+    { table: 'pricing_volume_tiers',  data: Object.entries(defaultVolumeTiersByProduct).flatMap(([productId, tiers]) => tiers.map((t, i) => ({ id: t.id, org_id: orgId, product_id: productId, tier_from: t.from, tier_to: t.to ?? null, discount: t.discount, sort_order: i }))) },
+    { table: 'pricing_print_profiles', data: defaultPrintProfiles.map((p, i) => ({ id: p.id, org_id: orgId, name: p.name, ink_factor: p.inkFactor, enabled: p.enabled, sort_order: i })) },
+  ] as const;
+  for (const { table, data } of listTables) {
+    await (supabase.from(table as string) as ReturnType<typeof supabase.from>).delete().eq('org_id', orgId);
+    if (data.length > 0) await (supabase.from(table as string) as ReturnType<typeof supabase.from>).insert(data as never[]);
+  }
+}
+
+// ── Interfaz del store ────────────────────────────────────────
 
 interface PricingState {
+  loading: boolean;
   config: PricingConfig;
   basePrices: BasePrice[];
+  basePricesCompleto: BasePrice[];
   supplies: Supply[];
   machines: MachineCost[];
   operations: OperationCost[];
   history: QuoteHistoryEntry[];
+  volumeTiersByProduct: Record<ProductId, VolumeTier[]>;
+  fabrics: FabricType[];
+  competitors: Competitor[];
+  cmPriceTiers: CmPriceTier[];
+  paperPriceTiers: CmPriceTier[];
+  printProfiles: PrintProfile[];
+  refClienteId: string | null;
+  refGender: Gender | null;
+  tablaExports: TablaExportEntry[];
+  cotizaciones: CotizacionHistoryEntry[];
 
+  init: () => Promise<void>;
   updateConfig: <K extends keyof PricingConfig>(key: K, value: PricingConfig[K]) => void;
   updateBasePrice: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
-  basePricesCompleto: BasePrice[];
   updateBasePriceCompleto: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
 
   updateSupply: (id: string, patch: Partial<Omit<Supply, 'id'>>) => void;
@@ -104,38 +185,30 @@ interface PricingState {
   addOperation: () => void;
   removeOperation: (id: string) => void;
 
-  volumeTiers: VolumeTier[];
-  updateVolumeTier: (id: string, patch: Partial<Omit<VolumeTier, 'id'>>) => void;
-  addVolumeTier: () => void;
-  removeVolumeTier: (id: string) => void;
+  updateVolumeTier: (productId: ProductId, id: string, patch: Partial<Omit<VolumeTier, 'id'>>) => void;
+  addVolumeTier: (productId: ProductId) => void;
+  removeVolumeTier: (productId: ProductId, id: string) => void;
 
-  fabrics: FabricType[];
   updateFabric: (id: string, patch: Partial<Omit<FabricType, 'id'>>) => void;
   addFabric: () => void;
   removeFabric: (id: string) => void;
 
-  competitors: Competitor[];
   updateCompetitor: (id: string, patch: Partial<Omit<Competitor, 'id'>>) => void;
   addCompetitor: () => void;
   removeCompetitor: (id: string) => void;
 
-  cmPriceTiers: CmPriceTier[];
   updateCmTier: (id: string, patch: Partial<Omit<CmPriceTier, 'id'>>) => void;
   addCmTier: () => void;
   removeCmTier: (id: string) => void;
 
-  paperPriceTiers: CmPriceTier[];
   updatePaperTier: (id: string, patch: Partial<Omit<CmPriceTier, 'id'>>) => void;
   addPaperTier: () => void;
   removePaperTier: (id: string) => void;
 
-  printProfiles: PrintProfile[];
   updatePrintProfile: (id: string, patch: Partial<Omit<PrintProfile, 'id'>>) => void;
   addPrintProfile: () => void;
   removePrintProfile: (id: string) => void;
 
-  refClienteId: string | null;
-  refGender: Gender | null;
   setRefCliente: (id: string | null) => void;
   setRefGender: (g: Gender | null) => void;
 
@@ -143,274 +216,557 @@ interface PricingState {
   saveQuote: (quote: QuoteResult) => void;
   clearHistory: () => void;
 
-  tablaExports: TablaExportEntry[];
   saveTablaExport: (entry: Omit<TablaExportEntry, 'id' | 'createdAt'>) => void;
   removeTablaExport: (id: string) => void;
+
+  saveCotizacion: (entry: CotizacionHistoryEntry) => void;
+  removeCotizacion: (id: string) => void;
 }
 
+// ── Store ─────────────────────────────────────────────────────
+
 export const usePricingStore = create<PricingState>()((set, get) => ({
-  config:              migrateConfig(loadJson(CONFIG_KEY, defaultPricingConfig)),
-  basePrices:          migrateBasePrices(loadJson(PRICES_KEY, defaultBasePrices)),
-  basePricesCompleto:  migrateBasePrices(loadJson(PRICES_COMPLETO_KEY, defaultBasePrices)),
-  supplies:       loadJson(SUPPLIES_KEY,    defaultSupplies),
-  machines:       loadJson(MACHINES_KEY,    defaultMachines),
-  operations:     loadJson(OPS_KEY,         defaultOperations),
-  volumeTiers:    loadJson(TIERS_KEY,       defaultVolumeTiers),
-  fabrics:        loadJson(FABRICS_KEY,     defaultFabrics),
-  competitors:    loadJson(COMPETITORS_KEY, defaultCompetitors),
-  cmPriceTiers:    loadJson(CM_TIERS_KEY,    defaultCmPriceTiers),
-  paperPriceTiers: loadJson(PAPER_TIERS_KEY, defaultPaperPriceTiers),
-  printProfiles:  migratePrintProfiles(loadJson(PROFILES_KEY, defaultPrintProfiles)),
-  history:        loadJson(HISTORY_KEY,      [] as QuoteHistoryEntry[]),
-  tablaExports:   loadJson(TABLA_EXPORTS_KEY, [] as TablaExportEntry[]),
-  refClienteId:  localStorage.getItem(REF_CLIENTE_KEY) || null,
-  refGender:     (localStorage.getItem(REF_GENDER_KEY) as Gender | null) || null,
+  loading: false,
+  config:               defaultPricingConfig,
+  basePrices:           defaultBasePrices,
+  basePricesCompleto:   defaultBasePrices,
+  supplies:             defaultSupplies,
+  machines:             defaultMachines,
+  operations:           defaultOperations,
+  volumeTiersByProduct: defaultVolumeTiersByProduct,
+  fabrics:              defaultFabrics,
+  competitors:          defaultCompetitors,
+  cmPriceTiers:         defaultCmPriceTiers,
+  paperPriceTiers:      defaultPaperPriceTiers,
+  printProfiles:        defaultPrintProfiles,
+  history:              [],
+  tablaExports:         [],
+  cotizaciones:         [],
+  refClienteId:         null,
+  refGender:            null,
 
-  updateConfig: (key, value) => {
-    const config = { ...get().config, [key]: value };
-    persist(CONFIG_KEY, config);
-    set({ config });
-  },
+  // ── Carga inicial desde Supabase ─────────────────────────────
+  init: async () => {
+    const orgId = getOrgId();
+    set({ loading: true });
 
-  updateBasePrice: (segment, gender, size, field, value) => {
-    const basePrices = get().basePrices.map(row =>
-      row.segment === segment && row.gender === gender && row.size === size
-        ? { ...row, [field]: Number.isFinite(value) ? value : 0 }
-        : row
+    const [
+      configRes, basePricesRes, suppliesRes, machinesRes, opsRes, fabricsRes,
+      tiersRes, competitorsRes, profilesRes, cmTiersRes,
+      quoteHistRes, cotizacionesRes, tablaExportsRes,
+    ] = await Promise.all([
+      supabase.from('pricing_config').select('*').eq('org_id', orgId).maybeSingle(),
+      supabase.from('pricing_base_prices').select('*').eq('org_id', orgId),
+      supabase.from('pricing_supplies').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_machines').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_operations').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_fabrics').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_volume_tiers').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_competitors').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_print_profiles').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_cm_price_tiers').select('*').eq('org_id', orgId).order('sort_order'),
+      supabase.from('pricing_quote_history').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+      supabase.from('pricing_cotizaciones').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+      supabase.from('pricing_tabla_exports').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+    ]);
+
+    // Org nueva sin datos → seed defaults y usar estado inicial
+    if (!configRes.data) {
+      await seedDefaults(orgId);
+      set({ loading: false });
+      return;
+    }
+
+    // Transformar filas DB → tipos del store
+    const config = migrateConfig({ ...defaultPricingConfig, ...configRes.data.config });
+    const refClienteId = configRes.data.ref_cliente_id ?? null;
+    const refGender = (configRes.data.ref_gender as Gender | null) ?? null;
+
+    const allBp = basePricesRes.data ?? [];
+    const basePrices = migrateBasePrices(
+      allBp.filter(r => r.service_mode === 'parcial').map(r => ({
+        segment: r.segment as CustomerSegment, gender: r.gender as Gender, size: r.size,
+        camiseta: Number(r.camiseta), pantaloneta: Number(r.pantaloneta), equipo: Number(r.equipo),
+      }))
     );
-    persist(PRICES_KEY, basePrices);
-    set({ basePrices });
-  },
-
-  updateBasePriceCompleto: (segment, gender, size, field, value) => {
-    const basePricesCompleto = get().basePricesCompleto.map(row =>
-      row.segment === segment && row.gender === gender && row.size === size
-        ? { ...row, [field]: Number.isFinite(value) ? value : 0 }
-        : row
+    const basePricesCompleto = migrateBasePrices(
+      allBp.filter(r => r.service_mode === 'completo').map(r => ({
+        segment: r.segment as CustomerSegment, gender: r.gender as Gender, size: r.size,
+        camiseta: Number(r.camiseta), pantaloneta: Number(r.pantaloneta), equipo: Number(r.equipo),
+      }))
     );
-    persist(PRICES_COMPLETO_KEY, basePricesCompleto);
-    set({ basePricesCompleto });
-  },
 
-  updateSupply: (id, patch) => {
-    const supplies = get().supplies.map(s => s.id === id ? { ...s, ...patch } : s);
-    persist(SUPPLIES_KEY, supplies);
-    set({ supplies });
-  },
-  addSupply: () => {
-    const supplies = [...get().supplies, {
-      id: genId(), name: 'Nuevo insumo', totalCost: 0, quantity: 1, unit: 'm', applyInkFactor: false,
-    }];
-    persist(SUPPLIES_KEY, supplies);
-    set({ supplies });
-  },
-  removeSupply: (id) => {
-    const supplies = get().supplies.filter(s => s.id !== id);
-    persist(SUPPLIES_KEY, supplies);
-    set({ supplies });
-  },
+    const supplies: Supply[] = (suppliesRes.data ?? []).map(r => ({
+      id: r.id, name: r.name, totalCost: Number(r.total_cost),
+      quantity: Number(r.quantity), unit: r.unit, applyInkFactor: r.apply_ink_factor,
+    }));
+    const machines: MachineCost[] = (machinesRes.data ?? []).map(r => ({
+      id: r.id, name: r.name, cost: Number(r.cost), lifeMeters: Number(r.life_meters),
+    }));
+    const operations: OperationCost[] = (opsRes.data ?? []).map(r => ({
+      id: r.id, name: r.name, monthlyCost: Number(r.monthly_cost),
+    }));
+    const fabrics: FabricType[] = (fabricsRes.data ?? []).map(r => ({
+      id: r.id, name: r.name, costPerKg: Number(r.cost_per_kg),
+      metersPerKg: Number(r.meters_per_kg), tubular: r.tubular,
+    }));
 
-  updateMachine: (id, patch) => {
-    const machines = get().machines.map(m => m.id === id ? { ...m, ...patch } : m);
-    persist(MACHINES_KEY, machines);
-    set({ machines });
-  },
-  addMachine: () => {
-    const machines = [...get().machines, {
-      id: genId(), name: 'Nuevo equipo', cost: 0, lifeMeters: 1000,
-    }];
-    persist(MACHINES_KEY, machines);
-    set({ machines });
-  },
-  removeMachine: (id) => {
-    const machines = get().machines.filter(m => m.id !== id);
-    persist(MACHINES_KEY, machines);
-    set({ machines });
-  },
+    // volumeTiersByProduct: agrupar por product_id
+    const volumeTiersByProduct = { ...defaultVolumeTiersByProduct } as Record<ProductId, VolumeTier[]>;
+    const tierRows = tiersRes.data ?? [];
+    if (tierRows.length > 0) {
+      const grouped: Record<string, VolumeTier[]> = {};
+      for (const r of tierRows) {
+        if (!grouped[r.product_id]) grouped[r.product_id] = [];
+        grouped[r.product_id].push({ id: r.id, from: r.tier_from, to: r.tier_to, discount: Number(r.discount) });
+      }
+      for (const productId of Object.keys(grouped) as ProductId[]) {
+        volumeTiersByProduct[productId] = grouped[productId];
+      }
+    }
 
-  updateOperation: (id, patch) => {
-    const operations = get().operations.map(o => o.id === id ? { ...o, ...patch } : o);
-    persist(OPS_KEY, operations);
-    set({ operations });
-  },
-  addOperation: () => {
-    const operations = [...get().operations, {
-      id: genId(), name: 'Nuevo costo', monthlyCost: 0,
-    }];
-    persist(OPS_KEY, operations);
-    set({ operations });
-  },
-  removeOperation: (id) => {
-    const operations = get().operations.filter(o => o.id !== id);
-    persist(OPS_KEY, operations);
-    set({ operations });
-  },
+    const competitors: Competitor[] = (competitorsRes.data ?? []).map(r => ({
+      id: r.id, name: r.name, prices: r.prices ?? {},
+    }));
+    const printProfiles = migratePrintProfiles(
+      (profilesRes.data ?? []).map(r => ({
+        id: r.id, name: r.name, inkFactor: Number(r.ink_factor), enabled: r.enabled,
+      }))
+    );
 
-  updateVolumeTier: (id, patch) => {
-    const volumeTiers = get().volumeTiers.map(t => t.id === id ? { ...t, ...patch } : t);
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
-  },
-  addVolumeTier: () => {
-    const tiers = get().volumeTiers;
-    const lastTo = tiers.length > 0 ? (tiers[tiers.length - 1].to ?? 99) : 0;
-    const volumeTiers = [...tiers, { id: genId(), from: lastTo + 1, to: null, discount: 0 }];
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
-  },
-  removeVolumeTier: (id) => {
-    const volumeTiers = get().volumeTiers.filter(t => t.id !== id);
-    persist(TIERS_KEY, volumeTiers);
-    set({ volumeTiers });
-  },
+    const allCm = cmTiersRes.data ?? [];
+    const cmPriceTiers: CmPriceTier[] = allCm
+      .filter(r => r.tier_type === 'embroidery')
+      .map(r => ({ id: r.id, maxCm: Number(r.max_cm), price: Number(r.price) }));
+    const paperPriceTiers: CmPriceTier[] = allCm
+      .filter(r => r.tier_type === 'paper')
+      .map(r => ({ id: r.id, maxCm: Number(r.max_cm), price: Number(r.price) }));
 
-  updateFabric: (id, patch) => {
-    const fabrics = get().fabrics.map(f => f.id === id ? { ...f, ...patch } : f);
-    persist(FABRICS_KEY, fabrics);
-    set({ fabrics });
-  },
-  addFabric: () => {
-    const fabrics = [...get().fabrics, {
-      id: genId(), name: 'Nueva tela', costPerKg: 0, metersPerKg: 1, tubular: false,
-    }];
-    persist(FABRICS_KEY, fabrics);
-    set({ fabrics });
-  },
-  removeFabric: (id) => {
-    const fabrics = get().fabrics.filter(f => f.id !== id);
-    persist(FABRICS_KEY, fabrics);
-    set({ fabrics });
-  },
+    const history: QuoteHistoryEntry[] = (quoteHistRes.data ?? []).map(r => r.data as QuoteHistoryEntry);
+    const cotizaciones: CotizacionHistoryEntry[] = (cotizacionesRes.data ?? []).map(r => r.data as CotizacionHistoryEntry);
+    const tablaExports: TablaExportEntry[] = (tablaExportsRes.data ?? []).map(r => r.data as TablaExportEntry);
 
-  updateCompetitor: (id, patch) => {
-    const competitors = get().competitors.map(c => c.id === id ? { ...c, ...patch } : c);
-    persist(COMPETITORS_KEY, competitors);
-    set({ competitors });
-  },
-
-  updateCmTier: (id, patch) => {
-    const cmPriceTiers = get().cmPriceTiers.map(t => t.id === id ? { ...t, ...patch } : t);
-    persist(CM_TIERS_KEY, cmPriceTiers);
-    set({ cmPriceTiers });
-  },
-  addCmTier: () => {
-    const tiers = get().cmPriceTiers;
-    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
-    const cmPriceTiers = [...tiers, { id: genId(), maxCm: lastMax + 10, price: 0 }];
-    persist(CM_TIERS_KEY, cmPriceTiers);
-    set({ cmPriceTiers });
-  },
-  removeCmTier: (id) => {
-    const cmPriceTiers = get().cmPriceTiers.filter(t => t.id !== id);
-    persist(CM_TIERS_KEY, cmPriceTiers);
-    set({ cmPriceTiers });
-  },
-
-  updatePaperTier: (id, patch) => {
-    const paperPriceTiers = get().paperPriceTiers.map(t => t.id === id ? { ...t, ...patch } : t);
-    persist(PAPER_TIERS_KEY, paperPriceTiers);
-    set({ paperPriceTiers });
-  },
-  addPaperTier: () => {
-    const tiers = get().paperPriceTiers;
-    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
-    const paperPriceTiers = [...tiers, { id: genId(), maxCm: lastMax + 10, price: 0 }];
-    persist(PAPER_TIERS_KEY, paperPriceTiers);
-    set({ paperPriceTiers });
-  },
-  removePaperTier: (id) => {
-    const paperPriceTiers = get().paperPriceTiers.filter(t => t.id !== id);
-    persist(PAPER_TIERS_KEY, paperPriceTiers);
-    set({ paperPriceTiers });
-  },
-  addCompetitor: () => {
-    const competitors = [...get().competitors, { id: genId(), name: 'Nuevo competidor', prices: {} }];
-    persist(COMPETITORS_KEY, competitors);
-    set({ competitors });
-  },
-  removeCompetitor: (id) => {
-    const competitors = get().competitors.filter(c => c.id !== id);
-    persist(COMPETITORS_KEY, competitors);
-    set({ competitors });
-  },
-
-  updatePrintProfile: (id, patch) => {
-    const printProfiles = get().printProfiles.map(p => p.id === id ? { ...p, ...patch } : p);
-    persist(PROFILES_KEY, printProfiles);
-    set({ printProfiles });
-  },
-  addPrintProfile: () => {
-    const printProfiles = [...get().printProfiles, {
-      id: genId(), name: 'Nuevo perfil', inkFactor: 1, enabled: true,
-    }];
-    persist(PROFILES_KEY, printProfiles);
-    set({ printProfiles });
-  },
-  removePrintProfile: (id) => {
-    const printProfiles = get().printProfiles.filter(p => p.id !== id);
-    persist(PROFILES_KEY, printProfiles);
-    set({ printProfiles });
-  },
-
-  setRefCliente: (id) => {
-    if (id) localStorage.setItem(REF_CLIENTE_KEY, id);
-    else localStorage.removeItem(REF_CLIENTE_KEY);
-    set({ refClienteId: id });
-  },
-  setRefGender: (g) => {
-    if (g) localStorage.setItem(REF_GENDER_KEY, g);
-    else localStorage.removeItem(REF_GENDER_KEY);
-    set({ refGender: g });
-  },
-
-  resetPricingData: () => {
-    persist(CONFIG_KEY,    defaultPricingConfig);
-    persist(PRICES_KEY,    defaultBasePrices);
-    persist(SUPPLIES_KEY,  defaultSupplies);
-    persist(MACHINES_KEY,  defaultMachines);
-    persist(OPS_KEY,       defaultOperations);
-    persist(TIERS_KEY,     defaultVolumeTiers);
-    persist(PROFILES_KEY,  defaultPrintProfiles);
     set({
-      config:         defaultPricingConfig,
-      basePrices:     defaultBasePrices,
-      supplies:       defaultSupplies,
-      machines:       defaultMachines,
-      operations:     defaultOperations,
-      volumeTiers:    defaultVolumeTiers,
-      printProfiles:  defaultPrintProfiles,
+      loading: false, config, refClienteId, refGender,
+      basePrices, basePricesCompleto, supplies, machines, operations, fabrics,
+      volumeTiersByProduct, competitors, printProfiles, cmPriceTiers, paperPriceTiers,
+      history, cotizaciones, tablaExports,
     });
   },
 
+  // ── Config ────────────────────────────────────────────────────
+  updateConfig: (key, value) => {
+    const orgId = getOrgId();
+    const { refClienteId, refGender } = get();
+    const config = { ...get().config, [key]: value };
+    set({ config });
+    scheduleConfigSave(orgId, config, refClienteId, refGender);
+  },
+
+  // ── Base prices ───────────────────────────────────────────────
+  updateBasePrice: (segment, gender, size, field, value) => {
+    const orgId = getOrgId();
+    const safe = Number.isFinite(value) ? value : 0;
+    const basePrices = get().basePrices.map(r =>
+      r.segment === segment && r.gender === gender && r.size === size ? { ...r, [field]: safe } : r
+    );
+    set({ basePrices });
+    supabase.from('pricing_base_prices')
+      .update({ [field]: safe })
+      .eq('org_id', orgId).eq('service_mode', 'parcial')
+      .eq('segment', segment).eq('gender', gender).eq('size', size)
+      .then(({ error }) => { if (error) console.error('base_prices.update:', error); });
+  },
+
+  updateBasePriceCompleto: (segment, gender, size, field, value) => {
+    const orgId = getOrgId();
+    const safe = Number.isFinite(value) ? value : 0;
+    const basePricesCompleto = get().basePricesCompleto.map(r =>
+      r.segment === segment && r.gender === gender && r.size === size ? { ...r, [field]: safe } : r
+    );
+    set({ basePricesCompleto });
+    supabase.from('pricing_base_prices')
+      .update({ [field]: safe })
+      .eq('org_id', orgId).eq('service_mode', 'completo')
+      .eq('segment', segment).eq('gender', gender).eq('size', size)
+      .then(({ error }) => { if (error) console.error('base_prices_completo.update:', error); });
+  },
+
+  // ── Supplies ──────────────────────────────────────────────────
+  updateSupply: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().supplies;
+    const supplies = prev.map(s => s.id === id ? { ...s, ...patch } : s);
+    set({ supplies });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name             !== undefined) dbPatch.name             = patch.name;
+    if (patch.totalCost        !== undefined) dbPatch.total_cost       = patch.totalCost;
+    if (patch.quantity         !== undefined) dbPatch.quantity         = patch.quantity;
+    if (patch.unit             !== undefined) dbPatch.unit             = patch.unit;
+    if (patch.applyInkFactor   !== undefined) dbPatch.apply_ink_factor = patch.applyInkFactor;
+    supabase.from('pricing_supplies').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('supplies.update:', error); set({ supplies: prev }); } });
+  },
+  addSupply: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().supplies.length;
+    const item: Supply = { id, name: 'Nuevo insumo', totalCost: 0, quantity: 1, unit: 'm', applyInkFactor: false };
+    set(s => ({ supplies: [...s.supplies, item] }));
+    supabase.from('pricing_supplies').insert({ id, org_id: orgId, name: item.name, total_cost: 0, quantity: 1, unit: 'm', apply_ink_factor: false, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('supplies.add:', error); set(s => ({ supplies: s.supplies.filter(x => x.id !== id) })); } });
+  },
+  removeSupply: (id) => {
+    const orgId = getOrgId();
+    const prev = get().supplies;
+    set(s => ({ supplies: s.supplies.filter(x => x.id !== id) }));
+    supabase.from('pricing_supplies').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('supplies.remove:', error); set({ supplies: prev }); } });
+  },
+
+  // ── Machines ──────────────────────────────────────────────────
+  updateMachine: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().machines;
+    const machines = prev.map(m => m.id === id ? { ...m, ...patch } : m);
+    set({ machines });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name        !== undefined) dbPatch.name        = patch.name;
+    if (patch.cost        !== undefined) dbPatch.cost        = patch.cost;
+    if (patch.lifeMeters  !== undefined) dbPatch.life_meters = patch.lifeMeters;
+    supabase.from('pricing_machines').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('machines.update:', error); set({ machines: prev }); } });
+  },
+  addMachine: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().machines.length;
+    const item: MachineCost = { id, name: 'Nuevo equipo', cost: 0, lifeMeters: 1000 };
+    set(s => ({ machines: [...s.machines, item] }));
+    supabase.from('pricing_machines').insert({ id, org_id: orgId, name: item.name, cost: 0, life_meters: 1000, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('machines.add:', error); set(s => ({ machines: s.machines.filter(x => x.id !== id) })); } });
+  },
+  removeMachine: (id) => {
+    const orgId = getOrgId();
+    const prev = get().machines;
+    set(s => ({ machines: s.machines.filter(x => x.id !== id) }));
+    supabase.from('pricing_machines').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('machines.remove:', error); set({ machines: prev }); } });
+  },
+
+  // ── Operations ────────────────────────────────────────────────
+  updateOperation: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().operations;
+    const operations = prev.map(o => o.id === id ? { ...o, ...patch } : o);
+    set({ operations });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name         !== undefined) dbPatch.name         = patch.name;
+    if (patch.monthlyCost  !== undefined) dbPatch.monthly_cost = patch.monthlyCost;
+    supabase.from('pricing_operations').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('operations.update:', error); set({ operations: prev }); } });
+  },
+  addOperation: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().operations.length;
+    const item: OperationCost = { id, name: 'Nuevo costo', monthlyCost: 0 };
+    set(s => ({ operations: [...s.operations, item] }));
+    supabase.from('pricing_operations').insert({ id, org_id: orgId, name: item.name, monthly_cost: 0, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('operations.add:', error); set(s => ({ operations: s.operations.filter(x => x.id !== id) })); } });
+  },
+  removeOperation: (id) => {
+    const orgId = getOrgId();
+    const prev = get().operations;
+    set(s => ({ operations: s.operations.filter(x => x.id !== id) }));
+    supabase.from('pricing_operations').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('operations.remove:', error); set({ operations: prev }); } });
+  },
+
+  // ── Volume tiers ──────────────────────────────────────────────
+  updateVolumeTier: (productId, id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().volumeTiersByProduct;
+    const volumeTiersByProduct = {
+      ...prev,
+      [productId]: (prev[productId] ?? []).map(t => t.id === id ? { ...t, ...patch } : t),
+    };
+    set({ volumeTiersByProduct });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.from     !== undefined) dbPatch.tier_from = patch.from;
+    if (patch.to       !== undefined) dbPatch.tier_to   = patch.to;
+    if (patch.discount !== undefined) dbPatch.discount  = patch.discount;
+    supabase.from('pricing_volume_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('volume_tiers.update:', error); set({ volumeTiersByProduct: prev }); } });
+  },
+  addVolumeTier: (productId) => {
+    const orgId = getOrgId();
+    const id = genId();
+    const tiers = get().volumeTiersByProduct[productId] ?? [];
+    const lastTo = tiers.length > 0 ? (tiers[tiers.length - 1].to ?? 99) : 0;
+    const item: VolumeTier = { id, from: lastTo + 1, to: null, discount: 0 };
+    const sortOrder = tiers.length;
+    set(s => ({
+      volumeTiersByProduct: { ...s.volumeTiersByProduct, [productId]: [...(s.volumeTiersByProduct[productId] ?? []), item] },
+    }));
+    supabase.from('pricing_volume_tiers').insert({ id, org_id: orgId, product_id: productId, tier_from: item.from, tier_to: null, discount: 0, sort_order: sortOrder })
+      .then(({ error }) => {
+        if (error) {
+          console.error('volume_tiers.add:', error);
+          set(s => ({ volumeTiersByProduct: { ...s.volumeTiersByProduct, [productId]: (s.volumeTiersByProduct[productId] ?? []).filter(t => t.id !== id) } }));
+        }
+      });
+  },
+  removeVolumeTier: (productId, id) => {
+    const orgId = getOrgId();
+    const prev = get().volumeTiersByProduct;
+    set(s => ({
+      volumeTiersByProduct: { ...s.volumeTiersByProduct, [productId]: (s.volumeTiersByProduct[productId] ?? []).filter(t => t.id !== id) },
+    }));
+    supabase.from('pricing_volume_tiers').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('volume_tiers.remove:', error); set({ volumeTiersByProduct: prev }); } });
+  },
+
+  // ── Fabrics ───────────────────────────────────────────────────
+  updateFabric: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().fabrics;
+    const fabrics = prev.map(f => f.id === id ? { ...f, ...patch } : f);
+    set({ fabrics });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name          !== undefined) dbPatch.name           = patch.name;
+    if (patch.costPerKg     !== undefined) dbPatch.cost_per_kg    = patch.costPerKg;
+    if (patch.metersPerKg   !== undefined) dbPatch.meters_per_kg  = patch.metersPerKg;
+    if (patch.tubular       !== undefined) dbPatch.tubular        = patch.tubular;
+    supabase.from('pricing_fabrics').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('fabrics.update:', error); set({ fabrics: prev }); } });
+  },
+  addFabric: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().fabrics.length;
+    const item: FabricType = { id, name: 'Nueva tela', costPerKg: 0, metersPerKg: 1, tubular: false };
+    set(s => ({ fabrics: [...s.fabrics, item] }));
+    supabase.from('pricing_fabrics').insert({ id, org_id: orgId, name: item.name, cost_per_kg: 0, meters_per_kg: 1, tubular: false, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('fabrics.add:', error); set(s => ({ fabrics: s.fabrics.filter(x => x.id !== id) })); } });
+  },
+  removeFabric: (id) => {
+    const orgId = getOrgId();
+    const prev = get().fabrics;
+    set(s => ({ fabrics: s.fabrics.filter(x => x.id !== id) }));
+    supabase.from('pricing_fabrics').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('fabrics.remove:', error); set({ fabrics: prev }); } });
+  },
+
+  // ── Competitors ───────────────────────────────────────────────
+  updateCompetitor: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().competitors;
+    const competitors = prev.map(c => c.id === id ? { ...c, ...patch } : c);
+    set({ competitors });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name   !== undefined) dbPatch.name   = patch.name;
+    if (patch.prices !== undefined) dbPatch.prices = patch.prices;
+    supabase.from('pricing_competitors').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('competitors.update:', error); set({ competitors: prev }); } });
+  },
+  addCompetitor: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().competitors.length;
+    const item: Competitor = { id, name: 'Nuevo competidor', prices: {} };
+    set(s => ({ competitors: [...s.competitors, item] }));
+    supabase.from('pricing_competitors').insert({ id, org_id: orgId, name: item.name, prices: {}, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('competitors.add:', error); set(s => ({ competitors: s.competitors.filter(x => x.id !== id) })); } });
+  },
+  removeCompetitor: (id) => {
+    const orgId = getOrgId();
+    const prev = get().competitors;
+    set(s => ({ competitors: s.competitors.filter(x => x.id !== id) }));
+    supabase.from('pricing_competitors').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('competitors.remove:', error); set({ competitors: prev }); } });
+  },
+
+  // ── CM price tiers (embroidery) ───────────────────────────────
+  updateCmTier: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().cmPriceTiers;
+    const cmPriceTiers = prev.map(t => t.id === id ? { ...t, ...patch } : t);
+    set({ cmPriceTiers });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.maxCm !== undefined) dbPatch.max_cm = patch.maxCm;
+    if (patch.price !== undefined) dbPatch.price  = patch.price;
+    supabase.from('pricing_cm_price_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId).eq('tier_type', 'embroidery')
+      .then(({ error }) => { if (error) { console.error('cm_tiers.update:', error); set({ cmPriceTiers: prev }); } });
+  },
+  addCmTier: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const tiers = get().cmPriceTiers;
+    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
+    const item: CmPriceTier = { id, maxCm: lastMax + 10, price: 0 };
+    set(s => ({ cmPriceTiers: [...s.cmPriceTiers, item] }));
+    supabase.from('pricing_cm_price_tiers').insert({ id, org_id: orgId, tier_type: 'embroidery', max_cm: item.maxCm, price: 0, sort_order: tiers.length })
+      .then(({ error }) => { if (error) { console.error('cm_tiers.add:', error); set(s => ({ cmPriceTiers: s.cmPriceTiers.filter(x => x.id !== id) })); } });
+  },
+  removeCmTier: (id) => {
+    const orgId = getOrgId();
+    const prev = get().cmPriceTiers;
+    set(s => ({ cmPriceTiers: s.cmPriceTiers.filter(x => x.id !== id) }));
+    supabase.from('pricing_cm_price_tiers').delete().eq('id', id).eq('org_id', orgId).eq('tier_type', 'embroidery')
+      .then(({ error }) => { if (error) { console.error('cm_tiers.remove:', error); set({ cmPriceTiers: prev }); } });
+  },
+
+  // ── Paper price tiers ─────────────────────────────────────────
+  updatePaperTier: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().paperPriceTiers;
+    const paperPriceTiers = prev.map(t => t.id === id ? { ...t, ...patch } : t);
+    set({ paperPriceTiers });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.maxCm !== undefined) dbPatch.max_cm = patch.maxCm;
+    if (patch.price !== undefined) dbPatch.price  = patch.price;
+    supabase.from('pricing_cm_price_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId).eq('tier_type', 'paper')
+      .then(({ error }) => { if (error) { console.error('paper_tiers.update:', error); set({ paperPriceTiers: prev }); } });
+  },
+  addPaperTier: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const tiers = get().paperPriceTiers;
+    const lastMax = tiers.length > 0 ? Math.max(...tiers.map(t => t.maxCm)) : 0;
+    const item: CmPriceTier = { id, maxCm: lastMax + 10, price: 0 };
+    set(s => ({ paperPriceTiers: [...s.paperPriceTiers, item] }));
+    supabase.from('pricing_cm_price_tiers').insert({ id, org_id: orgId, tier_type: 'paper', max_cm: item.maxCm, price: 0, sort_order: tiers.length })
+      .then(({ error }) => { if (error) { console.error('paper_tiers.add:', error); set(s => ({ paperPriceTiers: s.paperPriceTiers.filter(x => x.id !== id) })); } });
+  },
+  removePaperTier: (id) => {
+    const orgId = getOrgId();
+    const prev = get().paperPriceTiers;
+    set(s => ({ paperPriceTiers: s.paperPriceTiers.filter(x => x.id !== id) }));
+    supabase.from('pricing_cm_price_tiers').delete().eq('id', id).eq('org_id', orgId).eq('tier_type', 'paper')
+      .then(({ error }) => { if (error) { console.error('paper_tiers.remove:', error); set({ paperPriceTiers: prev }); } });
+  },
+
+  // ── Print profiles ────────────────────────────────────────────
+  updatePrintProfile: (id, patch) => {
+    const orgId = getOrgId();
+    const prev = get().printProfiles;
+    const printProfiles = prev.map(p => p.id === id ? { ...p, ...patch } : p);
+    set({ printProfiles });
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name      !== undefined) dbPatch.name       = patch.name;
+    if (patch.inkFactor !== undefined) dbPatch.ink_factor = patch.inkFactor;
+    if (patch.enabled   !== undefined) dbPatch.enabled    = patch.enabled;
+    supabase.from('pricing_print_profiles').update(dbPatch).eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('print_profiles.update:', error); set({ printProfiles: prev }); } });
+  },
+  addPrintProfile: () => {
+    const orgId = getOrgId();
+    const id = genId();
+    const sortOrder = get().printProfiles.length;
+    const item: PrintProfile = { id, name: 'Nuevo perfil', inkFactor: 1, enabled: true };
+    set(s => ({ printProfiles: [...s.printProfiles, item] }));
+    supabase.from('pricing_print_profiles').insert({ id, org_id: orgId, name: item.name, ink_factor: 1, enabled: true, sort_order: sortOrder })
+      .then(({ error }) => { if (error) { console.error('print_profiles.add:', error); set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) })); } });
+  },
+  removePrintProfile: (id) => {
+    const orgId = getOrgId();
+    const prev = get().printProfiles;
+    set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) }));
+    supabase.from('pricing_print_profiles').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('print_profiles.remove:', error); set({ printProfiles: prev }); } });
+  },
+
+  // ── Ref cliente / gender ──────────────────────────────────────
+  setRefCliente: (id) => {
+    const orgId = getOrgId();
+    const { config, refGender } = get();
+    set({ refClienteId: id });
+    scheduleConfigSave(orgId, config, id, refGender);
+  },
+  setRefGender: (g) => {
+    const orgId = getOrgId();
+    const { config, refClienteId } = get();
+    set({ refGender: g });
+    scheduleConfigSave(orgId, config, refClienteId, g);
+  },
+
+  // ── Reset ─────────────────────────────────────────────────────
+  resetPricingData: () => {
+    const orgId = getOrgId();
+    set({
+      config:               defaultPricingConfig,
+      basePrices:           defaultBasePrices,
+      basePricesCompleto:   defaultBasePrices,
+      supplies:             defaultSupplies,
+      machines:             defaultMachines,
+      operations:           defaultOperations,
+      volumeTiersByProduct: defaultVolumeTiersByProduct,
+      printProfiles:        defaultPrintProfiles,
+    });
+    resetToDefaults(orgId).catch(e => console.error('resetPricingData:', e));
+  },
+
+  // ── History ───────────────────────────────────────────────────
   saveQuote: (quote) => {
+    const orgId = getOrgId();
     const entry: QuoteHistoryEntry = {
       ...quote,
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       createdAt: new Date().toISOString(),
     };
-    const history = [entry, ...get().history].slice(0, 80);
-    persist(HISTORY_KEY, history);
-    set({ history });
+    set(s => ({ history: [entry, ...s.history] }));
+    supabase.from('pricing_quote_history').insert({ id: entry.id, org_id: orgId, created_at: entry.createdAt, data: entry })
+      .then(({ error }) => { if (error) console.error('quote_history.save:', error); });
   },
-
   clearHistory: () => {
-    persist(HISTORY_KEY, []);
+    const orgId = getOrgId();
     set({ history: [] });
+    supabase.from('pricing_quote_history').delete().eq('org_id', orgId)
+      .then(({ error }) => { if (error) console.error('quote_history.clear:', error); });
   },
 
+  // ── Tabla exports ─────────────────────────────────────────────
   saveTablaExport: (entry) => {
+    const orgId = getOrgId();
     const full: TablaExportEntry = {
       ...entry,
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       createdAt: new Date().toISOString(),
     };
-    const tablaExports = [full, ...get().tablaExports].slice(0, 50);
-    persist(TABLA_EXPORTS_KEY, tablaExports);
-    set({ tablaExports });
+    set(s => ({ tablaExports: [full, ...s.tablaExports] }));
+    supabase.from('pricing_tabla_exports').insert({
+      id: full.id, org_id: orgId, created_at: full.createdAt,
+      cliente_id: full.clienteId, cliente_nombre: full.clienteNombre,
+      segment: full.segment, profile_id: full.profileId, profile_name: full.profileName,
+      data: full,
+    }).then(({ error }) => { if (error) console.error('tabla_exports.save:', error); });
   },
   removeTablaExport: (id) => {
-    const tablaExports = get().tablaExports.filter(e => e.id !== id);
-    persist(TABLA_EXPORTS_KEY, tablaExports);
-    set({ tablaExports });
+    const orgId = getOrgId();
+    const prev = get().tablaExports;
+    set(s => ({ tablaExports: s.tablaExports.filter(e => e.id !== id) }));
+    supabase.from('pricing_tabla_exports').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('tabla_exports.remove:', error); set({ tablaExports: prev }); } });
+  },
+
+  // ── Cotizaciones ──────────────────────────────────────────────
+  saveCotizacion: (entry) => {
+    const orgId = getOrgId();
+    set(s => ({ cotizaciones: [entry, ...s.cotizaciones] }));
+    supabase.from('pricing_cotizaciones').insert({
+      id: entry.id, org_id: orgId, created_at: entry.createdAt,
+      cliente_nombre: entry.clienteNombre, org_nombre: entry.orgNombre,
+      service_mode: entry.serviceMode, total_units: entry.totalUnits,
+      total_price: entry.totalPrice, total_profit: entry.totalProfit,
+      overall_margin: entry.overallMargin, data: entry,
+    }).then(({ error }) => { if (error) console.error('cotizaciones.save:', error); });
+  },
+  removeCotizacion: (id) => {
+    const orgId = getOrgId();
+    const prev = get().cotizaciones;
+    set(s => ({ cotizaciones: s.cotizaciones.filter(c => c.id !== id) }));
+    supabase.from('pricing_cotizaciones').delete().eq('id', id).eq('org_id', orgId)
+      .then(({ error }) => { if (error) { console.error('cotizaciones.remove:', error); set({ cotizaciones: prev }); } });
   },
 }));

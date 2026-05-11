@@ -8,6 +8,7 @@ import { TallasSettingsTab } from './TallasSettingsTab';
 import { MoldesTab } from './MoldesTab';
 import { TiposClienteTab } from './TiposClienteTab';
 import { UsersTab } from './UsersTab';
+import { MigrateDataBanner } from '../pricing/MigrateDataBanner';
 import type { SettingsTab } from '../../types';
 
 interface Props {
@@ -20,6 +21,7 @@ export function SettingsScreen({ onToast }: Props) {
 
   return (
     <div className="screen settings-screen">
+      <MigrateDataBanner />
       <div className="settings-header">
         <div className="settings-title-block">
           <div className="settings-title">◈ AJUSTES</div>
