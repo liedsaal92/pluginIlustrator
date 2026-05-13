@@ -184,20 +184,6 @@ function main() {
         var _estaticoTemplate = findGroupByNameRecursivo(grupoTemplate, "ESTATICO");
         if (!_estaticoTemplate) _estaticoTemplate = findItemByNameRecursivo(grupoTemplate, "ESTATICO");
 
-        // PANT_IZQ/PANT_DER: usar _tallaTemplate como base (igual que mangas).
-        // Prioridad sobre ESTATICO: garantiza valores exactos del CSV sin imprecisiones
-        // de ptToCm(geometricBounds), independientemente de la estructura interna del template.
-        if ((nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") && _tallaTemplate) {
-            var _pa = parseFloat(_tallaTemplate.PANT_ANCHO);
-            var _ph = parseFloat(_tallaTemplate.PANT_ALTO);
-            if (!isNaN(_pa) && _pa > 0 && !isNaN(_ph) && _ph > 0) {
-                basePieza = { ancho: _pa, alto: _ph };
-                Log.ok(nombrePieza + ": base deducida de talla template (" +
-                       _tallaTemplate.TALLA_CAMI + ") → " +
-                       basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
-            }
-        }
-
         if (!basePieza) {
         if (_estaticoTemplate) {
             var _eb = _estaticoTemplate.geometricBounds; // [left, top, right, bottom]
@@ -230,7 +216,7 @@ function main() {
                     _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
                     _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
                     _baseSrc   = "PathItem bounds";
-                    Log.info(nombrePieza + ": ESTATICO es PathItem → bounds exactos " +
+                    Log.ok(nombrePieza + ": ESTATICO es PathItem → bounds exactos " +
                         _baseAncho.toFixed(3) + " x " + _baseAlto.toFixed(3) + " cm");
                 }
             }
@@ -286,14 +272,6 @@ function main() {
             basePieza = {
                 ancho: parseFloat(_tallaTemplate.MANGA_ANCHO),
                 alto:  parseFloat(_tallaTemplate.MANGA_ALTO)
-            };
-            Log.ok(nombrePieza + ": base deducida de talla template (" +
-                   _tallaTemplate.TALLA_CAMI + ") → " +
-                   basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
-        } else if ((nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") && _tallaTemplate) {
-            basePieza = {
-                ancho: parseFloat(_tallaTemplate.PANT_ANCHO),
-                alto:  parseFloat(_tallaTemplate.PANT_ALTO)
             };
             Log.ok(nombrePieza + ": base deducida de talla template (" +
                    _tallaTemplate.TALLA_CAMI + ") → " +
