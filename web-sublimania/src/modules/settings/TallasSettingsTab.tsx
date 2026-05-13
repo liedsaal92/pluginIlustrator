@@ -6,7 +6,6 @@ import { useState, useRef } from 'react';
 import { useTallasStore, TALLAS_DEFAULT } from '../../store/useTallasStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useMoldesStore } from '../../store/useMoldesStore';
-import { useMoldeTiposStore } from '../../store/useMoldeTiposStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
@@ -27,12 +26,11 @@ export function TallasSettingsTab({ onToast }: Props) {
   const { clientes } = useClientesStore();
   const { moldes } = useMoldesStore();
   const { getTallas, setDim, addTalla, removeTalla, initClienteFromDefault } = useTallasStore();
-  const { getTipo } = useMoldeTiposStore();
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
   const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
 
-  const isPantMolde = !!moldeId && getTipo(moldeId) === 'pantaloneta';
+  const isPantMolde = !!moldeId && (moldes.find(m => m.id === moldeId)?.tipo ?? 'camiseta') === 'pantaloneta';
   const FIELDS: { key: keyof TallaDims; label: string }[] = isPantMolde
     ? [
         { key: 'ALTO',  label: 'PANT ALTO'  },

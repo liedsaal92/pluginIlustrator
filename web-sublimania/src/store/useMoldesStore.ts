@@ -11,7 +11,7 @@ import type { Molde } from '../types';
 export const MOLDE_DEFAULT_ID = 'camiseta';
 
 export const MOLDES_DEFAULT: Molde[] = [
-  { id: 'camiseta', nombre: 'CAMISETA' },
+  { id: 'camiseta', nombre: 'CAMISETA', tipo: 'camiseta' },
 ];
 
 function getOrgId(): string {
@@ -27,6 +27,7 @@ interface MoldesState {
   addMolde:    (nombre: string) => string;
   renameMolde: (id: string, nombre: string) => void;
   removeMolde: (id: string) => void;
+  setTipo:     (id: string, tipo: 'camiseta' | 'pantaloneta') => void;
 }
 
 export const useMoldesStore = create<MoldesState>()((set, get) => ({
@@ -39,7 +40,7 @@ export const useMoldesStore = create<MoldesState>()((set, get) => ({
     set({ loading: true });
     const { data, error } = await supabase
       .from('moldes')
-      .select('id, nombre')
+      .select('id, nombre, tipo')
       .eq('org_id', orgId)
       .order('created_at');
     set({ loading: false });
@@ -51,21 +52,22 @@ export const useMoldesStore = create<MoldesState>()((set, get) => ({
         id:     MOLDE_DEFAULT_ID,
         org_id: orgId,
         nombre: 'CAMISETA',
+        tipo:   'camiseta',
       });
       set({ moldes: MOLDES_DEFAULT });
       return;
     }
 
-    set({ moldes: data.map(r => ({ id: r.id, nombre: r.nombre })) });
+    set({ moldes: data.map(r => ({ id: r.id, nombre: r.nombre, tipo: (r.tipo ?? 'camiseta') as 'camiseta' | 'pantaloneta' })) });
   },
 
   // ── Mutations — optimistic ────────────────────────────────────
   addMolde: (nombre) => {
     const id    = nombre.trim().toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
     const orgId = getOrgId();
-    const entry: Molde = { id, nombre: nombre.trim().toUpperCase() };
+    const entry: Molde = { id, nombre: nombre.trim().toUpperCase(), tipo: 'camiseta' };
     set(s => ({ moldes: [...s.moldes, entry] }));
-    supabase.from('moldes').insert({ id, org_id: orgId, nombre: entry.nombre })
+    supabase.from('moldes').insert({ id, org_id: orgId, nombre: entry.nombre, tipo: 'camiseta' })
       .then(({ error }) => {
         if (error) {
           console.error('moldes.add:', error);
@@ -93,5 +95,11 @@ export const useMoldesStore = create<MoldesState>()((set, get) => ({
       .then(({ error }) => {
         if (error) { console.error('moldes.remove:', error); set({ moldes: prev }); }
       });
+  },
+
+  setTipo: (id, tipo) => {
+    set(s => ({ moldes: s.moldes.map(m => m.id === id ? { ...m, tipo } : m) }));
+    supabase.from('moldes').update({ tipo }).eq('id', id)
+      .then(({ error }) => { if (error) console.error('moldes.setTipo:', error); });
   },
 }));

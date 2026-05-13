@@ -18,6 +18,7 @@ export function buildCSV(
   globalConfig: GlobalConfig,
   tallasSeleccionadas?: string[],
   tallaDims?: Record<string, TallaDims>,
+  pantTallaDims?: Record<string, TallaDims>,
 ): string {
   const rows: string[] = [CSV_COLUMN_ORDER.join(',')];
 
@@ -30,7 +31,8 @@ export function buildCSV(
     const base: Record<string, string> = { ...baseCami, ...basePant };
     const override = overrides[idx] ?? {};
     const merged: Record<string, string> = { ...base, ...override };
-    const dims = tallaDims?.[tallaCami] ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '' };
+    const dims  = tallaDims?.[tallaCami]   ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '' };
+    const pDims = pantTallaDims?.[tallaPant] ?? { ALTO: '', ANCHO: '', MANGA_ALTO: '', MANGA_ANCHO: '' };
 
     const row: Record<string, string> = {
       ...merged,
@@ -44,6 +46,8 @@ export function buildCSV(
       ANCHO:           dims.ANCHO,
       MANGA_ALTO:      dims.MANGA_ALTO,
       MANGA_ANCHO:     dims.MANGA_ANCHO,
+      PANT_ALTO:       pDims.ALTO,
+      PANT_ANCHO:      pDims.ANCHO,
       EQUIPO:          globalConfig.EQUIPO    ?? '',
       NOTAS:           globalConfig.NOTAS     ?? '',
     };

@@ -3,6 +3,7 @@
 // ============================================================
 import { useState } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
+import { saveActiveTeam } from '../../store/useTeamsStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { SCHEMA, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
@@ -57,6 +58,7 @@ export function PlayerCard({ idx }: Props) {
       TALLA_CAMI:      String(fd.get('TALLA_CAMI') ?? '').trim().toUpperCase(),
       TALLA_PANT:      String(fd.get('TALLA_PANT') ?? '').trim().toUpperCase(),
     });
+    saveActiveTeam();
     setEditing(false);
   }
 

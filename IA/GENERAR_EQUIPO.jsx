@@ -182,6 +182,22 @@ function main() {
         //   3. Fallback: bounding box completo del grupo
         var basePieza;
         var _estaticoTemplate = findGroupByNameRecursivo(grupoTemplate, "ESTATICO");
+
+        // PANT_IZQ/PANT_DER: usar _tallaTemplate como base (igual que mangas).
+        // Prioridad sobre ESTATICO: garantiza valores exactos del CSV sin imprecisiones
+        // de ptToCm(geometricBounds), independientemente de la estructura interna del template.
+        if ((nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") && _tallaTemplate) {
+            var _pa = parseFloat(_tallaTemplate.PANT_ANCHO);
+            var _ph = parseFloat(_tallaTemplate.PANT_ALTO);
+            if (!isNaN(_pa) && _pa > 0 && !isNaN(_ph) && _ph > 0) {
+                basePieza = { ancho: _pa, alto: _ph };
+                Log.ok(nombrePieza + ": base deducida de talla template (" +
+                       _tallaTemplate.TALLA_CAMI + ") → " +
+                       basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
+            }
+        }
+
+        if (!basePieza) {
         if (_estaticoTemplate) {
             var _eb = _estaticoTemplate.geometricBounds; // [left, top, right, bottom]
 
@@ -189,45 +205,66 @@ function main() {
             // CONTENIDO (más grande), no de la clip mask. La clip mask (pageItems[0]) define
             // la silueta real del molde — es la referencia correcta para el escalado.
             var _baseAncho, _baseAlto, _baseSrc;
-            if (_estaticoTemplate.clipped) {
-                try {
-                    var _clipB = _estaticoTemplate.pageItems[0].geometricBounds;
-                    _baseAncho = ptToCm(Math.abs(_clipB[2] - _clipB[0]));
-                    _baseAlto  = ptToCm(Math.abs(_clipB[1] - _clipB[3]));
-                    _baseSrc   = "clip mask";
-                    Log._linea("-----", nombrePieza + " ESTATICO clipped=true → usando clip mask " +
+
+            // Para piezas de pantaloneta con ESTATICO GroupItem: buscar el PathItem de silueta
+            // (el path de mayor área dentro de ESTATICO) y medir SUS bounds exactos.
+            // Esto evita que elementos decorativos con clips internos inflen los geomBounds
+            // del GroupItem (+0.1874 cm) y produzcan factores de escala incorrectos.
+            if (nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") {
+                var _siluetaPant = encontrarSiluetaManga(_estaticoTemplate);
+                if (_siluetaPant) {
+                    var _sb = _siluetaPant.geometricBounds;
+                    _baseAncho = ptToCm(Math.abs(_sb[2] - _sb[0]));
+                    _baseAlto  = ptToCm(Math.abs(_sb[1] - _sb[3]));
+                    _baseSrc   = "silueta path";
+                    Log._linea("-----", nombrePieza + " ESTATICO GroupItem → silueta path " +
                         _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
-                        " (contenido era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
+                        " (grupo era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
                         "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
-                } catch(_ece2) {
-                    _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
-                    _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
-                    _baseSrc   = "geom (clip error: " + _ece2.message + ")";
-                    Log._linea("-----", nombrePieza + " ESTATICO clip mask error: " + _ece2.message + " — usando geomBounds");
                 }
-            } else {
-                // ESTATICO no está clipped directamente — buscar subgrupo clipped interno
-                // (ocurre cuando el clip está en un grupo hijo, ej. ESPALDA con MARCA_AGUA)
-                var _innerClipB = null;
-                for (var _ci = 0; _ci < _estaticoTemplate.pageItems.length; _ci++) {
-                    var _cand = _estaticoTemplate.pageItems[_ci];
-                    if (_cand.typename === "GroupItem" && _cand.clipped) {
-                        var _cb = buscarClipBounds(_cand);
-                        if (_cb) { _innerClipB = _cb; break; }
+            }
+
+            if (!_baseSrc) {
+                if (_estaticoTemplate.clipped) {
+                    try {
+                        var _clipB = _estaticoTemplate.pageItems[0].geometricBounds;
+                        _baseAncho = ptToCm(Math.abs(_clipB[2] - _clipB[0]));
+                        _baseAlto  = ptToCm(Math.abs(_clipB[1] - _clipB[3]));
+                        _baseSrc   = "clip mask";
+                        Log._linea("-----", nombrePieza + " ESTATICO clipped=true → usando clip mask " +
+                            _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
+                            " (contenido era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
+                            "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
+                    } catch(_ece2) {
+                        _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
+                        _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
+                        _baseSrc   = "geom (clip error: " + _ece2.message + ")";
+                        Log._linea("-----", nombrePieza + " ESTATICO clip mask error: " + _ece2.message + " — usando geomBounds");
                     }
-                }
-                if (_innerClipB) {
-                    _baseAncho = ptToCm(Math.abs(_innerClipB[2] - _innerClipB[0]));
-                    _baseAlto  = ptToCm(Math.abs(_innerClipB[1] - _innerClipB[3]));
-                    _baseSrc   = "clip mask (subgrupo)";
-                    Log._linea("-----", nombrePieza + " ESTATICO subgrupo clipped → usando clip " +
-                        _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
-                        " (contenido era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
-                        "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
                 } else {
-                    _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
-                    _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
-                    _baseSrc   = "geom";
+                    // ESTATICO no está clipped directamente — buscar subgrupo clipped interno
+                    // (ocurre cuando el clip está en un grupo hijo, ej. ESPALDA con MARCA_AGUA)
+                    var _innerClipB = null;
+                    for (var _ci = 0; _ci < _estaticoTemplate.pageItems.length; _ci++) {
+                        var _cand = _estaticoTemplate.pageItems[_ci];
+                        if (_cand.typename === "GroupItem" && _cand.clipped) {
+                            var _cb = buscarClipBounds(_cand);
+                            if (_cb) { _innerClipB = _cb; break; }
+                        }
+                    }
+                    if (_innerClipB) {
+                        _baseAncho = ptToCm(Math.abs(_innerClipB[2] - _innerClipB[0]));
+                        _baseAlto  = ptToCm(Math.abs(_innerClipB[1] - _innerClipB[3]));
+                        _baseSrc   = "clip mask (subgrupo)";
+                        Log._linea("-----", nombrePieza + " ESTATICO subgrupo clipped → usando clip " +
+                            _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
+                            " (contenido era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
+                            "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
+                    } else {
+                        _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
+                        _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
+                        _baseSrc   = "geom";
+                    }
                 }
             }
 
@@ -258,6 +295,7 @@ function main() {
             Log.info(nombrePieza + ": base desde grupo completo (sin ESTATICO) → " +
                      basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
         }
+        } // end !basePieza
         Log._linea("-----", nombrePieza + " base medida: " +
             basePieza.ancho.toFixed(2) + " x " + basePieza.alto.toFixed(2) + " cm");
 

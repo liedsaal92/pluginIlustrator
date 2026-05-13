@@ -166,7 +166,7 @@ export const useTeamsStore = create<TeamsState>()((set, get) => ({
 
     const [teamsRes, playersRes, rulesRes, overridesRes, portalRes] = await Promise.all([
       supabase.from('teams').select('id,nombre,notas,base_team_id,created_at,updated_at,portal_status,created_by').eq('org_id', orgId).order('updated_at', { ascending: false }),
-      supabase.from('players').select('team_id,position,nombre,nombre_camiseta,numero,talla').eq('org_id', orgId).eq('player_status', 'confirmed').order('position'),
+      supabase.from('players').select('team_id,position,nombre,nombre_camiseta,numero,talla,talla_pant').eq('org_id', orgId).eq('player_status', 'confirmed').order('position'),
       supabase.from('talla_rules').select('team_id,talla,rules').eq('org_id', orgId),
       supabase.from('player_overrides').select('team_id,player_position,overrides').eq('org_id', orgId),
       supabase.from('portal_links').select('team_id,token,expires_at,status').eq('org_id', orgId),

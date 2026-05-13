@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useMoldesStore } from '../../store/useMoldesStore';
 import { useTallasStore } from '../../store/useTallasStore';
-import { useMoldeTiposStore, type MoldeTipo } from '../../store/useMoldeTiposStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 
 interface Props {
@@ -12,9 +11,8 @@ interface Props {
 }
 
 export function MoldesTab({ onToast }: Props) {
-  const { moldes, addMolde, renameMolde, removeMolde } = useMoldesStore();
+  const { moldes, addMolde, renameMolde, removeMolde, setTipo } = useMoldesStore();
   const { removeMoldeData } = useTallasStore();
-  const { getTipo, setTipo } = useMoldeTiposStore();
 
   const [newNombre, setNewNombre] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -86,8 +84,8 @@ export function MoldesTab({ onToast }: Props) {
                 <span className="molde-nombre">{m.nombre}</span>
                 <select
                   className="molde-tipo-select"
-                  value={getTipo(m.id)}
-                  onChange={e => setTipo(m.id, e.target.value as MoldeTipo)}
+                  value={m.tipo}
+                  onChange={e => setTipo(m.id, e.target.value as 'camiseta' | 'pantaloneta')}
                 >
                   <option value="camiseta">CAMISETA</option>
                   <option value="pantaloneta">PANTALONETA</option>

@@ -94,7 +94,7 @@ export interface Cliente {
 export interface Molde {
   id: string;
   nombre: string;
-  tipo?: 'camiseta' | 'pantaloneta'; // resuelto por useMoldeTiposStore (localStorage)
+  tipo: 'camiseta' | 'pantaloneta';
 }
 
 // ── PORTAL ────────────────────────────────────────────────────

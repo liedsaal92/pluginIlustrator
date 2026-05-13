@@ -145,10 +145,13 @@ export function TeamsScreen({ onToast }: Props) {
 
   function handleDelete(id: string) {
     if (!confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.')) return;
-    if (id === activeTeamId) {
-      useTeamStore.getState().loadFromEntry(EMPTY_ENTRY, 'teams');
+    const wasActive = id === activeTeamId;
+    deleteTeam(id); // primero: actualiza activeTeamId al siguiente equipo
+    if (wasActive) {
+      const { activeTeamId: nextId, teams: remaining } = useTeamsStore.getState();
+      const nextTeam = nextId ? remaining.find(t => t.id === nextId) : null;
+      useTeamStore.getState().loadFromEntry(nextTeam ?? EMPTY_ENTRY, 'teams');
     }
-    deleteTeam(id);
     onToast('Equipo eliminado', 'ok');
   }
 
