@@ -42,7 +42,7 @@ function PriceGrid({
   return (
     <div className="tallas-generos">
       {GROUPS.map(({ gender, label, badgeClass }) => {
-        const rows = basePrices.filter(r => r.segment === segment && r.gender === gender);
+        const rows = basePrices.filter(r => r.segment === segment && r.gender === gender).sort((a, b) => a.size - b.size);
         return (
           <div key={gender} className="tallas-genero-block">
             <div className={`tallas-genero-title ${badgeClass}`}>{label}</div>
