@@ -1017,7 +1017,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var pLineaIzqAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_IZQ_ALTO"]);
             var pLineaIzqRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_IZQ_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemPantLineaIzq, "IZQ", pLineaIzqAncho, pLineaIzqAlto, pLineaIzqRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia, true);
         }
 
         var itemPantLineaDer = findItemByNameRecursivo(dinamico, "PANT_LINEA_DER");
@@ -1029,7 +1029,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var pLineaDerAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_DER_ALTO"]);
             var pLineaDerRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_DER_REF"] || "") + "").toUpperCase();
             procesarLineaManga(itemPantLineaDer, "DER", pLineaDerAncho, pLineaDerAlto, pLineaDerRef,
-                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+                               jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia, true);
         }
 
         var itemPantLineaInf = findItemByNameRecursivo(dinamico, "PANT_LINEA_INF");
@@ -1041,7 +1041,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
             var pLineaInfAlto  = parseFloat(jugador["PANT_" + sufPantL + "_LINEA_INF_ALTO"]);
             var pLineaInfRef   = trim((jugador["PANT_" + sufPantL + "_LINEA_INF_REF"] || "") + "").toUpperCase();
             procesarLineaMangaInf(itemPantLineaInf, pLineaInfAncho, pLineaInfAlto, pLineaInfRef,
-                                  jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia);
+                                  jugador.NOMBRE, nombrePieza, factorPieza, grupoCopia, true);
         }
 
         // ── LINEAS ADIDAS (pant) ──────────────────────────────
@@ -1057,7 +1057,7 @@ function aplicarDinamicos(grupoCopia, jugador, nombrePieza, factorPieza) {
                 procesarLineasAdidas(
                     itemLineasAdidasPant, sufPantL,
                     laAnchoP, laRefP, laMarginInfP, "NO",
-                    grupoCopia, jugador.NOMBRE, nombrePieza
+                    grupoCopia, jugador.NOMBRE, nombrePieza, true
                 );
             }
         }

@@ -182,6 +182,7 @@ function main() {
         //   3. Fallback: bounding box completo del grupo
         var basePieza;
         var _estaticoTemplate = findGroupByNameRecursivo(grupoTemplate, "ESTATICO");
+        if (!_estaticoTemplate) _estaticoTemplate = findItemByNameRecursivo(grupoTemplate, "ESTATICO");
 
         // PANT_IZQ/PANT_DER: usar _tallaTemplate como base (igual que mangas).
         // Prioridad sobre ESTATICO: garantiza valores exactos del CSV sin imprecisiones
@@ -211,16 +212,26 @@ function main() {
             // Esto evita que elementos decorativos con clips internos inflen los geomBounds
             // del GroupItem (+0.1874 cm) y produzcan factores de escala incorrectos.
             if (nombrePieza === "PANT_IZQ" || nombrePieza === "PANT_DER") {
-                var _siluetaPant = encontrarSiluetaManga(_estaticoTemplate);
-                if (_siluetaPant) {
-                    var _sb = _siluetaPant.geometricBounds;
-                    _baseAncho = ptToCm(Math.abs(_sb[2] - _sb[0]));
-                    _baseAlto  = ptToCm(Math.abs(_sb[1] - _sb[3]));
-                    _baseSrc   = "silueta path";
-                    Log._linea("-----", nombrePieza + " ESTATICO GroupItem → silueta path " +
-                        _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
-                        " (grupo era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
-                        "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
+                // PathItem no tiene pageItems — omitir búsqueda de silueta y usar bounds directos
+                if (_estaticoTemplate.typename !== "PathItem") {
+                    var _siluetaPant = encontrarSiluetaManga(_estaticoTemplate);
+                    if (_siluetaPant) {
+                        var _sb = _siluetaPant.geometricBounds;
+                        _baseAncho = ptToCm(Math.abs(_sb[2] - _sb[0]));
+                        _baseAlto  = ptToCm(Math.abs(_sb[1] - _sb[3]));
+                        _baseSrc   = "silueta path";
+                        Log._linea("-----", nombrePieza + " ESTATICO GroupItem → silueta path " +
+                            _baseAncho.toFixed(3) + "x" + _baseAlto.toFixed(3) + "cm" +
+                            " (grupo era " + ptToCm(Math.abs(_eb[2]-_eb[0])).toFixed(3) +
+                            "x" + ptToCm(Math.abs(_eb[1]-_eb[3])).toFixed(3) + "cm)");
+                    }
+                } else {
+                    // PathItem: usar sus bounds directamente (ya están en _eb)
+                    _baseAncho = ptToCm(Math.abs(_eb[2] - _eb[0]));
+                    _baseAlto  = ptToCm(Math.abs(_eb[1] - _eb[3]));
+                    _baseSrc   = "PathItem bounds";
+                    Log.info(nombrePieza + ": ESTATICO es PathItem → bounds exactos " +
+                        _baseAncho.toFixed(3) + " x " + _baseAlto.toFixed(3) + " cm");
                 }
             }
 
