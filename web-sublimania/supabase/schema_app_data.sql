@@ -159,7 +159,31 @@ CREATE POLICY "export_history: org isolation"
   USING  (org_id = my_org_id())
   WITH CHECK (org_id = my_org_id());
 
+-- ── TABLA: tallas_default ────────────────────────────────────
+-- Lista de tallas disponibles por org (se usa al inicializar un cliente/molde)
+-- Auto-sembrada con TALLAS_DEFAULT la primera vez que se accede.
+CREATE TABLE public.tallas_default (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
+  molde_id    TEXT NOT NULL DEFAULT 'camiseta',
+  talla       TEXT NOT NULL,
+  alto        TEXT NOT NULL DEFAULT '',
+  ancho       TEXT NOT NULL DEFAULT '',
+  manga_ancho TEXT NOT NULL DEFAULT '',
+  manga_alto  TEXT NOT NULL DEFAULT '',
+  orden       INT  NOT NULL DEFAULT 0,
+  UNIQUE (org_id, molde_id, talla)
+);
+
+ALTER TABLE public.tallas_default ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tallas_default: org isolation"
+  ON public.tallas_default FOR ALL
+  USING  (org_id = my_org_id())
+  WITH CHECK (org_id = my_org_id());
+
 -- ── ÍNDICES de performance ────────────────────────────────────
+CREATE INDEX ON public.tallas_default  (org_id, orden);
 CREATE INDEX ON public.tallas_config   (org_id, cliente_id, molde_id);
 CREATE INDEX ON public.players         (team_id, org_id);
 CREATE INDEX ON public.talla_rules     (team_id, org_id);

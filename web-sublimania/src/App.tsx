@@ -8,6 +8,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { useClientesStore } from './store/useClientesStore';
 import { useMoldesStore } from './store/useMoldesStore';
 import { useTallasStore } from './store/useTallasStore';
+import { useTallasDefaultStore } from './store/useTallasDefaultStore';
 import { usePricingStore } from './store/usePricingStore';
 import { useTiposClienteStore } from './store/useTiposClienteStore';
 import { supabase } from './utils/supabase';
@@ -86,6 +87,7 @@ export default function App() {
     if (!session) return;
     useClientesStore.getState().init();
     useMoldesStore.getState().init();
+    useTallasDefaultStore.getState().init();
     useTallasStore.getState().init();
     usePricingStore.getState().init();
     useTiposClienteStore.getState().init();

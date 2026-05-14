@@ -157,7 +157,7 @@ export function TallasSettingsTab({ onToast }: Props) {
               onClick={handleReset}
               onBlur={() => setConfirmReset(false)}
             >
-              {confirmReset ? '¿CONFIRMAR RESET?' : '↺ RESTABLECER DEFAULTS'}
+              {confirmReset ? '¿CONFIRMAR RESET?' : '↺ APLICAR TALLAS BASE'}
             </button>
             <div className="tallas-toolbar-sep" />
             <span className={`tallas-dim-saved ${dimSaved ? 'visible' : ''}`}>✓ GUARDADO</span>
@@ -170,7 +170,7 @@ export function TallasSettingsTab({ onToast }: Props) {
         <>
           {allKeys.length === 0 ? (
             <p className="tallas-hint" style={{ textAlign: 'center' }}>
-              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ RESTABLECER DEFAULTS
+              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ APLICAR TALLAS BASE
             </p>
           ) : (
             <div className="tallas-generos">
