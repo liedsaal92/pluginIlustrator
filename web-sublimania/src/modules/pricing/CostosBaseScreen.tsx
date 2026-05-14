@@ -3,6 +3,7 @@ import { getCostPerMeter, calcShirtMetersFromDims } from '../../pricing/engines/
 import { usePricingStore } from '../../store/usePricingStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import type { Gender } from '../../pricing/types';
 
@@ -20,6 +21,7 @@ export function CostosBaseScreen({ onToast }: Props) {
     printProfiles, updatePrintProfile, addPrintProfile, removePrintProfile,
     fabrics, updateFabric, addFabric, removeFabric,
     refClienteId, refGender, setRefCliente, setRefGender,
+    refClienteIdPant, refGenderPant, refMoldeIdPant, setRefClientePant, setRefGenderPant, setRefMoldePant,
     updateConfig,
     updateSupply, addSupply, removeSupply,
     updateMachine, addMachine, removeMachine,
@@ -30,6 +32,9 @@ export function CostosBaseScreen({ onToast }: Props) {
 
   const { clientes } = useClientesStore();
   const { tallasPorCliente } = useTallasStore();
+  const { moldes } = useMoldesStore();
+  const moldesPant = moldes.filter(m => m.tipo === 'pantaloneta');
+  const activeMoldeIdPant = refMoldeIdPant ?? moldesPant[0]?.id ?? null;
 
   const refTallas = useMemo(() => {
     if (!refClienteId || !refGender) return [];
@@ -42,6 +47,18 @@ export function CostosBaseScreen({ onToast }: Props) {
       }))
       .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
   }, [refClienteId, refGender, tallasPorCliente, config.rollWidthCm]);
+
+  const refTallasPant = useMemo(() => {
+    if (!refClienteIdPant || !refGenderPant || !activeMoldeIdPant) return [];
+    const byTalla = tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant] ?? {};
+    return Object.entries(byTalla)
+      .filter(([nombre]) => nombre.toUpperCase().endsWith(refGenderPant))
+      .map(([nombre, dims]) => ({
+        nombre,
+        meters: calcShirtMetersFromDims(dims, config.rollWidthCm),
+      }))
+      .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
+  }, [refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente, config.rollWidthCm]);
 
   const cpmSupplies = useMemo(() => supplies.reduce((s, sup) => {
     if (!sup.quantity || sup.quantity <= 0) return s;
@@ -598,10 +615,14 @@ export function CostosBaseScreen({ onToast }: Props) {
       <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
         <div className="pricing-panel-title">TALLAS DE REFERENCIA</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
-          Seleccioná un cliente y género para que el motor use las medidas reales
-          (ALTO + ANCHO + MANGA) de tus tallas configuradas en lugar de la tabla por defecto.
+          Seleccioná un cliente y género para que el motor use las medidas reales de tus
+          tallas configuradas en lugar de la tabla por defecto.
         </div>
 
+        {/* ── Camiseta ── */}
+        <div className="pricing-table-sub" style={{ fontWeight: 600, marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
+          CAMISETA
+        </div>
         <div className="pricing-form-grid">
           <label className="pricing-field">
             <span>CLIENTE REF.</span>
@@ -624,7 +645,6 @@ export function CostosBaseScreen({ onToast }: Props) {
             </div>
           </div>
         </div>
-
         {refClienteId && refGender && refTallas.length > 0 && (
           <div className="ref-tallas-grid">
             {refTallas.map(({ nombre, meters }) => (
@@ -635,17 +655,79 @@ export function CostosBaseScreen({ onToast }: Props) {
             ))}
           </div>
         )}
-
         {refClienteId && refGender && refTallas.length === 0 && (
           <div className="pricing-table-sub" style={{ marginTop: '0.5rem', color: 'var(--red)' }}>
-            Sin tallas {refGender} configuradas para este cliente en el molde por defecto.
+            Sin tallas {refGender} configuradas para este cliente en el molde de camiseta.
           </div>
         )}
-
         {!refClienteId && (
           <div className="pricing-table-sub" style={{ marginTop: '0.5rem', opacity: 0.55 }}>
             Sin referencia activa — el cotizador usará la tabla hardcodeada de medidas.
           </div>
+        )}
+
+        {/* ── Pantaloneta ── */}
+        <div className="pricing-table-sub" style={{ fontWeight: 600, margin: '1rem 0 0.5rem', letterSpacing: '0.05em' }}>
+          PANTALONETA
+        </div>
+        {moldesPant.length === 0 ? (
+          <div className="pricing-table-sub" style={{ opacity: 0.55 }}>
+            No hay moldes de pantaloneta registrados. Creá uno en Ajustes → MOLDES.
+          </div>
+        ) : (
+          <>
+            <div className="pricing-form-grid">
+              <label className="pricing-field">
+                <span>CLIENTE REF.</span>
+                <select className="field-input field-select" value={refClienteIdPant ?? ''}
+                  onChange={e => setRefClientePant(e.target.value || null)}>
+                  <option value="">— Sin referencia —</option>
+                  {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                </select>
+              </label>
+              {moldesPant.length > 1 && (
+                <label className="pricing-field">
+                  <span>MOLDE</span>
+                  <select className="field-input field-select" value={activeMoldeIdPant ?? ''}
+                    onChange={e => setRefMoldePant(e.target.value || null)}>
+                    {moldesPant.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                  </select>
+                </label>
+              )}
+              <div className="pricing-field">
+                <span>GÉNERO</span>
+                <div className="pricing-transfer-btns">
+                  {(['H', 'M'] as Gender[]).map(g => (
+                    <button key={g}
+                      className={`pricing-transfer-btn${refGenderPant === g ? ' active' : ''}`}
+                      onClick={() => setRefGenderPant(refGenderPant === g ? null : g)}>
+                      {g === 'H' ? '♂ H' : '♀ M'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {refClienteIdPant && refGenderPant && refTallasPant.length > 0 && (
+              <div className="ref-tallas-grid">
+                {refTallasPant.map(({ nombre, meters }) => (
+                  <div key={nombre} className="ref-talla-chip">
+                    <strong>{nombre}</strong>
+                    <span>{meters.toFixed(3)} m</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {refClienteIdPant && refGenderPant && refTallasPant.length === 0 && (
+              <div className="pricing-table-sub" style={{ marginTop: '0.5rem', color: 'var(--red)' }}>
+                Sin tallas {refGenderPant} configuradas para este cliente en el molde seleccionado.
+              </div>
+            )}
+            {!refClienteIdPant && (
+              <div className="pricing-table-sub" style={{ marginTop: '0.5rem', opacity: 0.55 }}>
+                Sin referencia activa para pantaloneta.
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

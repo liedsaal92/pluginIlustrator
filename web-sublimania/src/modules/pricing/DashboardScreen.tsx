@@ -10,6 +10,8 @@ import {
 import { calculateQuote } from '../../pricing/engines/pricingEngine';
 import { compareProfiles } from '../../pricing/engines/simulator';
 import { usePricingStore } from '../../store/usePricingStore';
+import { useTallasStore } from '../../store/useTallasStore';
+import { useMoldesStore, MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import { sizeMeasurements } from '../../pricing/data/sizeMeasurements';
 import type {
   CustomerSegment, Gender, ProductId, QuoteInput, QuoteResult, BasePriceField,
@@ -55,7 +57,11 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     config, basePrices, basePricesCompleto,
     supplies, machines, operations,
     volumeTiersByProduct, printProfiles, fabrics,
+    refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant,
   } = usePricingStore();
+  const { tallasPorCliente } = useTallasStore();
+  const { moldes } = useMoldesStore();
+  const activeMoldeIdPant = refMoldeIdPant ?? moldes.find(m => m.tipo === 'pantaloneta')?.id ?? null;
 
   return useMemo(() => {
     const savingsTransferRate = controls.segment === 'vip'
@@ -65,6 +71,15 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     const rows: DashboardRow[] = [];
     for (const size of SIZES) {
       try {
+        const tallaKey = `${size}${controls.gender}`;
+        const tallaDims = controls.productId === 'pantaloneta'
+          ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
+              ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[tallaKey]
+              : undefined)
+          : (refClienteId && refGender
+              ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[tallaKey]
+              : undefined);
+
         const input: QuoteInput = {
           customerSegment:  controls.segment,
           gender:           controls.gender,
@@ -81,6 +96,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
           volumeTiers: volumeTiersByProduct[controls.productId] ?? [],
           savingsTransferRate,
           config,
+          tallaDims,
           serviceMode:      controls.serviceMode,
           fabrics,
           selectedFabricIdCamiseta:    controls.serviceMode === 'full_service' ? (config.defaultFabricCamisetaId ?? null)    : null,
@@ -112,6 +128,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     controls.profileId, controls.quantity, controls.serviceMode,
     basePrices, basePricesCompleto, supplies, machines,
     operations, volumeTiersByProduct, printProfiles, fabrics, config,
+    refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente,
   ]);
 }
 

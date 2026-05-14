@@ -5,7 +5,7 @@ import { usePricingStore } from '../../store/usePricingStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTiposClienteStore } from '../../store/useTiposClienteStore';
 import { useTallasStore } from '../../store/useTallasStore';
-import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
+import { useMoldesStore, MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import type { CotizacionHistoryEntry, CustomerSegment, Gender, MarketProductId, OrderLine, PrintProfileId, ProductId, QuoteInput, QuoteResult } from '../../pricing/types';
 import { openCotizacionPrintWindow } from '../../pricing/cotizacionPrint';
 
@@ -38,7 +38,9 @@ export function CotizadorScreen({ onToast }: Props) {
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
 
-  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, saveQuote, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender } = usePricingStore();
+  const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, saveQuote, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = usePricingStore();
+  const { moldes } = useMoldesStore();
+  const activeMoldeIdPant = refMoldeIdPant ?? moldes.find(m => m.tipo === 'pantaloneta')?.id ?? null;
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
   const savingsTransferRate = customerSegment === 'vip'
     ? (config.savingsTransferRateVip ?? 0)
@@ -67,9 +69,13 @@ export function CotizadorScreen({ onToast }: Props) {
   const lineQuotes = useMemo<(QuoteResult | null)[]>(() =>
     orderLines.map(line => {
       const { size, gender } = parseTalla(line.talla);
-      const tallaDims = (refClienteId && refGender)
-        ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
-        : undefined;
+      const tallaDims = line.productId === 'pantaloneta'
+        ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
+            ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
+            : undefined)
+        : (refClienteId && refGender
+            ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
+            : undefined);
       const input: QuoteInput = {
         customerSegment, gender, productId: line.productId, size,
         quantity: Math.max(1, line.quantity), profileId,
@@ -88,7 +94,7 @@ export function CotizadorScreen({ onToast }: Props) {
       try { return calculateQuote(input); } catch { return null; }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -109,9 +115,13 @@ export function CotizadorScreen({ onToast }: Props) {
       let tp = 0, tpr = 0;
       for (const line of orderLines) {
         const { size, gender } = parseTalla(line.talla);
-        const tallaDims = (refClienteId && refGender)
-          ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
-          : undefined;
+        const tallaDims = line.productId === 'pantaloneta'
+          ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
+              ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
+              : undefined)
+          : (refClienteId && refGender
+              ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
+              : undefined);
         const input: QuoteInput = {
           customerSegment, gender, productId: line.productId, size,
           quantity: Math.max(1, line.quantity), profileId: profile.id,
@@ -132,7 +142,7 @@ export function CotizadorScreen({ onToast }: Props) {
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
   );
 
   function addLine()    { setOrderLines(prev => [...prev, newLine(config.rollWidthCm)]); }
@@ -214,15 +224,18 @@ export function CotizadorScreen({ onToast }: Props) {
     onToast('Cotización cargada', 'ok');
   }
 
-  const refMissing = !refClienteId || !refGender;
+  const refMissing     = !refClienteId || !refGender;
+  const refPantMissing = !refClienteIdPant || !refGenderPant;
 
   return (
     <div className="screen pricing-screen">
-      {refMissing && (
+      {(refMissing || refPantMissing) && (
         <div className="cotizador-ref-banner">
           <span>⚠</span>
-          <span>Sin referencia de tallas configurada — los costos usan la tabla por defecto.
-            Ingresá a <strong>COSTOS BASE → TALLAS DE REFERENCIA</strong>, seleccioná un cliente con sus tallas cargadas y el género de referencia.
+          <span>
+            {refMissing && <>Sin referencia de tallas de <strong>camiseta</strong>. </>}
+            {refPantMissing && <>Sin referencia de tallas de <strong>pantaloneta</strong>. </>}
+            Los costos sin referencia usan la tabla por defecto. Configurá en <strong>COSTOS BASE → TALLAS DE REFERENCIA</strong>.
           </span>
         </div>
       )}

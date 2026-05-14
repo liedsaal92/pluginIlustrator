@@ -69,12 +69,19 @@ function scheduleConfigSave(
   config: PricingConfig,
   refClienteId: string | null,
   refGender: Gender | null,
+  refClienteIdPant: string | null,
+  refGenderPant: Gender | null,
+  refMoldeIdPant: string | null,
 ) {
   if (_configDebounce) clearTimeout(_configDebounce);
   _configDebounce = setTimeout(() => {
     supabase.from('pricing_config').upsert({
-      org_id: orgId, config, ref_cliente_id: refClienteId,
-      ref_gender: refGender, updated_at: new Date().toISOString(),
+      org_id: orgId, config,
+      ref_cliente_id: refClienteId, ref_gender: refGender,
+      ref_cliente_id_pant: refClienteIdPant,
+      ref_gender_pant:     refGenderPant,
+      ref_molde_id_pant:   refMoldeIdPant,
+      updated_at: new Date().toISOString(),
     }).then(({ error }) => {
       if (error) console.error('pricing_config.save:', error);
     });
@@ -210,7 +217,14 @@ interface PricingState {
   removePrintProfile: (id: string) => void;
 
   setRefCliente: (id: string | null) => void;
-  setRefGender: (g: Gender | null) => void;
+  setRefGender:  (g: Gender | null) => void;
+
+  refClienteIdPant: string | null;
+  refGenderPant:    Gender | null;
+  refMoldeIdPant:   string | null;
+  setRefClientePant: (id: string | null) => void;
+  setRefGenderPant:  (g: Gender | null) => void;
+  setRefMoldePant:   (id: string | null) => void;
 
   resetPricingData: () => void;
   saveQuote: (quote: QuoteResult) => void;
@@ -244,6 +258,9 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   cotizaciones:         [],
   refClienteId:         null,
   refGender:            null,
+  refClienteIdPant:     null,
+  refGenderPant:        null,
+  refMoldeIdPant:       null,
 
   // ── Carga inicial desde Supabase ─────────────────────────────
   init: async () => {
@@ -279,8 +296,11 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
 
     // Transformar filas DB → tipos del store
     const config = migrateConfig({ ...defaultPricingConfig, ...configRes.data.config });
-    const refClienteId = configRes.data.ref_cliente_id ?? null;
-    const refGender = (configRes.data.ref_gender as Gender | null) ?? null;
+    const refClienteId     = configRes.data.ref_cliente_id      ?? null;
+    const refGender        = (configRes.data.ref_gender as Gender | null) ?? null;
+    const refClienteIdPant = configRes.data.ref_cliente_id_pant ?? null;
+    const refGenderPant    = (configRes.data.ref_gender_pant as Gender | null) ?? null;
+    const refMoldeIdPant   = configRes.data.ref_molde_id_pant   ?? null;
 
     const allBp = basePricesRes.data ?? [];
     const basePrices = migrateBasePrices(
@@ -348,6 +368,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
 
     set({
       loading: false, config, refClienteId, refGender,
+      refClienteIdPant, refGenderPant, refMoldeIdPant,
       basePrices, basePricesCompleto, supplies, machines, operations, fabrics,
       volumeTiersByProduct, competitors, printProfiles, cmPriceTiers, paperPriceTiers,
       history, cotizaciones, tablaExports,
@@ -357,10 +378,10 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   // ── Config ────────────────────────────────────────────────────
   updateConfig: (key, value) => {
     const orgId = getOrgId();
-    const { refClienteId, refGender } = get();
+    const { refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
     const config = { ...get().config, [key]: value };
     set({ config });
-    scheduleConfigSave(orgId, config, refClienteId, refGender);
+    scheduleConfigSave(orgId, config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
   },
 
   // ── Base prices ───────────────────────────────────────────────
@@ -680,15 +701,34 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
   // ── Ref cliente / gender ──────────────────────────────────────
   setRefCliente: (id) => {
     const orgId = getOrgId();
-    const { config, refGender } = get();
+    const { config, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
     set({ refClienteId: id });
-    scheduleConfigSave(orgId, config, id, refGender);
+    scheduleConfigSave(orgId, config, id, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
   },
   setRefGender: (g) => {
     const orgId = getOrgId();
-    const { config, refClienteId } = get();
+    const { config, refClienteId, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
     set({ refGender: g });
-    scheduleConfigSave(orgId, config, refClienteId, g);
+    scheduleConfigSave(orgId, config, refClienteId, g, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+
+  setRefClientePant: (id) => {
+    const orgId = getOrgId();
+    const { config, refClienteId, refGender, refGenderPant, refMoldeIdPant } = get();
+    set({ refClienteIdPant: id });
+    scheduleConfigSave(orgId, config, refClienteId, refGender, id, refGenderPant, refMoldeIdPant);
+  },
+  setRefGenderPant: (g) => {
+    const orgId = getOrgId();
+    const { config, refClienteId, refGender, refClienteIdPant, refMoldeIdPant } = get();
+    set({ refGenderPant: g });
+    scheduleConfigSave(orgId, config, refClienteId, refGender, refClienteIdPant, g, refMoldeIdPant);
+  },
+  setRefMoldePant: (id) => {
+    const orgId = getOrgId();
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant } = get();
+    set({ refMoldeIdPant: id });
+    scheduleConfigSave(orgId, config, refClienteId, refGender, refClienteIdPant, refGenderPant, id);
   },
 
   // ── Reset ─────────────────────────────────────────────────────
