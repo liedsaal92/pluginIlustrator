@@ -131,6 +131,7 @@ export interface QuoteInput {
   savingsTransferRate: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   serviceMode?: 'sublimation' | 'full_service' | 'paper';
   fabrics?: FabricType[];
   selectedFabricIdCamiseta?: string | null;

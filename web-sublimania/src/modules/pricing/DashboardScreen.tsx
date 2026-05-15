@@ -72,13 +72,15 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
     for (const size of SIZES) {
       try {
         const tallaKey = `${size}${controls.gender}`;
+        const pantDims = refClienteIdPant && refGenderPant && activeMoldeIdPant
+          ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[tallaKey]
+          : undefined;
         const tallaDims = controls.productId === 'pantaloneta'
-          ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
-              ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[tallaKey]
-              : undefined)
+          ? pantDims
           : (refClienteId && refGender
               ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[tallaKey]
               : undefined);
+        const tallaDimsPant = controls.productId === 'equipo' ? pantDims : undefined;
 
         const input: QuoteInput = {
           customerSegment:  controls.segment,
@@ -97,6 +99,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
           savingsTransferRate,
           config,
           tallaDims,
+          tallaDimsPant,
           serviceMode:      controls.serviceMode,
           fabrics,
           selectedFabricIdCamiseta:    controls.serviceMode === 'full_service' ? (config.defaultFabricCamisetaId ?? null)    : null,

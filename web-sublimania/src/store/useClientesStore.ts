@@ -6,7 +6,14 @@
 import { create } from 'zustand';
 import { supabase } from '../utils/supabase';
 import { useAuthStore } from './useAuthStore';
+import { useToastStore } from './useToastStore';
 import type { Cliente } from '../types';
+
+function errToast(label: string, err: unknown) {
+  const msg = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+  console.error(label, err);
+  useToastStore.getState().push(`${label}: ${msg}`, 'error');
+}
 
 function generateId(): string {
   return 'c_' + Math.random().toString(36).slice(2, 10);
@@ -42,7 +49,7 @@ export const useClientesStore = create<ClientesState>()((set, get) => ({
       .eq('org_id', orgId)
       .order('created_at');
     set({ loading: false });
-    if (error) { console.error('clientes.init:', error); return; }
+    if (error) { errToast('clientes.init:', error); return; }
     set({
       clientes: (data ?? []).map(r => ({
         id:            r.id,
@@ -64,7 +71,7 @@ export const useClientesStore = create<ClientesState>()((set, get) => ({
       casa_costurera: casaCosturera.trim(),
     }).then(({ error }) => {
       if (error) {
-        console.error('clientes.add:', error);
+        errToast('clientes.add:', error);
         set(s => ({ clientes: s.clientes.filter(c => c.id !== id) }));
       }
     });
@@ -78,7 +85,7 @@ export const useClientesStore = create<ClientesState>()((set, get) => ({
     if (fields.nombre         !== undefined) update.nombre         = fields.nombre;
     if (fields.casaCosturera  !== undefined) update.casa_costurera = fields.casaCosturera;
     supabase.from('clientes').update(update).eq('id', id).then(({ error }) => {
-      if (error) { console.error('clientes.update:', error); set({ clientes: prev }); }
+      if (error) { errToast('clientes.update:', error); set({ clientes: prev }); }
     });
   },
 
@@ -86,7 +93,7 @@ export const useClientesStore = create<ClientesState>()((set, get) => ({
     const prev = get().clientes;
     set(s => ({ clientes: s.clientes.filter(c => c.id !== id) }));
     supabase.from('clientes').delete().eq('id', id).then(({ error }) => {
-      if (error) { console.error('clientes.remove:', error); set({ clientes: prev }); }
+      if (error) { errToast('clientes.remove:', error); set({ clientes: prev }); }
     });
   },
 

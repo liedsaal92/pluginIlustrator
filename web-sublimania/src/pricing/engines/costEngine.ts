@@ -82,6 +82,7 @@ function getMetersForProduct(
   linearCm?: number,
   widthCm?: number,
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
 ) {
   const notes: string[] = [];
 
@@ -105,19 +106,26 @@ function getMetersForProduct(
   const ratio = prices.camiseta > 0 ? prices.pantaloneta / prices.camiseta : 1;
 
   if (productId === 'pantaloneta') {
-    if (!tallaDims) notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
+    if (tallaDims) {
+      // dims reales: MANGA_ANCHO/ALTO son '' → sleeveM = 0, correcto para pantaloneta
+      const pMeters = calcShirtMetersFromDims(tallaDims, plotterWidthCm);
+      return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'real' as const, notes };
+    }
+    notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
     const pMeters = shirtMeters * ratio;
-    return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: tallaDims ? source : 'estimated' as const, notes };
+    return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'estimated' as const, notes };
   }
 
-  // equipo
-  if (!tallaDims) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
-  const pMeters = shirtMeters * ratio;
+  // equipo: camiseta usa dims reales si disponible; pantaloneta usa dims pant si disponible, si no ratio
+  if (!tallaDims || !tallaDimsPant) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
+  const pMeters = tallaDimsPant
+    ? calcShirtMetersFromDims(tallaDimsPant, plotterWidthCm)
+    : shirtMeters * ratio;
   return {
     meters: shirtMeters + pMeters,
     camisetaMeters: shirtMeters,
     pantalonetaMeters: pMeters,
-    source: tallaDims ? source : 'estimated' as const,
+    source: (tallaDims && tallaDimsPant) ? 'real' as const : 'estimated' as const,
     notes,
   };
 }
@@ -138,6 +146,7 @@ export function calculateCost(input: {
   widthCm?: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   serviceMode?: 'sublimation' | 'full_service' | 'paper';
   fabrics?: FabricType[];
   selectedFabricIdCamiseta?: string | null;
@@ -148,7 +157,7 @@ export function calculateCost(input: {
   const normalCostPerMeter = computeCostWithInkFactor(1, input.config, input.supplies, input.machines, input.operations);
   const productMeters = getMetersForProduct(
     input.productId, input.basePrices, input.segment, input.gender, input.size,
-    input.config.rollWidthCm, input.linearCm, input.widthCm, input.tallaDims,
+    input.config.rollWidthCm, input.linearCm, input.widthCm, input.tallaDims, input.tallaDimsPant,
   );
   const wasteRate = input.config.wasteRate;
   const metersUnit = productMeters.meters * (1 + wasteRate);

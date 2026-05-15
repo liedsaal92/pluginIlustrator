@@ -2,6 +2,7 @@
 //  utils/schema.ts — Definición del schema de piezas y campos
 // ============================================================
 import type { Schema, SchemaField, GlobalConfig, Rules } from '../types';
+import { TALLAS_DEFAULT } from '../store/tallasConstants';
 
 const REF_OPTIONS = ['PROPORCIONAL', 'ANCHO', 'ALTO', 'AMBOS'];
 const LADO_OPTIONS = ['IZQ', 'DER'];
@@ -362,7 +363,4 @@ export function sortTallas(tallas: string[]): string[] {
 }
 
 // Tallas estándar — siempre visibles en la pantalla de exportación
-export const TALLAS_ESTANDAR = [
-  '24H','26H','28H','30H','32H','34H','35H','36H','38H','40H','42H','44H',
-  '24M','26M','28M','30M','32M','34M','35M','36M','38M','40M','42M','44M',
-];
+export const TALLAS_ESTANDAR = Object.keys(TALLAS_DEFAULT);

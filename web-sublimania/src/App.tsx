@@ -1,7 +1,7 @@
 // ============================================================
 //  App.tsx — Root: layout persistente con sidebar
 // ============================================================
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTeamStore } from './store/useTeamStore';
 import { useTeamsStore } from './store/useTeamsStore';
 import { useAuthStore } from './store/useAuthStore';
@@ -12,6 +12,7 @@ import { useTallasDefaultStore } from './store/useTallasDefaultStore';
 import { usePricingStore } from './store/usePricingStore';
 import { useTiposClienteStore } from './store/useTiposClienteStore';
 import { supabase } from './utils/supabase';
+import { useToastStore } from './store/useToastStore';
 import { Sidebar } from './components/layout/Sidebar';
 import { Toast } from './components/ui/Toast';
 import { AuthScreen } from './modules/auth/AuthScreen';
@@ -23,15 +24,13 @@ import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
 import { PreviewScreen } from './modules/preview/PreviewScreen';
 import { ClienteScreen } from './modules/cliente/ClienteScreen';
-import { CotizadorScreen } from './modules/pricing/CotizadorScreen';
-import { CostosBaseScreen } from './modules/pricing/CostosBaseScreen';
-import { TablasScreen } from './modules/pricing/TablasScreen';
-import { MercadoScreen } from './modules/pricing/MercadoScreen';
-import { TablaClienteScreen } from './modules/pricing/TablaClienteScreen';
-import { DashboardScreen } from './modules/pricing/DashboardScreen';
+const CotizadorScreen    = lazy(() => import('./modules/pricing/CotizadorScreen').then(m => ({ default: m.CotizadorScreen })));
+const CostosBaseScreen   = lazy(() => import('./modules/pricing/CostosBaseScreen').then(m => ({ default: m.CostosBaseScreen })));
+const TablasScreen       = lazy(() => import('./modules/pricing/TablasScreen').then(m => ({ default: m.TablasScreen })));
+const MercadoScreen      = lazy(() => import('./modules/pricing/MercadoScreen').then(m => ({ default: m.MercadoScreen })));
+const TablaClienteScreen = lazy(() => import('./modules/pricing/TablaClienteScreen').then(m => ({ default: m.TablaClienteScreen })));
+const DashboardScreen    = lazy(() => import('./modules/pricing/DashboardScreen').then(m => ({ default: m.DashboardScreen })));
 import { hasPermission } from './types/auth';
-
-interface ToastState { msg: string; type: 'ok' | 'error'; key: number; }
 
 // Detectar ruta pública /portal/TOKEN antes de cualquier auth
 const portalMatch = window.location.pathname.match(/^\/portal\/([^/]+)/);
@@ -41,7 +40,9 @@ export default function App() {
   const screen  = useTeamStore(s => s.screen);
   const session = useAuthStore(s => s.session);
   const checkSession = useAuthStore(s => s.checkSession);
-  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastQueue = useToastStore(s => s.queue);
+  const removeToast = useToastStore(s => s.remove);
+  const pushToast = useToastStore(s => s.push);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() =>
     localStorage.getItem('sidebar_collapsed') === 'true'
@@ -66,7 +67,7 @@ export default function App() {
   const toggleTheme = useCallback(() => setTheme(t => t === 'light' ? 'dark' : 'light'), []);
 
   function showToast(msg: string, type: 'ok' | 'error') {
-    setToast({ msg, type, key: Date.now() });
+    pushToast(msg, type);
   }
 
   // Validar sesión al arrancar
@@ -127,7 +128,9 @@ export default function App() {
             <ClienteScreen onToast={showToast} />
           </main>
         </div>
-        {toast && <Toast key={toast.key} message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
+        {toastQueue.map((t, i) => i === 0 && (
+          <Toast key={t.id} message={t.message} type={t.type} onDone={() => removeToast(t.id)} />
+        ))}
       </>
     );
   }
@@ -162,22 +165,22 @@ export default function App() {
           {screen === 'settings'  && <SettingsScreen  onToast={showToast} />}
           {screen.startsWith('pricing_') && (
             hasPermission(session.user.role, 'billing:manage') ? (
-              <>
+              <Suspense fallback={<div className="screen-loading">Cargando...</div>}>
                 {screen === 'pricing_cotizador'     && <CotizadorScreen     onToast={showToast} />}
                 {screen === 'pricing_costos'        && <CostosBaseScreen    onToast={showToast} />}
                 {screen === 'pricing_tablas'        && <TablasScreen        onToast={showToast} />}
                 {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
                 {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
                 {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
-              </>
+              </Suspense>
             ) : <TeamsScreen onToast={showToast} />
           )}
         </div>
       </main>
 
-      {toast && (
-        <Toast key={toast.key} message={toast.msg} type={toast.type} onDone={() => setToast(null)} />
-      )}
+      {toastQueue.map((t, i) => i === 0 && (
+        <Toast key={t.id} message={t.message} type={t.type} onDone={() => removeToast(t.id)} />
+      ))}
     </div>
   );
 }

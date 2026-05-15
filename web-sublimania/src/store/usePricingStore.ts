@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { supabase } from '../utils/supabase';
 import { useAuthStore } from './useAuthStore';
+import { useToastStore } from './useToastStore';
 import { defaultBasePrices } from '../pricing/data/basePrices';
 import { defaultPricingConfig } from '../pricing/data/config';
 import { defaultFabrics } from '../pricing/data/fabrics';
@@ -24,6 +25,12 @@ import type {
 } from '../pricing/types';
 
 // ── Helpers ──────────────────────────────────────────────────
+
+function errToast(label: string, err: unknown) {
+  console.error(label, err);
+  const msg = (err as { message?: string })?.message ?? String(err);
+  useToastStore.getState().push(`Error al guardar: ${msg}`, 'error');
+}
 
 function getOrgId(): string {
   const orgId = useAuthStore.getState().session?.user.orgId;
@@ -83,7 +90,7 @@ function scheduleConfigSave(
       ref_molde_id_pant:   refMoldeIdPant,
       updated_at: new Date().toISOString(),
     }).then(({ error }) => {
-      if (error) console.error('pricing_config.save:', error);
+      if (error) errToast('pricing_config.save:', error);
     });
   }, 600);
 }
@@ -396,7 +403,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       .update({ [field]: safe })
       .eq('org_id', orgId).eq('service_mode', 'parcial')
       .eq('segment', segment).eq('gender', gender).eq('size', size)
-      .then(({ error }) => { if (error) console.error('base_prices.update:', error); });
+      .then(({ error }) => { if (error) errToast('base_prices.update:', error); });
   },
 
   updateBasePriceCompleto: (segment, gender, size, field, value) => {
@@ -410,7 +417,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       .update({ [field]: safe })
       .eq('org_id', orgId).eq('service_mode', 'completo')
       .eq('segment', segment).eq('gender', gender).eq('size', size)
-      .then(({ error }) => { if (error) console.error('base_prices_completo.update:', error); });
+      .then(({ error }) => { if (error) errToast('base_prices_completo.update:', error); });
   },
 
   // ── Supplies ──────────────────────────────────────────────────
@@ -426,7 +433,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.unit             !== undefined) dbPatch.unit             = patch.unit;
     if (patch.applyInkFactor   !== undefined) dbPatch.apply_ink_factor = patch.applyInkFactor;
     supabase.from('pricing_supplies').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('supplies.update:', error); set({ supplies: prev }); } });
+      .then(({ error }) => { if (error) { errToast('supplies.update:', error); set({ supplies: prev }); } });
   },
   addSupply: () => {
     const orgId = getOrgId();
@@ -435,14 +442,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: Supply = { id, name: 'Nuevo insumo', totalCost: 0, quantity: 1, unit: 'm', applyInkFactor: false };
     set(s => ({ supplies: [...s.supplies, item] }));
     supabase.from('pricing_supplies').insert({ id, org_id: orgId, name: item.name, total_cost: 0, quantity: 1, unit: 'm', apply_ink_factor: false, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('supplies.add:', error); set(s => ({ supplies: s.supplies.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('supplies.add:', error); set(s => ({ supplies: s.supplies.filter(x => x.id !== id) })); } });
   },
   removeSupply: (id) => {
     const orgId = getOrgId();
     const prev = get().supplies;
     set(s => ({ supplies: s.supplies.filter(x => x.id !== id) }));
     supabase.from('pricing_supplies').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('supplies.remove:', error); set({ supplies: prev }); } });
+      .then(({ error }) => { if (error) { errToast('supplies.remove:', error); set({ supplies: prev }); } });
   },
 
   // ── Machines ──────────────────────────────────────────────────
@@ -456,7 +463,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.cost        !== undefined) dbPatch.cost        = patch.cost;
     if (patch.lifeMeters  !== undefined) dbPatch.life_meters = patch.lifeMeters;
     supabase.from('pricing_machines').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('machines.update:', error); set({ machines: prev }); } });
+      .then(({ error }) => { if (error) { errToast('machines.update:', error); set({ machines: prev }); } });
   },
   addMachine: () => {
     const orgId = getOrgId();
@@ -465,14 +472,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: MachineCost = { id, name: 'Nuevo equipo', cost: 0, lifeMeters: 1000 };
     set(s => ({ machines: [...s.machines, item] }));
     supabase.from('pricing_machines').insert({ id, org_id: orgId, name: item.name, cost: 0, life_meters: 1000, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('machines.add:', error); set(s => ({ machines: s.machines.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('machines.add:', error); set(s => ({ machines: s.machines.filter(x => x.id !== id) })); } });
   },
   removeMachine: (id) => {
     const orgId = getOrgId();
     const prev = get().machines;
     set(s => ({ machines: s.machines.filter(x => x.id !== id) }));
     supabase.from('pricing_machines').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('machines.remove:', error); set({ machines: prev }); } });
+      .then(({ error }) => { if (error) { errToast('machines.remove:', error); set({ machines: prev }); } });
   },
 
   // ── Operations ────────────────────────────────────────────────
@@ -485,7 +492,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.name         !== undefined) dbPatch.name         = patch.name;
     if (patch.monthlyCost  !== undefined) dbPatch.monthly_cost = patch.monthlyCost;
     supabase.from('pricing_operations').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('operations.update:', error); set({ operations: prev }); } });
+      .then(({ error }) => { if (error) { errToast('operations.update:', error); set({ operations: prev }); } });
   },
   addOperation: () => {
     const orgId = getOrgId();
@@ -494,14 +501,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: OperationCost = { id, name: 'Nuevo costo', monthlyCost: 0 };
     set(s => ({ operations: [...s.operations, item] }));
     supabase.from('pricing_operations').insert({ id, org_id: orgId, name: item.name, monthly_cost: 0, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('operations.add:', error); set(s => ({ operations: s.operations.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('operations.add:', error); set(s => ({ operations: s.operations.filter(x => x.id !== id) })); } });
   },
   removeOperation: (id) => {
     const orgId = getOrgId();
     const prev = get().operations;
     set(s => ({ operations: s.operations.filter(x => x.id !== id) }));
     supabase.from('pricing_operations').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('operations.remove:', error); set({ operations: prev }); } });
+      .then(({ error }) => { if (error) { errToast('operations.remove:', error); set({ operations: prev }); } });
   },
 
   // ── Volume tiers ──────────────────────────────────────────────
@@ -518,7 +525,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.to       !== undefined) dbPatch.tier_to   = patch.to;
     if (patch.discount !== undefined) dbPatch.discount  = patch.discount;
     supabase.from('pricing_volume_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('volume_tiers.update:', error); set({ volumeTiersByProduct: prev }); } });
+      .then(({ error }) => { if (error) { errToast('volume_tiers.update:', error); set({ volumeTiersByProduct: prev }); } });
   },
   addVolumeTier: (productId) => {
     const orgId = getOrgId();
@@ -533,7 +540,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     supabase.from('pricing_volume_tiers').insert({ id, org_id: orgId, product_id: productId, tier_from: item.from, tier_to: null, discount: 0, sort_order: sortOrder })
       .then(({ error }) => {
         if (error) {
-          console.error('volume_tiers.add:', error);
+          errToast('volume_tiers.add:', error);
           set(s => ({ volumeTiersByProduct: { ...s.volumeTiersByProduct, [productId]: (s.volumeTiersByProduct[productId] ?? []).filter(t => t.id !== id) } }));
         }
       });
@@ -545,7 +552,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       volumeTiersByProduct: { ...s.volumeTiersByProduct, [productId]: (s.volumeTiersByProduct[productId] ?? []).filter(t => t.id !== id) },
     }));
     supabase.from('pricing_volume_tiers').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('volume_tiers.remove:', error); set({ volumeTiersByProduct: prev }); } });
+      .then(({ error }) => { if (error) { errToast('volume_tiers.remove:', error); set({ volumeTiersByProduct: prev }); } });
   },
 
   // ── Fabrics ───────────────────────────────────────────────────
@@ -560,7 +567,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.metersPerKg   !== undefined) dbPatch.meters_per_kg  = patch.metersPerKg;
     if (patch.tubular       !== undefined) dbPatch.tubular        = patch.tubular;
     supabase.from('pricing_fabrics').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('fabrics.update:', error); set({ fabrics: prev }); } });
+      .then(({ error }) => { if (error) { errToast('fabrics.update:', error); set({ fabrics: prev }); } });
   },
   addFabric: () => {
     const orgId = getOrgId();
@@ -569,14 +576,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: FabricType = { id, name: 'Nueva tela', costPerKg: 0, metersPerKg: 1, tubular: false };
     set(s => ({ fabrics: [...s.fabrics, item] }));
     supabase.from('pricing_fabrics').insert({ id, org_id: orgId, name: item.name, cost_per_kg: 0, meters_per_kg: 1, tubular: false, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('fabrics.add:', error); set(s => ({ fabrics: s.fabrics.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('fabrics.add:', error); set(s => ({ fabrics: s.fabrics.filter(x => x.id !== id) })); } });
   },
   removeFabric: (id) => {
     const orgId = getOrgId();
     const prev = get().fabrics;
     set(s => ({ fabrics: s.fabrics.filter(x => x.id !== id) }));
     supabase.from('pricing_fabrics').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('fabrics.remove:', error); set({ fabrics: prev }); } });
+      .then(({ error }) => { if (error) { errToast('fabrics.remove:', error); set({ fabrics: prev }); } });
   },
 
   // ── Competitors ───────────────────────────────────────────────
@@ -589,7 +596,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.name   !== undefined) dbPatch.name   = patch.name;
     if (patch.prices !== undefined) dbPatch.prices = patch.prices;
     supabase.from('pricing_competitors').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('competitors.update:', error); set({ competitors: prev }); } });
+      .then(({ error }) => { if (error) { errToast('competitors.update:', error); set({ competitors: prev }); } });
   },
   addCompetitor: () => {
     const orgId = getOrgId();
@@ -598,14 +605,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: Competitor = { id, name: 'Nuevo competidor', prices: {} };
     set(s => ({ competitors: [...s.competitors, item] }));
     supabase.from('pricing_competitors').insert({ id, org_id: orgId, name: item.name, prices: {}, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('competitors.add:', error); set(s => ({ competitors: s.competitors.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('competitors.add:', error); set(s => ({ competitors: s.competitors.filter(x => x.id !== id) })); } });
   },
   removeCompetitor: (id) => {
     const orgId = getOrgId();
     const prev = get().competitors;
     set(s => ({ competitors: s.competitors.filter(x => x.id !== id) }));
     supabase.from('pricing_competitors').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('competitors.remove:', error); set({ competitors: prev }); } });
+      .then(({ error }) => { if (error) { errToast('competitors.remove:', error); set({ competitors: prev }); } });
   },
 
   // ── CM price tiers (embroidery) ───────────────────────────────
@@ -618,7 +625,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.maxCm !== undefined) dbPatch.max_cm = patch.maxCm;
     if (patch.price !== undefined) dbPatch.price  = patch.price;
     supabase.from('pricing_cm_price_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId).eq('tier_type', 'embroidery')
-      .then(({ error }) => { if (error) { console.error('cm_tiers.update:', error); set({ cmPriceTiers: prev }); } });
+      .then(({ error }) => { if (error) { errToast('cm_tiers.update:', error); set({ cmPriceTiers: prev }); } });
   },
   addCmTier: () => {
     const orgId = getOrgId();
@@ -628,14 +635,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: CmPriceTier = { id, maxCm: lastMax + 10, price: 0 };
     set(s => ({ cmPriceTiers: [...s.cmPriceTiers, item] }));
     supabase.from('pricing_cm_price_tiers').insert({ id, org_id: orgId, tier_type: 'embroidery', max_cm: item.maxCm, price: 0, sort_order: tiers.length })
-      .then(({ error }) => { if (error) { console.error('cm_tiers.add:', error); set(s => ({ cmPriceTiers: s.cmPriceTiers.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('cm_tiers.add:', error); set(s => ({ cmPriceTiers: s.cmPriceTiers.filter(x => x.id !== id) })); } });
   },
   removeCmTier: (id) => {
     const orgId = getOrgId();
     const prev = get().cmPriceTiers;
     set(s => ({ cmPriceTiers: s.cmPriceTiers.filter(x => x.id !== id) }));
     supabase.from('pricing_cm_price_tiers').delete().eq('id', id).eq('org_id', orgId).eq('tier_type', 'embroidery')
-      .then(({ error }) => { if (error) { console.error('cm_tiers.remove:', error); set({ cmPriceTiers: prev }); } });
+      .then(({ error }) => { if (error) { errToast('cm_tiers.remove:', error); set({ cmPriceTiers: prev }); } });
   },
 
   // ── Paper price tiers ─────────────────────────────────────────
@@ -648,7 +655,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.maxCm !== undefined) dbPatch.max_cm = patch.maxCm;
     if (patch.price !== undefined) dbPatch.price  = patch.price;
     supabase.from('pricing_cm_price_tiers').update(dbPatch).eq('id', id).eq('org_id', orgId).eq('tier_type', 'paper')
-      .then(({ error }) => { if (error) { console.error('paper_tiers.update:', error); set({ paperPriceTiers: prev }); } });
+      .then(({ error }) => { if (error) { errToast('paper_tiers.update:', error); set({ paperPriceTiers: prev }); } });
   },
   addPaperTier: () => {
     const orgId = getOrgId();
@@ -658,14 +665,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: CmPriceTier = { id, maxCm: lastMax + 10, price: 0 };
     set(s => ({ paperPriceTiers: [...s.paperPriceTiers, item] }));
     supabase.from('pricing_cm_price_tiers').insert({ id, org_id: orgId, tier_type: 'paper', max_cm: item.maxCm, price: 0, sort_order: tiers.length })
-      .then(({ error }) => { if (error) { console.error('paper_tiers.add:', error); set(s => ({ paperPriceTiers: s.paperPriceTiers.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('paper_tiers.add:', error); set(s => ({ paperPriceTiers: s.paperPriceTiers.filter(x => x.id !== id) })); } });
   },
   removePaperTier: (id) => {
     const orgId = getOrgId();
     const prev = get().paperPriceTiers;
     set(s => ({ paperPriceTiers: s.paperPriceTiers.filter(x => x.id !== id) }));
     supabase.from('pricing_cm_price_tiers').delete().eq('id', id).eq('org_id', orgId).eq('tier_type', 'paper')
-      .then(({ error }) => { if (error) { console.error('paper_tiers.remove:', error); set({ paperPriceTiers: prev }); } });
+      .then(({ error }) => { if (error) { errToast('paper_tiers.remove:', error); set({ paperPriceTiers: prev }); } });
   },
 
   // ── Print profiles ────────────────────────────────────────────
@@ -679,7 +686,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     if (patch.inkFactor !== undefined) dbPatch.ink_factor = patch.inkFactor;
     if (patch.enabled   !== undefined) dbPatch.enabled    = patch.enabled;
     supabase.from('pricing_print_profiles').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('print_profiles.update:', error); set({ printProfiles: prev }); } });
+      .then(({ error }) => { if (error) { errToast('print_profiles.update:', error); set({ printProfiles: prev }); } });
   },
   addPrintProfile: () => {
     const orgId = getOrgId();
@@ -688,14 +695,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const item: PrintProfile = { id, name: 'Nuevo perfil', inkFactor: 1, enabled: true };
     set(s => ({ printProfiles: [...s.printProfiles, item] }));
     supabase.from('pricing_print_profiles').insert({ id, org_id: orgId, name: item.name, ink_factor: 1, enabled: true, sort_order: sortOrder })
-      .then(({ error }) => { if (error) { console.error('print_profiles.add:', error); set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) })); } });
+      .then(({ error }) => { if (error) { errToast('print_profiles.add:', error); set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) })); } });
   },
   removePrintProfile: (id) => {
     const orgId = getOrgId();
     const prev = get().printProfiles;
     set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) }));
     supabase.from('pricing_print_profiles').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('print_profiles.remove:', error); set({ printProfiles: prev }); } });
+      .then(({ error }) => { if (error) { errToast('print_profiles.remove:', error); set({ printProfiles: prev }); } });
   },
 
   // ── Ref cliente / gender ──────────────────────────────────────
@@ -744,7 +751,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       volumeTiersByProduct: defaultVolumeTiersByProduct,
       printProfiles:        defaultPrintProfiles,
     });
-    resetToDefaults(orgId).catch(e => console.error('resetPricingData:', e));
+    resetToDefaults(orgId).catch(e => errToast('resetPricingData:', e));
   },
 
   // ── History ───────────────────────────────────────────────────
@@ -757,13 +764,13 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     };
     set(s => ({ history: [entry, ...s.history] }));
     supabase.from('pricing_quote_history').insert({ id: entry.id, org_id: orgId, created_at: entry.createdAt, data: entry })
-      .then(({ error }) => { if (error) console.error('quote_history.save:', error); });
+      .then(({ error }) => { if (error) errToast('quote_history.save:', error); });
   },
   clearHistory: () => {
     const orgId = getOrgId();
     set({ history: [] });
     supabase.from('pricing_quote_history').delete().eq('org_id', orgId)
-      .then(({ error }) => { if (error) console.error('quote_history.clear:', error); });
+      .then(({ error }) => { if (error) errToast('quote_history.clear:', error); });
   },
 
   // ── Tabla exports ─────────────────────────────────────────────
@@ -780,14 +787,14 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       cliente_id: full.clienteId, cliente_nombre: full.clienteNombre,
       segment: full.segment, profile_id: full.profileId, profile_name: full.profileName,
       data: full,
-    }).then(({ error }) => { if (error) console.error('tabla_exports.save:', error); });
+    }).then(({ error }) => { if (error) errToast('tabla_exports.save:', error); });
   },
   removeTablaExport: (id) => {
     const orgId = getOrgId();
     const prev = get().tablaExports;
     set(s => ({ tablaExports: s.tablaExports.filter(e => e.id !== id) }));
     supabase.from('pricing_tabla_exports').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('tabla_exports.remove:', error); set({ tablaExports: prev }); } });
+      .then(({ error }) => { if (error) { errToast('tabla_exports.remove:', error); set({ tablaExports: prev }); } });
   },
 
   // ── Cotizaciones ──────────────────────────────────────────────
@@ -800,13 +807,13 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
       service_mode: entry.serviceMode, total_units: entry.totalUnits,
       total_price: entry.totalPrice, total_profit: entry.totalProfit,
       overall_margin: entry.overallMargin, data: entry,
-    }).then(({ error }) => { if (error) console.error('cotizaciones.save:', error); });
+    }).then(({ error }) => { if (error) errToast('cotizaciones.save:', error); });
   },
   removeCotizacion: (id) => {
     const orgId = getOrgId();
     const prev = get().cotizaciones;
     set(s => ({ cotizaciones: s.cotizaciones.filter(c => c.id !== id) }));
     supabase.from('pricing_cotizaciones').delete().eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('cotizaciones.remove:', error); set({ cotizaciones: prev }); } });
+      .then(({ error }) => { if (error) { errToast('cotizaciones.remove:', error); set({ cotizaciones: prev }); } });
   },
 }));

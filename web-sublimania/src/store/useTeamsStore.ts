@@ -116,7 +116,7 @@ function buildTeams(
       tallas,
       tallaRules,
       overrides,
-      globalConfig:  { EQUIPO: t.nombre, NOTAS: t.notas ?? '' },
+      globalConfig:  { EQUIPO: t.nombre, NOTAS: t.notas ?? '', clienteIdPant: '', moldeIdPant: '' },
       exportHistory: {},
       portalStatus:  (t.portal_status ?? 'none') as TeamEntry['portalStatus'],
       createdBy:     t.created_by,

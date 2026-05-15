@@ -69,13 +69,15 @@ export function CotizadorScreen({ onToast }: Props) {
   const lineQuotes = useMemo<(QuoteResult | null)[]>(() =>
     orderLines.map(line => {
       const { size, gender } = parseTalla(line.talla);
+      const pantDims = refClienteIdPant && refGenderPant && activeMoldeIdPant
+        ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
+        : undefined;
       const tallaDims = line.productId === 'pantaloneta'
-        ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
-            ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
-            : undefined)
+        ? pantDims
         : (refClienteId && refGender
             ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
             : undefined);
+      const tallaDimsPant = line.productId === 'equipo' ? pantDims : undefined;
       const input: QuoteInput = {
         customerSegment, gender, productId: line.productId, size,
         quantity: Math.max(1, line.quantity), profileId,
@@ -85,7 +87,7 @@ export function CotizadorScreen({ onToast }: Props) {
         linearCm: line.linearCm,
         widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
-        savingsTransferRate, config, tallaDims,
+        savingsTransferRate, config, tallaDims, tallaDimsPant,
         serviceMode, fabrics,
         selectedFabricIdCamiseta: fabricCamisetaId,
         selectedFabricIdPantaloneta: fabricPantalonetaId,
@@ -115,13 +117,15 @@ export function CotizadorScreen({ onToast }: Props) {
       let tp = 0, tpr = 0;
       for (const line of orderLines) {
         const { size, gender } = parseTalla(line.talla);
+        const pantDims2 = refClienteIdPant && refGenderPant && activeMoldeIdPant
+          ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
+          : undefined;
         const tallaDims = line.productId === 'pantaloneta'
-          ? (refClienteIdPant && refGenderPant && activeMoldeIdPant
-              ? tallasPorCliente[refClienteIdPant]?.[activeMoldeIdPant]?.[line.talla]
-              : undefined)
+          ? pantDims2
           : (refClienteId && refGender
               ? tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID]?.[line.talla]
               : undefined);
+        const tallaDimsPant = line.productId === 'equipo' ? pantDims2 : undefined;
         const input: QuoteInput = {
           customerSegment, gender, productId: line.productId, size,
           quantity: Math.max(1, line.quantity), profileId: profile.id,
@@ -131,7 +135,7 @@ export function CotizadorScreen({ onToast }: Props) {
           linearCm: line.linearCm,
           widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
-          savingsTransferRate, config, tallaDims,
+          savingsTransferRate, config, tallaDims, tallaDimsPant,
           serviceMode, fabrics,
           selectedFabricIdCamiseta: fabricCamisetaId,
           selectedFabricIdPantaloneta: fabricPantalonetaId,

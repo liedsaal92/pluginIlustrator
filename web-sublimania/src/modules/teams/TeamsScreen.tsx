@@ -51,7 +51,7 @@ function lastExportInfo(entry: TeamEntry): { relative: string; full: string; tal
 const EMPTY_ENTRY: TeamEntry = {
   id: '', nombre: '', createdAt: '', updatedAt: '',
   players: [], tallas: [], tallaRules: {}, overrides: {},
-  globalConfig: { EQUIPO: '', NOTAS: '' }, exportHistory: {},
+  globalConfig: { EQUIPO: '', NOTAS: '', clienteIdPant: '', moldeIdPant: '' }, exportHistory: {},
   portalStatus: 'none', createdBy: null, portalToken: null, portalExpiry: null,
 };
 

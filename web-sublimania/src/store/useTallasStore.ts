@@ -7,9 +7,16 @@ import { create } from 'zustand';
 import { supabase } from '../utils/supabase';
 import { useAuthStore } from './useAuthStore';
 import { useTallasDefaultStore } from './useTallasDefaultStore';
+import { useToastStore } from './useToastStore';
 import type { TallaDims } from '../types';
 export { MOLDE_DEFAULT_ID } from './useMoldesStore';
 export { TALLAS_DEFAULT, TALLAS_BASE_EMPTY } from './tallasConstants';
+
+function errToast(label: string, err: unknown) {
+  console.error(label, err);
+  const msg = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+  useToastStore.getState().push(`Error al guardar tallas: ${msg}`, 'error');
+}
 
 const EMPTY_DIMS: TallaDims = { ALTO: '', ANCHO: '', MANGA_ANCHO: '', MANGA_ALTO: '' };
 
@@ -65,7 +72,7 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
       .select('cliente_id, molde_id, talla, alto, ancho, manga_ancho, manga_alto')
       .eq('org_id', orgId);
     set({ loading: false });
-    if (error) { console.error('tallas.init:', error); return; }
+    if (error) { errToast('tallas.init:', error); return; }
 
     const result: TallasPorCliente = {};
     for (const row of data ?? []) {
@@ -115,7 +122,7 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
       manga_alto:  updated.MANGA_ALTO,
     }, { onConflict: 'org_id,cliente_id,molde_id,talla' })
       .then(({ error }) => {
-        if (error) console.error('tallas.setDim:', error);
+        if (error) errToast('tallas.setDim:', error);
       });
     void DIM_COL; // usado por el tipo, evita lint warning
   },
@@ -138,7 +145,7 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
       org_id: orgId, cliente_id: clienteId, molde_id: moldeId, talla: t,
       alto: '', ancho: '', manga_ancho: '', manga_alto: '',
     }).then(({ error }) => {
-      if (error) console.error('tallas.addTalla:', error);
+      if (error) errToast('tallas.addTalla:', error);
     });
   },
 
@@ -157,7 +164,7 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
       .eq('talla', talla)
       .then(({ error }) => {
         if (error) {
-          console.error('tallas.removeTalla:', error);
+          errToast('tallas.removeTalla:', error);
           set({ tallasPorCliente: prev });
         }
       });
@@ -183,10 +190,10 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
       .eq('org_id', orgId)
       .eq('cliente_id', clienteId)
       .eq('molde_id', moldeId);
-    if (delErr) { console.error('tallas.initDefault.delete:', delErr); set({ tallasPorCliente: prev }); return; }
+    if (delErr) { errToast('tallas.initDefault.delete:', delErr); set({ tallasPorCliente: prev }); return; }
     supabase.from('tallas_config')
       .insert(rows)
-      .then(({ error }) => { if (error) { console.error('tallas.initDefault.insert:', error); set({ tallasPorCliente: prev }); } });
+      .then(({ error }) => { if (error) { errToast('tallas.initDefault.insert:', error); set({ tallasPorCliente: prev }); } });
   },
 
   removeCliente: (clienteId) => {
@@ -196,7 +203,7 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
     set({ tallasPorCliente: next });
     supabase.from('tallas_config')
       .delete().eq('org_id', orgId).eq('cliente_id', clienteId)
-      .then(({ error }) => { if (error) console.error('tallas.removeCliente:', error); });
+      .then(({ error }) => { if (error) errToast('tallas.removeCliente:', error); });
   },
 
   removeMoldeData: (moldeId) => {
@@ -210,6 +217,6 @@ export const useTallasStore = create<TallasState>()((set, get) => ({
     set({ tallasPorCliente: next });
     supabase.from('tallas_config')
       .delete().eq('org_id', orgId).eq('molde_id', moldeId)
-      .then(({ error }) => { if (error) console.error('tallas.removeMolde:', error); });
+      .then(({ error }) => { if (error) errToast('tallas.removeMolde:', error); });
   },
 }));

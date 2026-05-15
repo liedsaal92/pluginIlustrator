@@ -6,8 +6,15 @@
 import { create } from 'zustand';
 import { supabase } from '../utils/supabase';
 import { useAuthStore } from './useAuthStore';
+import { useToastStore } from './useToastStore';
 import type { TipoCliente } from '../types';
 import type { CustomerSegment } from '../pricing/types';
+
+function errToast(label: string, err: unknown) {
+  const msg = err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+  console.error(label, err);
+  useToastStore.getState().push(`${label}: ${msg}`, 'error');
+}
 
 const SEED: TipoCliente[] = [
   { id: 'tipo_normal', nombre: 'NORMAL', segmento: 'normal' },
@@ -80,7 +87,7 @@ export const useTiposClienteStore = create<TiposClienteStore>((set, get) => ({
     set(s => ({ tipos: [...s.tipos, tipo] }));
     supabase.from('pricing_tipos_cliente').insert({ id, org_id: orgId, nombre: tipo.nombre, segmento, sort_order: sortOrder })
       .then(({ error }) => {
-        if (error) { console.error('tipos_cliente.add:', error); set(s => ({ tipos: s.tipos.filter(t => t.id !== id) })); }
+        if (error) { errToast('tipos_cliente.add:', error); set(s => ({ tipos: s.tipos.filter(t => t.id !== id) })); }
       });
   },
 
@@ -95,7 +102,7 @@ export const useTiposClienteStore = create<TiposClienteStore>((set, get) => ({
     if (patch.nombre   !== undefined) dbPatch.nombre   = patch.nombre.toUpperCase();
     if (patch.segmento !== undefined) dbPatch.segmento = patch.segmento;
     supabase.from('pricing_tipos_cliente').update(dbPatch).eq('id', id).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('tipos_cliente.update:', error); set({ tipos: prev }); } });
+      .then(({ error }) => { if (error) { errToast('tipos_cliente.update:', error); set({ tipos: prev }); } });
   },
 
   removeTipo: (id) => {
@@ -111,7 +118,7 @@ export const useTiposClienteStore = create<TiposClienteStore>((set, get) => ({
       .then(() =>
         supabase.from('pricing_tipos_cliente').delete().eq('id', id).eq('org_id', orgId)
       ).then(({ error }) => {
-        if (error) { console.error('tipos_cliente.remove:', error); set({ tipos: prevTipos, clienteTipos: prevClienteTipos }); }
+        if (error) { errToast('tipos_cliente.remove:', error); set({ tipos: prevTipos, clienteTipos: prevClienteTipos }); }
       });
   },
 
@@ -120,7 +127,7 @@ export const useTiposClienteStore = create<TiposClienteStore>((set, get) => ({
     const prev = get().clienteTipos;
     set(s => ({ clienteTipos: { ...s.clienteTipos, [clienteId]: tipoId } }));
     supabase.from('pricing_cliente_tipos').upsert({ cliente_id: clienteId, org_id: orgId, tipo_id: tipoId })
-      .then(({ error }) => { if (error) { console.error('cliente_tipos.assign:', error); set({ clienteTipos: prev }); } });
+      .then(({ error }) => { if (error) { errToast('cliente_tipos.assign:', error); set({ clienteTipos: prev }); } });
   },
 
   unassignTipo: (clienteId) => {
@@ -132,7 +139,7 @@ export const useTiposClienteStore = create<TiposClienteStore>((set, get) => ({
       return { clienteTipos };
     });
     supabase.from('pricing_cliente_tipos').delete().eq('cliente_id', clienteId).eq('org_id', orgId)
-      .then(({ error }) => { if (error) { console.error('cliente_tipos.unassign:', error); set({ clienteTipos: prev }); } });
+      .then(({ error }) => { if (error) { errToast('cliente_tipos.unassign:', error); set({ clienteTipos: prev }); } });
   },
 
   getSegmentoForCliente: (clienteId) => {
