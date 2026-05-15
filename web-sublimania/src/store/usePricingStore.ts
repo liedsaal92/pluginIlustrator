@@ -70,6 +70,7 @@ function migratePrintProfiles(raw: PrintProfile[]): PrintProfile[] {
 
 // Debounce para config (cambia en cada keystroke)
 let _configDebounce: ReturnType<typeof setTimeout> | null = null;
+let _pendingFlush: (() => void) | null = null;
 
 function scheduleConfigSave(
   orgId: string,
@@ -81,7 +82,8 @@ function scheduleConfigSave(
   refMoldeIdPant: string | null,
 ) {
   if (_configDebounce) clearTimeout(_configDebounce);
-  _configDebounce = setTimeout(() => {
+
+  _pendingFlush = () => {
     supabase.from('pricing_config').upsert({
       org_id: orgId, config,
       ref_cliente_id: refClienteId, ref_gender: refGender,
@@ -92,8 +94,21 @@ function scheduleConfigSave(
     }).then(({ error }) => {
       if (error) errToast('pricing_config.save:', error);
     });
+  };
+
+  _configDebounce = setTimeout(() => {
+    _pendingFlush?.();
+    _pendingFlush = null;
+    _configDebounce = null;
   }, 600);
 }
+
+window.addEventListener('beforeunload', () => {
+  if (_configDebounce && _pendingFlush) {
+    clearTimeout(_configDebounce);
+    _pendingFlush();
+  }
+});
 
 // Seed de datos default para orgs nuevas
 async function seedDefaults(orgId: string): Promise<void> {

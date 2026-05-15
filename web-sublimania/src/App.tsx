@@ -24,6 +24,7 @@ import { ExportScreen } from './modules/export/ExportScreen';
 import { SettingsScreen } from './modules/settings/SettingsScreen';
 import { PreviewScreen } from './modules/preview/PreviewScreen';
 import { ClienteScreen } from './modules/cliente/ClienteScreen';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 const CotizadorScreen    = lazy(() => import('./modules/pricing/CotizadorScreen').then(m => ({ default: m.CotizadorScreen })));
 const CostosBaseScreen   = lazy(() => import('./modules/pricing/CostosBaseScreen').then(m => ({ default: m.CostosBaseScreen })));
 const TablasScreen       = lazy(() => import('./modules/pricing/TablasScreen').then(m => ({ default: m.TablasScreen })));
@@ -90,7 +91,7 @@ export default function App() {
     useMoldesStore.getState().init();
     useTallasDefaultStore.getState().init();
     useTallasStore.getState().init();
-    usePricingStore.getState().init();
+    usePricingStore.getState().init().catch(err => console.error('[pricing init]', err));
     useTiposClienteStore.getState().init();
     useTeamsStore.getState().init().then(() => {
       const { teams, activeTeamId } = useTeamsStore.getState();
@@ -165,14 +166,16 @@ export default function App() {
           {screen === 'settings'  && <SettingsScreen  onToast={showToast} />}
           {screen.startsWith('pricing_') && (
             hasPermission(session.user.role, 'billing:manage') ? (
-              <Suspense fallback={<div className="screen-loading">Cargando...</div>}>
-                {screen === 'pricing_cotizador'     && <CotizadorScreen     onToast={showToast} />}
-                {screen === 'pricing_costos'        && <CostosBaseScreen    onToast={showToast} />}
-                {screen === 'pricing_tablas'        && <TablasScreen        onToast={showToast} />}
-                {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
-                {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
-                {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
-              </Suspense>
+              <ErrorBoundary>
+                <Suspense fallback={<div className="screen-loading">Cargando...</div>}>
+                  {screen === 'pricing_cotizador'     && <CotizadorScreen     onToast={showToast} />}
+                  {screen === 'pricing_costos'        && <CostosBaseScreen    onToast={showToast} />}
+                  {screen === 'pricing_tablas'        && <TablasScreen        onToast={showToast} />}
+                  {screen === 'pricing_mercado'       && <MercadoScreen       onToast={showToast} />}
+                  {screen === 'pricing_tabla_cliente' && <TablaClienteScreen  onToast={showToast} />}
+                  {screen === 'pricing_dashboard'     && <DashboardScreen     onToast={showToast} />}
+                </Suspense>
+              </ErrorBoundary>
             ) : <TeamsScreen onToast={showToast} />
           )}
         </div>

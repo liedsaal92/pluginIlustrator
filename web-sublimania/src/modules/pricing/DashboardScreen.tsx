@@ -390,21 +390,21 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                   className={`db-row${selectedSize === row.size ? ' db-row-selected' : ''}`}
                   onClick={() => setSelectedSize(selectedSize === row.size ? null : row.size)}
                 >
-                  <td><strong>{row.label}</strong></td>
-                  <td>{money(row.quote.basePrice)}</td>
-                  <td>{money(row.quote.cost.unitCost)}</td>
-                  <td>{money(row.quote.finalUnitPrice)}</td>
-                  <td>{money(row.quote.unitProfit)}</td>
-                  <td className={marginCls(row.quote.margin, config.minMargin)}>
+                  <td data-label="Talla"><strong>{row.label}</strong></td>
+                  <td data-label="Base">{money(row.quote.basePrice)}</td>
+                  <td data-label="Costo">{money(row.quote.cost.unitCost)}</td>
+                  <td data-label="Final">{money(row.quote.finalUnitPrice)}</td>
+                  <td data-label="Ganancia">{money(row.quote.unitProfit)}</td>
+                  <td data-label="Margen" className={marginCls(row.quote.margin, config.minMargin)}>
                     {pct(row.quote.margin)}
                   </td>
-                  <td>{money(row.quote.retainedSavings)}</td>
-                  <td>
+                  <td data-label="Ahorro">{money(row.quote.retainedSavings)}</td>
+                  <td data-label="⚠">
                     {row.quote.alerts.length > 0 && (
                       <span className="db-alert-icon" title={row.quote.alerts.join(' · ')}>⚠</span>
                     )}
                   </td>
-                  <td className={row.suggestedBase !== null ? 'db-suggested' : ''}>
+                  <td data-label="Sug." className={row.suggestedBase !== null ? 'db-suggested' : ''}>
                     {row.suggestedBase !== null
                       ? <button className="db-suggested-btn" onClick={() => {
                           setEditingBase({ size: row.size, value: row.suggestedBase! });

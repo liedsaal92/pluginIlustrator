@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Spinner } from '../../components/ui/Spinner';
 import { products } from '../../pricing/data/products';
 import { calculateQuote } from '../../pricing/engines/pricingEngine';
 import { usePricingStore } from '../../store/usePricingStore';
@@ -37,6 +38,8 @@ export function CotizadorScreen({ onToast }: Props) {
   const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service' | 'paper'>('sublimation');
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
+  const [saving, setSaving]     = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const { config, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, printProfiles, fabrics, competitors, saveQuote, cotizaciones, saveCotizacion, removeCotizacion, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = usePricingStore();
   const { moldes } = useMoldesStore();
@@ -202,17 +205,21 @@ export function CotizadorScreen({ onToast }: Props) {
   function handleGuardarCotizacion() {
     const entry = buildCotizacionEntry();
     if (!entry) return;
+    setSaving(true);
     saveCotizacion(entry);
     lineQuotes.forEach(q => { if (q) saveQuote(q); });
     onToast('Cotización guardada', 'ok');
+    setTimeout(() => setSaving(false), 400);
   }
 
   function handleExportPdf() {
     const entry = buildCotizacionEntry();
     if (!entry) return;
+    setExporting(true);
     saveCotizacion(entry);
     lineQuotes.forEach(q => { if (q) saveQuote(q); });
     openCotizacionPrintWindow(entry);
+    setTimeout(() => setExporting(false), 400);
   }
 
   function handleCargarCotizacion(entry: CotizacionHistoryEntry) {
@@ -250,8 +257,12 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-subtitle">// Arma un pedido y obtén precios con márgenes</div>
         </div>
         <div className="pricing-header-actions">
-          <button className="btn btn-ghost btn-sm" onClick={handleGuardarCotizacion}>GUARDAR COTIZACIÓN</button>
-          <button className="btn btn-primary btn-sm" onClick={handleExportPdf}>IMPRIMIR COTIZACIÓN</button>
+          <button className="btn btn-ghost btn-sm" onClick={handleGuardarCotizacion} disabled={saving}>
+            {saving ? <Spinner /> : null} GUARDAR COTIZACIÓN
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={handleExportPdf} disabled={exporting}>
+            {exporting ? <Spinner /> : null} IMPRIMIR COTIZACIÓN
+          </button>
         </div>
       </div>
 
@@ -372,13 +383,13 @@ export function CotizadorScreen({ onToast }: Props) {
                   const profit = q?.unitProfit ?? null;
                   return (
                   <tr key={line.id}>
-                    <td>
+                    <td data-label="Producto">
                       <select className="pricing-order-input pricing-order-select" value={line.productId}
                         onChange={e => updateLine(line.id, 'productId', e.target.value as ProductId)}>
                         {products.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
                       </select>
                     </td>
-                    <td>
+                    <td data-label="Talla">
                       {line.productId === 'por_cm' ? (
                         serviceMode === 'sublimation' ? (
                           <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
@@ -412,17 +423,17 @@ export function CotizadorScreen({ onToast }: Props) {
                         </select>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Cant.">
                       <input className="pricing-order-input" type="number" min="1" value={line.quantity}
                         onChange={e => updateLine(line.id, 'quantity', Number(e.target.value))} />
                     </td>
-                    <td>
+                    <td data-label="Precio ($)">
                       <input className="pricing-order-input" type="number" min="0.01" step="0.01"
                         placeholder={q ? q.basePrice.toFixed(2) : '—'}
                         value={line.manualPrice}
                         onChange={e => updateLine(line.id, 'manualPrice', e.target.value)} />
                     </td>
-                    <td className="pricing-order-profit-cell" style={{
+                    <td data-label="Ganancia/u" className="pricing-order-profit-cell" style={{
                       color: profit === null ? undefined : profit >= 0 ? 'var(--green, #4caf50)' : 'var(--red, #f44336)',
                       fontVariantNumeric: 'tabular-nums',
                       fontSize: '0.78rem',
@@ -430,7 +441,7 @@ export function CotizadorScreen({ onToast }: Props) {
                     }}>
                       {profit !== null ? fmt(profit) : '—'}
                     </td>
-                    <td>
+                    <td data-label="">
                       <button className="pricing-order-remove" onClick={() => removeLine(line.id)}>✕</button>
                     </td>
                   </tr>
@@ -532,20 +543,20 @@ export function CotizadorScreen({ onToast }: Props) {
                   const mrkDelta = avg && q ? (q.finalUnitPrice - avg) / avg : null;
                   return (
                     <tr key={orderLines[i].id} className={q === null ? 'pricing-breakdown-error' : ''}>
-                      <td>{i + 1}</td>
-                      <td>{orderLines[i].productId.toUpperCase()}</td>
-                      <td>{orderLines[i].productId === 'por_cm'
+                      <td data-label="#">{i + 1}</td>
+                      <td data-label="Prod.">{orderLines[i].productId.toUpperCase()}</td>
+                      <td data-label="T.">{orderLines[i].productId === 'por_cm'
                         ? (serviceMode === 'sublimation'
                           ? `${orderLines[i].linearCm}×${orderLines[i].widthCm}cm`
                           : `${orderLines[i].linearCm}cm`)
                         : orderLines[i].talla}
                       </td>
-                      <td>{orderLines[i].quantity}</td>
-                      <td>{q ? fmt(q.cost.unitCost) : '—'}</td>
-                      <td className={q && q.volumeDiscount > 0 ? 'pricing-discount-cell' : ''}>
+                      <td data-label="Cant.">{orderLines[i].quantity}</td>
+                      <td data-label="Costo/u">{q ? fmt(q.cost.unitCost) : '—'}</td>
+                      <td data-label="Desc." className={q && q.volumeDiscount > 0 ? 'pricing-discount-cell' : ''}>
                         {q && q.volumeDiscount > 0 ? `−${Math.round(q.volumeDiscount * 100)}%` : '—'}
                       </td>
-                      <td>
+                      <td data-label="P/u">
                         {q ? (
                           <>
                             {fmt(q.finalUnitPrice)}
@@ -557,10 +568,10 @@ export function CotizadorScreen({ onToast }: Props) {
                           </>
                         ) : '—'}
                       </td>
-                      <td>{q ? fmt(q.totalPrice) : 'ERR'}</td>
-                      <td>{q ? pct.format(q.margin) : '—'}</td>
+                      <td data-label="Subtotal">{q ? fmt(q.totalPrice) : 'ERR'}</td>
+                      <td data-label="Mrg">{q ? pct.format(q.margin) : '—'}</td>
                       {Object.keys(mktAvg).length > 0 && (
-                        <td className={mrkDelta !== null ? (mrkDelta > 0.05 ? 'mkt-diff-above' : mrkDelta < -0.05 ? 'mkt-diff-below' : '') : ''}>
+                        <td data-label="Mrk" className={mrkDelta !== null ? (mrkDelta > 0.05 ? 'mkt-diff-above' : mrkDelta < -0.05 ? 'mkt-diff-below' : '') : ''}>
                           {mrkDelta !== null ? `${mrkDelta >= 0 ? '+' : ''}${Math.round(mrkDelta * 100)}%` : '—'}
                         </td>
                       )}
@@ -581,9 +592,29 @@ export function CotizadorScreen({ onToast }: Props) {
                 </tr>
               </tfoot>
             </table>
+            <div className="pricing-breakdown-summary">
+              <div className="pbs-row">
+                <span className="pbs-label">CANT. TOTAL</span>
+                <span className="pbs-value">{totalUnits}</span>
+              </div>
+              {totalVolumeDiscount > 0 && (
+                <div className="pbs-row pbs-discount">
+                  <span className="pbs-label">DESC. VOLUMEN</span>
+                  <span className="pbs-value">−{fmt(totalVolumeDiscount)}</span>
+                </div>
+              )}
+              <div className="pbs-row pbs-total">
+                <span className="pbs-label">TOTAL</span>
+                <span className="pbs-value">{fmt(totalPrice)}</span>
+              </div>
+              <div className="pbs-row">
+                <span className="pbs-label">MARGEN</span>
+                <span className="pbs-value">{pct.format(overallMargin)}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="pricing-alerts">
+          <div className="pricing-alerts" aria-live="polite">
             {allAlerts.length === 0 ? (
               <div className="pricing-alert pricing-alert-ok">SIN ALERTAS FINANCIERAS</div>
             ) : allAlerts.map((alert, i) => (

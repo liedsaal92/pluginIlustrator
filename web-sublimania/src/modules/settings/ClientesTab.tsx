@@ -158,13 +158,14 @@ export function ClientesTab({ onToast }: Props) {
                       <button
                         className="btn-del-talla"
                         title="Editar"
+                        aria-label={`Editar ${c.nombre}`}
                         onClick={() => { setEditId(c.id); setEditForm({ nombre: c.nombre, casaCosturera: c.casaCosturera }); }}
                       >
                         ✎
                       </button>
                       <ConfirmButton
                         className="btn-del-talla btn-del-danger"
-                        title="Eliminar"
+                        title={`Eliminar ${c.nombre}`}
                         onConfirm={() => handleDelete(c.id, c.nombre)}
                       />
                     </td>

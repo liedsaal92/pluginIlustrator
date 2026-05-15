@@ -93,6 +93,7 @@ export function MoldesTab({ onToast }: Props) {
                 <div className="molde-actions">
                   <button
                     className="btn btn-ghost btn-sm"
+                    aria-label={`Renombrar ${m.nombre}`}
                     onClick={() => { setEditingId(m.id); setEditingNombre(m.nombre); }}
                   >
                     ✎ RENOMBRAR
@@ -100,7 +101,7 @@ export function MoldesTab({ onToast }: Props) {
                   {moldes.length > 1 && (
                     <ConfirmButton
                       className="btn btn-ghost btn-sm btn-danger"
-                      title="Eliminar molde y todas sus tallas"
+                      title={`Eliminar ${m.nombre} y todas sus tallas`}
                       onConfirm={() => handleRemove(m.id, m.nombre)}
                     />
                   )}

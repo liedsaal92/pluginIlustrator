@@ -93,10 +93,11 @@ function getMetersForProduct(
     return { meters: (heightCm / 100) * widthRatio, camisetaMeters: 0, pantalonetaMeters: 0, source: 'real' as const, notes };
   }
 
-  const shirtMeters = tallaDims
-    ? calcShirtMetersFromDims(tallaDims, plotterWidthCm)
-    : getSizeMeasurement(size).shirtMeters;
-  const source = tallaDims ? 'real' as const : 'real' as const;
+  const dimsShirtMeters = tallaDims ? calcShirtMetersFromDims(tallaDims, plotterWidthCm) : 0;
+  const dimsValid = tallaDims && dimsShirtMeters > 0;
+  const shirtMeters = dimsValid ? dimsShirtMeters : getSizeMeasurement(size).shirtMeters;
+  if (tallaDims && !dimsValid) notes.push('Dims configuradas incompletas — usando tabla por defecto.');
+  const source = dimsValid ? 'real' as const : 'estimated' as const;
 
   if (productId === 'camiseta') {
     return { meters: shirtMeters, camisetaMeters: shirtMeters, pantalonetaMeters: 0, source, notes };
@@ -107,25 +108,26 @@ function getMetersForProduct(
 
   if (productId === 'pantaloneta') {
     if (tallaDims) {
-      // dims reales: MANGA_ANCHO/ALTO son '' → sleeveM = 0, correcto para pantaloneta
       const pMeters = calcShirtMetersFromDims(tallaDims, plotterWidthCm);
-      return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'real' as const, notes };
+      if (pMeters > 0) {
+        return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'real' as const, notes };
+      }
+      notes.push('Dims pantaloneta incompletas — usando tabla por defecto.');
     }
-    notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
+    if (!tallaDims) notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
     const pMeters = shirtMeters * ratio;
     return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'estimated' as const, notes };
   }
 
   // equipo: camiseta usa dims reales si disponible; pantaloneta usa dims pant si disponible, si no ratio
-  if (!tallaDims || !tallaDimsPant) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
-  const pMeters = tallaDimsPant
-    ? calcShirtMetersFromDims(tallaDimsPant, plotterWidthCm)
-    : shirtMeters * ratio;
+  if (!dimsValid || !tallaDimsPant) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
+  const dimsPantMeters = tallaDimsPant ? calcShirtMetersFromDims(tallaDimsPant, plotterWidthCm) : 0;
+  const pMeters = dimsPantMeters > 0 ? dimsPantMeters : shirtMeters * ratio;
   return {
     meters: shirtMeters + pMeters,
     camisetaMeters: shirtMeters,
     pantalonetaMeters: pMeters,
-    source: (tallaDims && tallaDimsPant) ? 'real' as const : 'estimated' as const,
+    source: (dimsValid && dimsPantMeters > 0) ? 'real' as const : 'estimated' as const,
     notes,
   };
 }

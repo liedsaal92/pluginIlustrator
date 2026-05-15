@@ -32,6 +32,7 @@ export function ConfirmButton({ onConfirm, className, title, stopPropagation = f
         <span className="confirm-popover__label">¿Eliminar?</span>
         <button
           className="confirm-popover__yes"
+          aria-label="Confirmar eliminación"
           onClick={e => { e.stopPropagation(); setPending(false); onConfirm(); }}
         >
           Sí
@@ -50,6 +51,7 @@ export function ConfirmButton({ onConfirm, className, title, stopPropagation = f
     <button
       className={className}
       title={title}
+      aria-label={title}
       onClick={e => { if (stopPropagation) e.stopPropagation(); setPending(true); }}
     >
       ×

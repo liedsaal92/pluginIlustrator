@@ -28,6 +28,7 @@ export function CostosBaseScreen({ onToast }: Props) {
     updateOperation, addOperation, removeOperation,
     updateVolumeTier, addVolumeTier, removeVolumeTier,
     resetPricingData,
+    loading: pricingLoading,
   } = usePricingStore();
 
   const { clientes } = useClientesStore();
@@ -149,6 +150,10 @@ export function CostosBaseScreen({ onToast }: Props) {
               </tr>
             </thead>
             <tbody>
+              {pricingLoading ? <tr><td colSpan={6}><span className="skeleton-row" /></td></tr> : null}
+              {!pricingLoading && supplies.length === 0 && (
+                <tr><td colSpan={6} className="pricing-empty-row">Sin insumos — agregá uno abajo</td></tr>
+              )}
               {supplies.map(s => (
                 <tr key={s.id}>
                   <td>
@@ -199,6 +204,10 @@ export function CostosBaseScreen({ onToast }: Props) {
               </tr>
             </thead>
             <tbody>
+              {pricingLoading ? <tr><td colSpan={5}><span className="skeleton-row" /></td></tr> : null}
+              {!pricingLoading && machines.length === 0 && (
+                <tr><td colSpan={5} className="pricing-empty-row">Sin equipos — agregá uno abajo</td></tr>
+              )}
               {machines.map(m => (
                 <tr key={m.id}>
                   <td>
@@ -244,6 +253,10 @@ export function CostosBaseScreen({ onToast }: Props) {
               </tr>
             </thead>
             <tbody>
+              {pricingLoading ? <tr><td colSpan={4}><span className="skeleton-row" /></td></tr> : null}
+              {!pricingLoading && operations.length === 0 && (
+                <tr><td colSpan={4} className="pricing-empty-row">Sin operaciones — agregá una abajo</td></tr>
+              )}
               {operations.map(o => (
                 <tr key={o.id}>
                   <td>
