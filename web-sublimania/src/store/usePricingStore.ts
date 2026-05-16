@@ -199,6 +199,7 @@ interface PricingState {
 
   init: () => Promise<void>;
   updateConfig: <K extends keyof PricingConfig>(key: K, value: PricingConfig[K]) => void;
+  flushConfig: () => void;
   updateBasePrice: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
   updateBasePriceCompleto: (segment: CustomerSegment, gender: Gender, size: number, field: BasePriceField, value: number) => void;
 
@@ -412,6 +413,11 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     const config = { ...get().config, [key]: value };
     set({ config });
     scheduleConfigSave(orgId, config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+
+  flushConfig: () => {
+    if (_configDebounce) { clearTimeout(_configDebounce); _configDebounce = null; }
+    if (_pendingFlush) { _pendingFlush(); _pendingFlush = null; }
   },
 
   // ── Base prices ───────────────────────────────────────────────

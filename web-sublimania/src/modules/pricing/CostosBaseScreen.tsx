@@ -23,7 +23,7 @@ export function CostosBaseScreen({ onToast }: Props) {
     fabrics, updateFabric, addFabric, removeFabric,
     refClienteId, refGender, setRefCliente, setRefGender,
     refClienteIdPant, refGenderPant, refMoldeIdPant, setRefClientePant, setRefGenderPant, setRefMoldePant,
-    updateConfig,
+    updateConfig, flushConfig,
     updateSupply, addSupply, removeSupply,
     updateMachine, addMachine, removeMachine,
     updateOperation, addOperation, removeOperation,
@@ -611,19 +611,22 @@ export function CostosBaseScreen({ onToast }: Props) {
             <span>COSTURA CAMISETA ($)</span>
             <input className="field-input" type="number" min="0" step="0.01"
               value={config.tailoringCamiseta ?? 0}
-              onChange={e => updateConfig('tailoringCamiseta', toNum(e.target.value))} />
+              onChange={e => updateConfig('tailoringCamiseta', toNum(e.target.value))}
+              onBlur={flushConfig} />
           </label>
           <label className="pricing-field">
             <span>COSTURA PANTALONETA ($)</span>
             <input className="field-input" type="number" min="0" step="0.01"
               value={config.tailoringPantaloneta ?? 0}
-              onChange={e => updateConfig('tailoringPantaloneta', toNum(e.target.value))} />
+              onChange={e => updateConfig('tailoringPantaloneta', toNum(e.target.value))}
+              onBlur={flushConfig} />
           </label>
           <label className="pricing-field">
             <span>POLINES / MEDIAS ($)</span>
             <input className="field-input" type="number" min="0" step="0.01"
               value={config.polinesCost ?? 0}
-              onChange={e => updateConfig('polinesCost', toNum(e.target.value))} />
+              onChange={e => updateConfig('polinesCost', toNum(e.target.value))}
+              onBlur={flushConfig} />
           </label>
           <label className="pricing-field">
             <span>TELA POR DEFECTO — CAMISETA</span>

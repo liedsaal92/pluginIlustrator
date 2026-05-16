@@ -12,5 +12,5 @@ export const sizeMeasurements: SizeMeasurement[] = [
   { size: 38, torsoHeightCm: 79.5, torsoWidthCm: 55, sleeveWidthCm: 48, sleeveHeightCm: 29.5, shirtMeters: 1.09, source: 'real' },
   { size: 40, torsoHeightCm: 82, torsoWidthCm: 58, sleeveWidthCm: 50, sleeveHeightCm: 30.5, shirtMeters: 1.125, source: 'real' },
   { size: 42, torsoHeightCm: 86.5, torsoWidthCm: 61, sleeveWidthCm: 52.5, sleeveHeightCm: 32.5, shirtMeters: 1.19, source: 'real' },
-  { size: 44, torsoHeightCm: 89.5, torsoWidthCm: 65.5, sleeveWidthCm: 54.5, sleeveHeightCm: 33.5, shirtMeters: 1.255, source: 'real' },
+  { size: 44, torsoHeightCm: 89.5, torsoWidthCm: 65.5, sleeveWidthCm: 54.5, sleeveHeightCm: 33.5, shirtMeters: 2.125, source: 'real' },
 ];
