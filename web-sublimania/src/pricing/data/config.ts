@@ -18,4 +18,9 @@ export const defaultPricingConfig: PricingConfig = {
   defaultFabricCamisetaId: null,
   defaultFabricPantalonetaId: null,
   orgNombre: 'SUBLIMANIA',
+  presses: [{ id: 'press_default', name: 'Plancha 75×105', widthCm: 75, heightCm: 105, cost: 3657, lifeBajadas: 100000, paperSheetsPerBajada: 2 }],
+  selectedPressId: 'press_default',
+  plotters: [{ id: 'plotter_default', name: 'Plotter 130cm', widthCm: 130 }],
+  selectedPlotterId: 'plotter_default',
+  perBajadaSupplyIds: ['newspaper'],
 };

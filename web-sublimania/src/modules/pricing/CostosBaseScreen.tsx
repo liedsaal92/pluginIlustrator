@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { getCostPerMeter, calcShirtMetersFromDims } from '../../pricing/engines/costEngine';
+import { getCostPerMeter, calcShirtMetersFromDims, calcBajadasDePlancha, calcBajadasFromSizeMeasurement } from '../../pricing/engines/costEngine';
 import { usePricingStore } from '../../store/usePricingStore';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { useMoldesStore } from '../../store/useMoldesStore';
 import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
+import { sizeMeasurements } from '../../pricing/data/sizeMeasurements';
 import type { Gender } from '../../pricing/types';
 
 interface Props {
@@ -31,6 +32,10 @@ export function CostosBaseScreen({ onToast }: Props) {
     loading: pricingLoading,
   } = usePricingStore();
 
+  const activePlotter = (config.plotters ?? []).find(p => p.id === config.selectedPlotterId);
+  const effectivePlotterWidth = activePlotter?.widthCm ?? config.rollWidthCm;
+  const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId);
+
   const { clientes } = useClientesStore();
   const { tallasPorCliente } = useTallasStore();
   const { moldes } = useMoldesStore();
@@ -44,10 +49,10 @@ export function CostosBaseScreen({ onToast }: Props) {
       .filter(([nombre]) => nombre.toUpperCase().endsWith(refGender))
       .map(([nombre, dims]) => ({
         nombre,
-        meters: calcShirtMetersFromDims(dims, config.rollWidthCm),
+        meters: calcShirtMetersFromDims(dims, effectivePlotterWidth),
       }))
       .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
-  }, [refClienteId, refGender, tallasPorCliente, config.rollWidthCm]);
+  }, [refClienteId, refGender, tallasPorCliente, effectivePlotterWidth]);
 
   const refTallasPant = useMemo(() => {
     if (!refClienteIdPant || !refGenderPant || !activeMoldeIdPant) return [];
@@ -56,10 +61,19 @@ export function CostosBaseScreen({ onToast }: Props) {
       .filter(([nombre]) => nombre.toUpperCase().endsWith(refGenderPant))
       .map(([nombre, dims]) => ({
         nombre,
-        meters: calcShirtMetersFromDims(dims, config.rollWidthCm),
+        meters: calcShirtMetersFromDims(dims, effectivePlotterWidth),
       }))
       .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
-  }, [refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente, config.rollWidthCm]);
+  }, [refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente, effectivePlotterWidth]);
+
+  const refTallasBajadas = useMemo(() => {
+    if (!activePress || !refClienteId || !refGender) return [];
+    const byTalla = tallasPorCliente[refClienteId]?.[MOLDE_DEFAULT_ID] ?? {};
+    return Object.entries(byTalla)
+      .filter(([nombre]) => nombre.toUpperCase().endsWith(refGender))
+      .map(([nombre, dims]) => ({ nombre, bajadas: calcBajadasDePlancha(dims, activePress) }))
+      .sort((a, b) => parseInt(a.nombre) - parseInt(b.nombre));
+  }, [activePress, refClienteId, refGender, tallasPorCliente]);
 
   const cpmSupplies = useMemo(() => supplies.reduce((s, sup) => {
     if (!sup.quantity || sup.quantity <= 0) return s;
@@ -234,6 +248,83 @@ export function CostosBaseScreen({ onToast }: Props) {
           </table>
         </div>
         <button className="pricing-order-add" onClick={addMachine}>+ AGREGAR EQUIPO</button>
+      </section>
+
+      {/* ── Equipo activo (plotter + plancha) ────────────────── */}
+      <section className="pricing-panel" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+        <div className="pricing-panel-title">EQUIPO ACTIVO</div>
+        <div className="pricing-table-sub" style={{ marginBottom: '1rem' }}>
+          Seleccioná el plotter y la plancha en uso. Para agregar o editar máquinas: <strong>Ajustes → Máquinas</strong>.
+        </div>
+
+        {/* Plotter */}
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div className="pricing-table-sub" style={{ marginBottom: '0.5rem' }}>PLOTTER</div>
+          {(config.plotters ?? []).length === 0 ? (
+            <div className="pricing-table-sub">Sin plotters configurados. Agregá uno en Ajustes → Máquinas.</div>
+          ) : (
+            <div className="pricing-transfer-btns">
+              {(config.plotters ?? []).map(pl => (
+                <button key={pl.id}
+                  className={`pricing-transfer-btn${config.selectedPlotterId === pl.id ? ' active' : ''}`}
+                  onClick={() => updateConfig('selectedPlotterId', pl.id)}>
+                  <span className="pricing-transfer-badge">{pl.widthCm} cm</span>
+                  {pl.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Plancha */}
+        <div>
+          <div className="pricing-table-sub" style={{ marginBottom: '0.5rem' }}>PLANCHA</div>
+          {(config.presses ?? []).length === 0 ? (
+            <div className="pricing-table-sub">Sin planchas configuradas. Agregá una en Ajustes → Máquinas.</div>
+          ) : (
+            <div className="pricing-transfer-btns">
+              {(config.presses ?? []).map(pr => (
+                <button key={pr.id}
+                  className={`pricing-transfer-btn${config.selectedPressId === pr.id ? ' active' : ''}`}
+                  onClick={() => updateConfig('selectedPressId', pr.id)}>
+                  <span className="pricing-transfer-badge">{pr.widthCm}×{pr.heightCm} cm</span>
+                  {pr.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {activePress && (
+            <div style={{ marginTop: '0.75rem' }}>
+              <div className="pricing-table-sub" style={{ marginBottom: '0.4rem' }}>
+                Bajadas estimadas — <strong>{activePress.name} ({activePress.widthCm}×{activePress.heightCm} cm)</strong>
+              </div>
+              <div className="pricing-kpis" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+                {sizeMeasurements.map(sm => {
+                  const bajadas = calcBajadasFromSizeMeasurement(sm, activePress);
+                  return (
+                    <div key={sm.size} className="pricing-kpi" style={{ flex: '0 0 auto', minWidth: '70px' }}>
+                      <span>T{sm.size}</span>
+                      <strong>{bajadas} baj.</strong>
+                    </div>
+                  );
+                })}
+              </div>
+              {refTallasBajadas.length > 0 && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <div className="pricing-table-sub" style={{ marginBottom: '0.4rem' }}>Medidas reales del cliente seleccionado:</div>
+                  <div className="pricing-kpis" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {refTallasBajadas.map(t => (
+                      <div key={t.nombre} className="pricing-kpi" style={{ flex: '0 0 auto', minWidth: '80px' }}>
+                        <span>{t.nombre}</span>
+                        <strong>{t.bajadas} baj.</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ── Operaciones mensuales ────────────────────────────── */}

@@ -24,6 +24,11 @@ const minConfig: PricingConfig = {
   defaultFabricCamisetaId: null,
   defaultFabricPantalonetaId: null,
   orgNombre: 'Test',
+  presses: [],
+  selectedPressId: null,
+  plotters: [],
+  selectedPlotterId: null,
+  perBajadaSupplyIds: [],
 };
 
 const profiles: PrintProfile[] = [

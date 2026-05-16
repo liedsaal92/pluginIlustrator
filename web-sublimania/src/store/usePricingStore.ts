@@ -20,8 +20,8 @@ import { defaultCmPriceTiers } from '../pricing/data/cmPriceTiers';
 import { defaultPaperPriceTiers } from '../pricing/data/paperPriceTiers';
 import type {
   BasePrice, BasePriceField, CmPriceTier, Competitor, CotizacionHistoryEntry, CustomerSegment,
-  FabricType, Gender, MachineCost, OperationCost, PricingConfig, PrintProfile, ProductId,
-  QuoteHistoryEntry, QuoteResult, Supply, TablaExportEntry, VolumeTier,
+  FabricType, Gender, HeatPress, MachineCost, OperationCost, Plotter, PricingConfig, PrintProfile,
+  ProductId, QuoteHistoryEntry, QuoteResult, Supply, TablaExportEntry, VolumeTier,
 } from '../pricing/types';
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -237,6 +237,14 @@ interface PricingState {
   updatePrintProfile: (id: string, patch: Partial<Omit<PrintProfile, 'id'>>) => void;
   addPrintProfile: () => void;
   removePrintProfile: (id: string) => void;
+
+  updatePress: (id: string, patch: Partial<Omit<HeatPress, 'id'>>) => void;
+  addPress: () => void;
+  removePress: (id: string) => void;
+
+  updatePlotter: (id: string, patch: Partial<Omit<Plotter, 'id'>>) => void;
+  addPlotter: () => void;
+  removePlotter: (id: string) => void;
 
   setRefCliente: (id: string | null) => void;
   setRefGender:  (g: Gender | null) => void;
@@ -718,6 +726,62 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     set(s => ({ printProfiles: s.printProfiles.filter(x => x.id !== id) }));
     supabase.from('pricing_print_profiles').delete().eq('id', id).eq('org_id', orgId)
       .then(({ error }) => { if (error) { errToast('print_profiles.remove:', error); set({ printProfiles: prev }); } });
+  },
+
+  // ── Presses (config JSON) ─────────────────────────────────────
+  updatePress: (id, patch) => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const updated = { ...config, presses: (config.presses ?? []).map(p => p.id === id ? { ...p, ...patch } : p) };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+  addPress: () => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const newPress: HeatPress = { id: genId(), name: 'Nueva plancha', widthCm: 75, heightCm: 105, cost: 0, lifeBajadas: 100000, paperSheetsPerBajada: 2 };
+    const updated = { ...config, presses: [...(config.presses ?? []), newPress] };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+  removePress: (id) => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const updated = {
+      ...config,
+      presses: (config.presses ?? []).filter(p => p.id !== id),
+      selectedPressId: config.selectedPressId === id ? null : config.selectedPressId,
+    };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+
+  // ── Plotters (config JSON) ────────────────────────────────────
+  updatePlotter: (id, patch) => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const updated = { ...config, plotters: (config.plotters ?? []).map(p => p.id === id ? { ...p, ...patch } : p) };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+  addPlotter: () => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const newPlotter: Plotter = { id: genId(), name: 'Nuevo plotter', widthCm: 130 };
+    const updated = { ...config, plotters: [...(config.plotters ?? []), newPlotter] };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
+  },
+  removePlotter: (id) => {
+    const { config, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant } = get();
+    const orgId = getOrgId();
+    const updated = {
+      ...config,
+      plotters: (config.plotters ?? []).filter(p => p.id !== id),
+      selectedPlotterId: config.selectedPlotterId === id ? null : config.selectedPlotterId,
+    };
+    set({ config: updated });
+    scheduleConfigSave(orgId, updated, refClienteId, refGender, refClienteIdPant, refGenderPant, refMoldeIdPant);
   },
 
   // ── Ref cliente / gender ──────────────────────────────────────

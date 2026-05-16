@@ -482,21 +482,22 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-kpi-section">
             <div className="pricing-kpi-section-label">COSTOS</div>
             <div className="pricing-kpis">
-              {serviceMode === 'full_service' ? (() => {
+              {(() => {
                 const totalPrint     = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit     * q.input.quantity : 0), 0);
                 const totalFabric    = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit    * q.input.quantity : 0), 0);
                 const totalTailoring = lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit * q.input.quantity : 0), 0);
                 const totalPolines   = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit   * q.input.quantity : 0), 0);
-                return (<>
+                const showBreakdown  = serviceMode === 'full_service';
+                return showBreakdown ? (<>
                   <div className="pricing-kpi"><span>Sublimado</span><strong>{fmt(totalPrint)}</strong></div>
                   {totalFabric    > 0 && <div className="pricing-kpi"><span>Tela</span><strong>{fmt(totalFabric)}</strong></div>}
                   {totalTailoring > 0 && <div className="pricing-kpi"><span>Costura</span><strong>{fmt(totalTailoring)}</strong></div>}
                   {totalPolines   > 0 && <div className="pricing-kpi"><span>Polines/medias</span><strong>{fmt(totalPolines)}</strong></div>}
                   <div className="pricing-kpi pricing-kpi-total"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
-                </>);
-              })() : (
-                <div className="pricing-kpi"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
-              )}
+                </>) : (
+                  <div className="pricing-kpi"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
+                );
+              })()}
             </div>
           </div>
 

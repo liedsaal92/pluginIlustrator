@@ -127,5 +127,5 @@ export interface TipoCliente {
 // ── PANTALLAS ─────────────────────────────────────────────────
 export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings' | 'pricing_cotizador' | 'pricing_costos' | 'pricing_tablas' | 'pricing_mercado' | 'pricing_tabla_cliente' | 'pricing_dashboard';
 export type ConfigTab = 'rules' | 'pantaloneta' | 'players';
-export type SettingsTab = 'clientes' | 'tallas' | 'tallas_default' | 'moldes' | 'tipos' | 'users' | 'roles';
+export type SettingsTab = 'clientes' | 'tallas' | 'tallas_default' | 'moldes' | 'tipos' | 'users' | 'roles' | 'maquinas';
 export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der' | 'pant_izq' | 'pant_der';

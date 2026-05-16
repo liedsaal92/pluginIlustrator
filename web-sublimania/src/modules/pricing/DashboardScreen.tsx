@@ -162,7 +162,7 @@ function marginHex(margin: number, minMargin: number) {
 interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
 export function DashboardScreen({ onToast: _onToast }: Props) {
-  const { config, printProfiles, fabrics, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
+  const { config, printProfiles, fabrics, supplies, machines, operations, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
 
   const [controls, setControls] = useState<DashboardControls>({
@@ -515,6 +515,130 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
           </div>
         </section>
       )}
+
+      {/* DESGLOSE DE COSTOS POR TALLA */}
+      {sortedRows.length > 0 && (() => {
+        const activeProfile = printProfiles.find(p => p.id === controls.profileId);
+        const inkFactor = activeProfile?.inkFactor ?? 1;
+        const monthlyMeters = config.monthlyMeters > 0 ? config.monthlyMeters : 1;
+        const totalMonthlyCost = operations.reduce((s, o) => s + o.monthlyCost, 0);
+        const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId);
+        const showPress = activePress != null && sortedRows.some(r => r.quote.cost.pressBajadas > 0);
+        const perBajadaIds = activePress ? (config.perBajadaSupplyIds ?? []) : [];
+        const showFabric    = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.fabricCostPerUnit > 0);
+        const showTailoring = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.tailoringCostPerUnit > 0);
+        const showPolines   = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.polinesCostPerUnit > 0);
+
+        const perMeterSupplies = supplies.filter(s => s.quantity > 0 && !perBajadaIds.includes(s.id));
+        const perBajadaSupplies = supplies.filter(s => s.quantity > 0 && perBajadaIds.includes(s.id));
+        const activeMachines = machines.filter(m => m.lifeMeters > 0);
+        const perMeterSpan = perMeterSupplies.length + activeMachines.length + 2; // +ops +subtotal
+        const planchaSpan  = showPress ? perBajadaSupplies.length + 3 : 0; // +bajadas +depr +subtotal
+        const confSpan     = (showFabric ? 1 : 0) + (showTailoring ? 1 : 0) + (showPolines ? 1 : 0);
+        const grpStyle     = { textAlign: 'center' as const, fontSize: '0.68rem', opacity: 0.65, fontWeight: 600, letterSpacing: '0.06em' };
+
+        return (
+          <section className="pricing-panel db-comparison-panel" style={{ marginTop: '1.5rem' }}>
+            <div className="pricing-panel-title">DESGLOSE DE COSTOS POR TALLA</div>
+            <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+              IMPRESIÓN + PLANCHA{confSpan > 0 ? ' + CONFECCIÓN' : ''} = COSTO REAL
+            </div>
+            <div className="pricing-price-table-wrap">
+              <table className="pricing-price-table" style={{ fontSize: '0.78rem' }}>
+                <thead>
+                  {/* Fila 1 — grupos */}
+                  <tr>
+                    <th rowSpan={2}>TALLA</th>
+                    <th rowSpan={2}>METROS</th>
+                    <th colSpan={perMeterSpan} style={grpStyle}>── IMPRESIÓN (por metro) ──</th>
+                    {showPress && <th colSpan={planchaSpan} style={grpStyle}>── PLANCHA (por bajada) ──</th>}
+                    {confSpan > 0 && <th colSpan={confSpan} style={grpStyle}>── CONFECCIÓN ──</th>}
+                    <th rowSpan={2} style={{ fontWeight: 800 }}>TOTAL</th>
+                  </tr>
+                  {/* Fila 2 — columnas individuales */}
+                  <tr>
+                    {perMeterSupplies.map(s => (
+                      <th key={s.id} title={s.applyInkFactor ? 'Varía con perfil de tinta' : undefined}>
+                        {s.name}{s.applyInkFactor ? ' *' : ''}
+                      </th>
+                    ))}
+                    {activeMachines.map(m => <th key={m.id}>{m.name}</th>)}
+                    <th>OPS.</th>
+                    <th style={{ fontWeight: 700 }}>SUBTOTAL</th>
+                    {showPress && perBajadaSupplies.map(s => (
+                      <th key={s.id} title="Costo por bajada de plancha">{s.name} †</th>
+                    ))}
+                    {showPress && <th>BAJADAS</th>}
+                    {showPress && <th>DEPR.</th>}
+                    {showPress && <th style={{ fontWeight: 700 }}>SUBTOTAL</th>}
+                    {showFabric    && <th>TELA</th>}
+                    {showTailoring && <th>COSTURA</th>}
+                    {showPolines   && <th>POLINES</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRows.map(row => {
+                    const m = row.quote.cost.metersUnit;
+                    const opsCost = (totalMonthlyCost / monthlyMeters) * m;
+                    const bajadas = row.quote.cost.pressBajadas;
+                    const dep = activePress && activePress.lifeBajadas > 0
+                      ? (activePress.cost / activePress.lifeBajadas) * bajadas : 0;
+                    return (
+                      <tr key={row.size} className={selectedSize === row.size ? 'db-row-selected' : ''}>
+                        <td><strong>{row.label}</strong></td>
+                        <td>{m.toFixed(3)} m</td>
+                        {/* Per-metro supplies */}
+                        {perMeterSupplies.map(s => {
+                          const cpm = s.totalCost / s.quantity;
+                          return <td key={s.id}>{money(cpm * (s.applyInkFactor ? inkFactor : 1) * m)}</td>;
+                        })}
+                        {/* Machines */}
+                        {activeMachines.map(mach => (
+                          <td key={mach.id}>{money((mach.cost / mach.lifeMeters) * m)}</td>
+                        ))}
+                        {/* Ops + Subtotal (= printCostPerUnit) */}
+                        <td>{money(opsCost)}</td>
+                        <td style={{ fontWeight: 700 }}>{money(row.quote.cost.printCostPerUnit)}</td>
+                        {/* Per-bajada supplies */}
+                        {showPress && perBajadaSupplies.map(s => {
+                          const cpm = s.totalCost / s.quantity;
+                          const val = bajadas > 0
+                            ? cpm * (activePress!.paperSheetsPerBajada ?? 2) * bajadas : 0;
+                          return <td key={s.id}>{val > 0 ? money(val) : '—'}</td>;
+                        })}
+                        {/* Bajadas count + depreciación */}
+                        {showPress && <td>{bajadas > 0 ? `${bajadas} baj.` : '—'}</td>}
+                        {showPress && <td>{dep > 0 ? money(dep) : '—'}</td>}
+                        {showPress && <td style={{ fontWeight: 700 }}>{row.quote.cost.pressCostPerUnit > 0 ? money(row.quote.cost.pressCostPerUnit) : '—'}</td>}
+                        {showFabric    && <td>{money(row.quote.cost.fabricCostPerUnit)}</td>}
+                        {showTailoring && <td>{money(row.quote.cost.tailoringCostPerUnit)}</td>}
+                        {showPolines   && <td>{money(row.quote.cost.polinesCostPerUnit)}</td>}
+                        <td style={{ fontWeight: 800 }}>{money(row.quote.cost.unitCost)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  {supplies.some(s => s.applyInkFactor && s.quantity > 0) && (
+                    <tr>
+                      <td colSpan={100} style={{ opacity: 0.55, fontSize: '0.72rem', paddingTop: '0.5rem' }}>
+                        * Varía según perfil de tinta (inkFactor {(inkFactor * 100).toFixed(0)}% — {activeProfile?.name ?? controls.profileId})
+                      </td>
+                    </tr>
+                  )}
+                  {perBajadaIds.length > 0 && supplies.some(s => perBajadaIds.includes(s.id) && s.quantity > 0) && (
+                    <tr>
+                      <td colSpan={100} style={{ opacity: 0.55, fontSize: '0.72rem' }}>
+                        † Costo por bajada de plancha (no por metro de tela)
+                      </td>
+                    </tr>
+                  )}
+                </tfoot>
+              </table>
+            </div>
+          </section>
+        );
+      })()}
 
       {editingBase && (
         <BasePricePopup
