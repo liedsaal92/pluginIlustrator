@@ -40,7 +40,8 @@ export default function App() {
   if (portalMatch) return <PortalScreen token={portalMatch[1]} />;
   const screen  = useTeamStore(s => s.screen);
   const session = useAuthStore(s => s.session);
-  const checkSession = useAuthStore(s => s.checkSession);
+  const checkSession    = useAuthStore(s => s.checkSession);
+  const refreshSession  = useAuthStore(s => s.refreshSession);
   const toastQueue = useToastStore(s => s.queue);
   const removeToast = useToastStore(s => s.remove);
   const pushToast = useToastStore(s => s.push);
@@ -71,8 +72,11 @@ export default function App() {
     pushToast(msg, type);
   }
 
-  // Validar sesión al arrancar
-  useEffect(() => { checkSession(); }, [checkSession]);
+  // Validar sesión al arrancar; si permissions falta (sesión antigua en localStorage), re-fetch
+  useEffect(() => {
+    checkSession();
+    if (session && !session.user.permissions) refreshSession();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Detectar recovery session de Supabase (password reset desde email)
   useEffect(() => {

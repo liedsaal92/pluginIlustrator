@@ -3672,6 +3672,34 @@ textarea:focus-visible,
   padding: 6px 10px;
 }
 
+/* ── ROLE PERMISSIONS MANAGER ────────────────────────────────── */
+.rp-role-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.rp-section-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.rp-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--yellow);
+  flex-shrink: 0;
+}
+.rp-note {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  color: var(--sb-text-sub);
+  letter-spacing: 0.04em;
+}
+
 /* ── SCROLLBAR ───────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--cream); }

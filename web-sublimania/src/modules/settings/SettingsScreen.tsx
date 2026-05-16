@@ -9,6 +9,7 @@ import { TallasDefaultTab } from './TallasDefaultTab';
 import { MoldesTab } from './MoldesTab';
 import { TiposClienteTab } from './TiposClienteTab';
 import { UsersTab } from './UsersTab';
+import { RolePermissionsManager } from './RolePermissionsManager';
 import { MigrateDataBanner } from '../pricing/MigrateDataBanner';
 import type { SettingsTab } from '../../types';
 
@@ -76,6 +77,15 @@ export function SettingsScreen({ onToast }: Props) {
               USUARIOS
             </button>
           )}
+          {canManageUsers && (
+            <button
+              className={`settings-nav-item ${tab === 'roles' ? 'active' : ''}`}
+              onClick={() => setTab('roles')}
+            >
+              <span className="settings-nav-icon">▤</span>
+              ROLES
+            </button>
+          )}
         </nav>
 
         <div className="settings-content">
@@ -85,6 +95,7 @@ export function SettingsScreen({ onToast }: Props) {
           {tab === 'moldes'         && <MoldesTab onToast={onToast} />}
           {tab === 'tipos'    && <TiposClienteTab onToast={onToast} />}
           {tab === 'users' && canManageUsers && <UsersTab onToast={onToast} />}
+          {tab === 'roles' && canManageUsers && <RolePermissionsManager onToast={onToast} />}
         </div>
       </div>
     </div>
