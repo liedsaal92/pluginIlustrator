@@ -26,6 +26,8 @@ const PIEZA_TABS: { key: PiezaKey; label: string }[] = [
   { key: 'espalda',   label: 'ESPALDA'   },
   { key: 'manga_izq', label: 'MANGA IZQ' },
   { key: 'manga_der', label: 'MANGA DER' },
+  { key: 'pant_izq',  label: 'PANT IZQ'  },
+  { key: 'pant_der',  label: 'PANT DER'  },
 ];
 
 // ── Posicionamiento ──────────────────────────────────────────
@@ -103,6 +105,10 @@ function sleevePath(W: number, H: number): string {
   return [`M ${ti.toFixed(2)} 0`, `L ${(W - ti).toFixed(2)} 0`, `L ${W.toFixed(2)} ${H.toFixed(2)}`, `L 0 ${H.toFixed(2)}`, 'Z'].join(' ');
 }
 
+function pantallonetaPath(W: number, H: number): string {
+  return [`M 0 0`, `L ${W.toFixed(2)} 0`, `L ${W.toFixed(2)} ${H.toFixed(2)}`, `L 0 ${H.toFixed(2)}`, 'Z'].join(' ');
+}
+
 // ── Component ────────────────────────────────────────────────
 interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
@@ -120,7 +126,7 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
   const [zoom,      setZoom]      = useState(90);
 
   const player = players[playerIdx];
-  const talla  = player?.TALLA ?? tallas[0] ?? '';
+  const talla  = player?.TALLA_CAMI ?? tallas[0] ?? '';
 
   const tallaDimsMap = useMemo(
     () => (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {},
@@ -136,9 +142,14 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
   const rules: Rules = player ? getPlayerRules(playerIdx) : (tallaRules[talla] ?? {});
 
   const isBody = pieza === 'frente' || pieza === 'espalda';
-  const svgW   = isBody ? (parseFloat(dims.ANCHO)       || 50) : (parseFloat(dims.MANGA_ANCHO) || 40);
-  const svgH   = isBody ? (parseFloat(dims.ALTO)        || 70) : (parseFloat(dims.MANGA_ALTO)  || 25);
-  const silPath = isBody ? bodyPath(svgW, svgH) : sleevePath(svgW, svgH);
+  const isPant = pieza === 'pant_izq' || pieza === 'pant_der';
+  const svgW   = isBody ? (parseFloat(dims.ANCHO) || 50)
+               : isPant ? (parseFloat(rules['PANT_ANCHO'] ?? '') || 40)
+               : (parseFloat(dims.MANGA_ANCHO) || 40);
+  const svgH   = isBody ? (parseFloat(dims.ALTO)  || 70)
+               : isPant ? (parseFloat(rules['PANT_ALTO'] ?? '') || 55)
+               : (parseFloat(dims.MANGA_ALTO)  || 25);
+  const silPath = isBody ? bodyPath(svgW, svgH) : isPant ? pantallonetaPath(svgW, svgH) : sleevePath(svgW, svgH);
 
   const piezaDef  = SCHEMA[pieza];
   const activeEls = piezaDef.elements.filter(el => el.toggleKey && rules[el.toggleKey] === 'SI');
@@ -211,7 +222,7 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
             ) : (
               <select className="preview-select" value={playerIdx} onChange={e => setPlayerIdx(Number(e.target.value))}>
                 {players.map((p, i) => (
-                  <option key={i} value={i}>{p.NOMBRE_CAMISETA || p.NOMBRE} — {p.TALLA}</option>
+                  <option key={i} value={i}>{p.NOMBRE_CAMISETA || p.NOMBRE} — {p.TALLA_CAMI}</option>
                 ))}
               </select>
             )}
@@ -239,7 +250,12 @@ export function PreviewScreen({ onToast: _onToast }: Props) {
               {usingDefault && <span className="preview-dim-badge">ESTÁNDAR</span>}
             </div>
             <div className="preview-dims">
-              {isBody ? (
+              {isPant ? (
+                <>
+                  <div className="preview-dim-row"><span>PANT ANCHO</span><strong>{rules['PANT_ANCHO'] || '—'} cm</strong></div>
+                  <div className="preview-dim-row"><span>PANT ALTO</span><strong>{rules['PANT_ALTO'] || '—'} cm</strong></div>
+                </>
+              ) : isBody ? (
                 <>
                   <div className="preview-dim-row"><span>ANCHO</span><strong>{dims.ANCHO} cm</strong></div>
                   <div className="preview-dim-row"><span>ALTO</span><strong>{dims.ALTO} cm</strong></div>

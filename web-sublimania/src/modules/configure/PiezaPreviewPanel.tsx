@@ -46,6 +46,7 @@ function sleevePath(W:number,H:number){
   const dh=H*.2;
   return[`M 0 ${H.toFixed(2)}`,`L ${W.toFixed(2)} ${H.toFixed(2)}`,`L ${W.toFixed(2)} 0`,`Q ${(W/2).toFixed(2)} ${(-dh).toFixed(2)} 0 0`,'Z'].join(' ');
 }
+function pantallonetaPath(W:number,H:number){return[`M 0 0`,`L ${W.toFixed(2)} 0`,`L ${W.toFixed(2)} ${H.toFixed(2)}`,`L 0 ${H.toFixed(2)}`,'Z'].join(' ');}
 
 interface Props {
   pieza: PiezaKey;
@@ -75,10 +76,15 @@ export function PiezaPreviewPanel({ pieza, talla, rules, onClose, onExpand }: Pr
     : (TALLAS_DEFAULT[talla] ?? { ALTO:'70', ANCHO:'50', MANGA_ANCHO:'40', MANGA_ALTO:'25' });
 
   const isBody  = pieza === 'frente' || pieza === 'espalda';
-  const svgW    = isBody ? (parseFloat(dims.ANCHO) || 50)       : (parseFloat(dims.MANGA_ANCHO) || 40);
-  const svgH    = isBody ? (parseFloat(dims.ALTO)  || 70)       : (parseFloat(dims.MANGA_ALTO)  || 25);
-  const domeH   = isBody ? 0 : svgH * 0.21;
-  const silPath = isBody ? bodyPath(svgW, svgH) : sleevePath(svgW, svgH);
+  const isPant  = pieza === 'pant_izq' || pieza === 'pant_der';
+  const svgW    = isBody ? (parseFloat(dims.ANCHO) || 50)
+               : isPant ? (parseFloat(rules['PANT_ANCHO'] ?? '') || 40)
+               : (parseFloat(dims.MANGA_ANCHO) || 40);
+  const svgH    = isBody ? (parseFloat(dims.ALTO)  || 70)
+               : isPant ? (parseFloat(rules['PANT_ALTO'] ?? '') || 55)
+               : (parseFloat(dims.MANGA_ALTO)  || 25);
+  const domeH   = (isBody || isPant) ? 0 : svgH * 0.21;
+  const silPath = isBody ? bodyPath(svgW, svgH) : isPant ? pantallonetaPath(svgW, svgH) : sleevePath(svgW, svgH);
 
   const piezaDef  = SCHEMA[pieza];
   const activeEls = piezaDef.elements.filter(el => el.toggleKey && rules[el.toggleKey] === 'SI');

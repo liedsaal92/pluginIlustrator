@@ -18,6 +18,7 @@ interface AuthState {
   logout:                () => Promise<void>;
   clearError:            () => void;
   checkSession:          () => void;
+  refreshSession:        () => Promise<void>;
   requestPasswordReset:  (email: string) => Promise<void>;
   updatePassword:        (newPassword: string) => Promise<void>;
 }
@@ -93,6 +94,13 @@ export const useAuthStore = create<AuthState>()(
         if (!authService.isSessionValid(session)) {
           set({ session: null });
         }
+      },
+
+      refreshSession: async () => {
+        try {
+          const session = await authService.refreshSession();
+          set({ session });
+        } catch (_) {}
       },
     }),
     {

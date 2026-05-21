@@ -64,6 +64,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     widthCm: normalizedInput.widthCm,
     config: normalizedInput.config,
     tallaDims: normalizedInput.tallaDims,
+    tallaDimsPant: normalizedInput.tallaDimsPant,
     serviceMode: normalizedInput.serviceMode,
     fabrics: normalizedInput.fabrics,
     selectedFabricIdCamiseta: normalizedInput.selectedFabricIdCamiseta,

@@ -9,13 +9,6 @@ import { useMoldesStore } from '../../store/useMoldesStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import type { TallaDims } from '../../types';
 
-const FIELDS: { key: keyof TallaDims; label: string }[] = [
-  { key: 'ALTO',        label: 'ALTO'        },
-  { key: 'ANCHO',       label: 'ANCHO'       },
-  { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
-  { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
-];
-
 const TALLA_COLORS = ['#E8462A', '#F5C842', '#4A9BE8', '#7B5CF0', '#1DBF73', '#F050A0', '#FF8C00', '#00CED1'];
 const colorMap: Record<string, string> = {};
 function tallaColor(talla: string): string {
@@ -36,6 +29,19 @@ export function TallasSettingsTab({ onToast }: Props) {
 
   const [clienteId, setClienteId] = useState<string>(clientes[0]?.id ?? '');
   const [moldeId,   setMoldeId]   = useState<string>(moldes[0]?.id ?? '');
+
+  const isPantMolde = !!moldeId && (moldes.find(m => m.id === moldeId)?.tipo ?? 'camiseta') === 'pantaloneta';
+  const FIELDS: { key: keyof TallaDims; label: string }[] = isPantMolde
+    ? [
+        { key: 'ALTO',  label: 'PANT ALTO'  },
+        { key: 'ANCHO', label: 'PANT ANCHO' },
+      ]
+    : [
+        { key: 'ALTO',        label: 'ALTO'        },
+        { key: 'ANCHO',       label: 'ANCHO'       },
+        { key: 'MANGA_ANCHO', label: 'MANGA ANCHO' },
+        { key: 'MANGA_ALTO',  label: 'MANGA ALTO'  },
+      ];
   const [newTalla, setNewTalla] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [dimSaved, setDimSaved] = useState(false);
@@ -151,7 +157,7 @@ export function TallasSettingsTab({ onToast }: Props) {
               onClick={handleReset}
               onBlur={() => setConfirmReset(false)}
             >
-              {confirmReset ? '¿CONFIRMAR RESET?' : '↺ RESTABLECER DEFAULTS'}
+              {confirmReset ? '¿CONFIRMAR RESET?' : '↺ APLICAR TALLAS BASE'}
             </button>
             <div className="tallas-toolbar-sep" />
             <span className={`tallas-dim-saved ${dimSaved ? 'visible' : ''}`}>✓ GUARDADO</span>
@@ -164,7 +170,7 @@ export function TallasSettingsTab({ onToast }: Props) {
         <>
           {allKeys.length === 0 ? (
             <p className="tallas-hint" style={{ textAlign: 'center' }}>
-              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ RESTABLECER DEFAULTS
+              Sin tallas para <strong>{clientes.find(c => c.id === clienteId)?.nombre}</strong> / <strong>{moldes.find(m => m.id === moldeId)?.nombre}</strong> — agregá una o usá ↺ APLICAR TALLAS BASE
             </p>
           ) : (
             <div className="tallas-generos">

@@ -1,11 +1,38 @@
 import { sizeMeasurements } from '../data/sizeMeasurements';
 import type {
-  BasePrice, CostBreakdown, FabricType, Gender, MachineCost, OperationCost,
+  BasePrice, CostBreakdown, FabricType, Gender, HeatPress, MachineCost, OperationCost,
   PricingConfig, PrintProfile, PrintProfileId, ProductId, CustomerSegment, Supply,
 } from '../types';
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function fitsTwoPieces(w: number, h: number, press: HeatPress): boolean {
+  return (w * 2 <= press.widthCm && h <= press.heightCm) ||
+         (h * 2 <= press.widthCm && w <= press.heightCm);
+}
+
+export function calcBajadasDePlancha(
+  dims: { ANCHO: string; ALTO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
+  press: HeatPress,
+): number {
+  const ancho      = parseFloat(dims.ANCHO)       || 0;
+  const alto       = parseFloat(dims.ALTO)        || 0;
+  const mangaAncho = parseFloat(dims.MANGA_ANCHO) || 0;
+  const mangaAlto  = parseFloat(dims.MANGA_ALTO)  || 0;
+  const torsoBajadas  = fitsTwoPieces(ancho,      alto,      press) ? 1 : 2;
+  const mangasBajadas = fitsTwoPieces(mangaAncho, mangaAlto, press) ? 1 : 2;
+  return torsoBajadas + mangasBajadas;
+}
+
+export function calcBajadasFromSizeMeasurement(
+  sm: { torsoWidthCm: number; torsoHeightCm: number; sleeveWidthCm: number; sleeveHeightCm: number },
+  press: HeatPress,
+): number {
+  const torsoBajadas  = fitsTwoPieces(sm.torsoWidthCm,  sm.torsoHeightCm,  press) ? 1 : 2;
+  const mangasBajadas = fitsTwoPieces(sm.sleeveWidthCm, sm.sleeveHeightCm, press) ? 1 : 2;
+  return torsoBajadas + mangasBajadas;
 }
 
 export function calcShirtMetersFromDims(
@@ -27,9 +54,11 @@ function computeCostWithInkFactor(
   supplies: Supply[],
   machines: MachineCost[],
   operations: OperationCost[],
+  excludeSupplyIds?: string[],
 ): number {
   const suppliesCost = supplies.reduce((sum, s) => {
     if (!s.quantity || s.quantity <= 0) return sum;
+    if (excludeSupplyIds?.includes(s.id)) return sum;
     const cpm = s.totalCost / s.quantity;
     return sum + (s.applyInkFactor ? cpm * inkFactor : cpm);
   }, 0);
@@ -52,10 +81,11 @@ export function getCostPerMeter(
   machines: MachineCost[],
   operations: OperationCost[],
   profiles: PrintProfile[],
+  excludeSupplyIds?: string[],
 ): number {
   const profile = profiles.find(p => p.id === profileId);
   if (!profile) throw new Error(`Perfil no encontrado: ${profileId}`);
-  return computeCostWithInkFactor(profile.inkFactor, config, supplies, machines, operations);
+  return computeCostWithInkFactor(profile.inkFactor, config, supplies, machines, operations, excludeSupplyIds);
 }
 
 export function getSizeMeasurement(size: number) {
@@ -82,6 +112,7 @@ function getMetersForProduct(
   linearCm?: number,
   widthCm?: number,
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string },
 ) {
   const notes: string[] = [];
 
@@ -92,10 +123,17 @@ function getMetersForProduct(
     return { meters: (heightCm / 100) * widthRatio, camisetaMeters: 0, pantalonetaMeters: 0, source: 'real' as const, notes };
   }
 
-  const shirtMeters = tallaDims
-    ? calcShirtMetersFromDims(tallaDims, plotterWidthCm)
-    : getSizeMeasurement(size).shirtMeters;
-  const source = tallaDims ? 'real' as const : 'real' as const;
+  const dimsShirtMeters = tallaDims ? calcShirtMetersFromDims(tallaDims, plotterWidthCm) : 0;
+  const dimsValid = tallaDims && dimsShirtMeters > 0;
+  const sm = getSizeMeasurement(size);
+  const fallbackMeters = calcShirtMetersFromDims(
+    { ALTO: String(sm.torsoHeightCm), ANCHO: String(sm.torsoWidthCm),
+      MANGA_ANCHO: String(sm.sleeveWidthCm), MANGA_ALTO: String(sm.sleeveHeightCm) },
+    plotterWidthCm,
+  );
+  const shirtMeters = dimsValid ? dimsShirtMeters : fallbackMeters;
+  if (tallaDims && !dimsValid) notes.push('Dims configuradas incompletas — usando tabla por defecto.');
+  const source = dimsValid ? 'real' as const : 'estimated' as const;
 
   if (productId === 'camiseta') {
     return { meters: shirtMeters, camisetaMeters: shirtMeters, pantalonetaMeters: 0, source, notes };
@@ -105,19 +143,27 @@ function getMetersForProduct(
   const ratio = prices.camiseta > 0 ? prices.pantaloneta / prices.camiseta : 1;
 
   if (productId === 'pantaloneta') {
+    if (tallaDims) {
+      const pMeters = calcShirtMetersFromDims(tallaDims, plotterWidthCm);
+      if (pMeters > 0) {
+        return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'real' as const, notes };
+      }
+      notes.push('Dims pantaloneta incompletas — usando tabla por defecto.');
+    }
     if (!tallaDims) notes.push('Pantaloneta estimada por proporcion hasta configurar medidas reales.');
     const pMeters = shirtMeters * ratio;
-    return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: tallaDims ? source : 'estimated' as const, notes };
+    return { meters: pMeters, camisetaMeters: 0, pantalonetaMeters: pMeters, source: 'estimated' as const, notes };
   }
 
-  // equipo
-  if (!tallaDims) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
-  const pMeters = shirtMeters * ratio;
+  // equipo: camiseta usa dims reales si disponible; pantaloneta usa dims pant si disponible, si no ratio
+  if (!dimsValid || !tallaDimsPant) notes.push('Equipo usa camiseta real + pantaloneta estimada.');
+  const dimsPantMeters = tallaDimsPant ? calcShirtMetersFromDims(tallaDimsPant, plotterWidthCm) : 0;
+  const pMeters = dimsPantMeters > 0 ? dimsPantMeters : shirtMeters * ratio;
   return {
     meters: shirtMeters + pMeters,
     camisetaMeters: shirtMeters,
     pantalonetaMeters: pMeters,
-    source: tallaDims ? source : 'estimated' as const,
+    source: (dimsValid && dimsPantMeters > 0) ? 'real' as const : 'estimated' as const,
     notes,
   };
 }
@@ -138,17 +184,28 @@ export function calculateCost(input: {
   widthCm?: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   serviceMode?: 'sublimation' | 'full_service' | 'paper';
   fabrics?: FabricType[];
   selectedFabricIdCamiseta?: string | null;
   selectedFabricIdPantaloneta?: string | null;
 }): CostBreakdown {
-  const costPerMeter = getCostPerMeter(input.profileId, input.config, input.supplies, input.machines, input.operations, input.profiles);
+  // Derive active plotter width
+  const activePlotter = (input.config.plotters ?? []).find(p => p.id === input.config.selectedPlotterId);
+  const effectivePlotterWidth = activePlotter?.widthCm ?? input.config.rollWidthCm;
+
+  // Derive active press
+  const activePress = (input.config.presses ?? []).find(p => p.id === input.config.selectedPressId);
+
+  // Supplies billed per-bajada are excluded from per-meter cost (computed separately below)
+  const perBajadaIds = activePress ? (input.config.perBajadaSupplyIds ?? []) : [];
+
+  const costPerMeter = getCostPerMeter(input.profileId, input.config, input.supplies, input.machines, input.operations, input.profiles, perBajadaIds);
   // baseline is always inkFactor=1 (full ink), independent of which profile is 'normal'
-  const normalCostPerMeter = computeCostWithInkFactor(1, input.config, input.supplies, input.machines, input.operations);
+  const normalCostPerMeter = computeCostWithInkFactor(1, input.config, input.supplies, input.machines, input.operations, perBajadaIds);
   const productMeters = getMetersForProduct(
     input.productId, input.basePrices, input.segment, input.gender, input.size,
-    input.config.rollWidthCm, input.linearCm, input.widthCm, input.tallaDims,
+    effectivePlotterWidth, input.linearCm, input.widthCm, input.tallaDims, input.tallaDimsPant,
   );
   const wasteRate = input.config.wasteRate;
   const metersUnit = productMeters.meters * (1 + wasteRate);
@@ -187,7 +244,44 @@ export function calculateCost(input: {
     polinesCostPerUnit = input.config.polinesCost ?? 0;
   }
 
-  const unitCost = roundMoney(printCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit);
+  // ── Planchado ──────────────────────────────────────────────────
+  let pressBajadas = 0;
+  if (activePress && input.productId !== 'por_cm') {
+    if (input.tallaDims) {
+      pressBajadas = calcBajadasDePlancha(input.tallaDims, activePress);
+    } else {
+      try {
+        const sm = getSizeMeasurement(input.size);
+        pressBajadas = calcBajadasFromSizeMeasurement(sm, activePress);
+      } catch {
+        pressBajadas = 0;
+      }
+    }
+    if (input.productId === 'equipo') {
+      const pantDims = input.tallaDimsPant ?? input.tallaDims;
+      const pantBajadas = pantDims
+        ? calcBajadasDePlancha(pantDims, activePress)
+        : pressBajadas;
+      pressBajadas += pantBajadas;
+    }
+  }
+
+  // Press depreciation + per-bajada supplies (e.g. papel periódico), all × bajadas
+  let pressCostPerUnit = 0;
+  if (activePress && pressBajadas > 0) {
+    const pressDepreciation = activePress.lifeBajadas > 0
+      ? (activePress.cost / activePress.lifeBajadas) * pressBajadas : 0;
+    const paperCost = input.supplies
+      .filter(s => perBajadaIds.includes(s.id) && s.quantity > 0)
+      .reduce((sum, s) => {
+        const cpm = s.totalCost / s.quantity;
+        const sheets = activePress.paperSheetsPerBajada ?? 2;
+        return sum + cpm * sheets * pressBajadas;
+      }, 0);
+    pressCostPerUnit = roundMoney(pressDepreciation + paperCost);
+  }
+
+  const unitCost = roundMoney(printCostPerUnit + pressCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit);
 
   return {
     profileId: input.profileId,
@@ -198,6 +292,8 @@ export function calculateCost(input: {
     fabricCostPerUnit,
     tailoringCostPerUnit,
     polinesCostPerUnit,
+    pressBajadas,
+    pressCostPerUnit,
     unitCost,
     totalCost: roundMoney(unitCost * input.quantity),
     savingsPerUnit: Math.max(0, roundMoney(normalPrintCostPerUnit - printCostPerUnit)),

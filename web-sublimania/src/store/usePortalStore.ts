@@ -139,7 +139,7 @@ export const usePortalStore = create<PortalState>()((set, _get) => ({
       tallas:        [],
       tallaRules:    {},
       overrides:     {},
-      globalConfig:  { EQUIPO: nombre.trim().toUpperCase(), NOTAS: '' },
+      globalConfig:  { EQUIPO: nombre.trim().toUpperCase(), NOTAS: '', clienteIdPant: '', moldeIdPant: '' },
       exportHistory: {},
       portalStatus:  'collecting' as const,
       createdBy:     userId,

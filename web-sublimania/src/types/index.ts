@@ -7,7 +7,8 @@ export interface Player {
   NOMBRE: string;
   NOMBRE_CAMISETA: string;
   NUMERO: string;
-  TALLA: string;
+  TALLA_CAMI: string;
+  TALLA_PANT: string;
 }
 
 // ── REGLAS (valores configurables por talla o por jugador) ────
@@ -21,6 +22,8 @@ export type Overrides = Record<number, Rules>;
 export interface GlobalConfig {
   EQUIPO: string;
   NOTAS: string;
+  clienteIdPant: string; // cliente activo para tallas de pantaloneta
+  moldeIdPant:   string; // molde pantaloneta activo para este equipo
 }
 
 // ── SCHEMA ────────────────────────────────────────────────────
@@ -49,6 +52,7 @@ export interface SchemaPieza {
   label: string;
   color: string;
   elements: SchemaElement[];
+  category?: 'camiseta' | 'pantaloneta';
 }
 
 export type Schema = Record<string, SchemaPieza>;
@@ -90,6 +94,7 @@ export interface Cliente {
 export interface Molde {
   id: string;
   nombre: string;
+  tipo: 'camiseta' | 'pantaloneta';
 }
 
 // ── PORTAL ────────────────────────────────────────────────────
@@ -121,6 +126,6 @@ export interface TipoCliente {
 
 // ── PANTALLAS ─────────────────────────────────────────────────
 export type Screen = 'teams' | 'upload' | 'configure' | 'export' | 'preview' | 'settings' | 'pricing_cotizador' | 'pricing_costos' | 'pricing_tablas' | 'pricing_mercado' | 'pricing_tabla_cliente' | 'pricing_dashboard';
-export type ConfigTab = 'rules' | 'players';
-export type SettingsTab = 'clientes' | 'tallas' | 'moldes' | 'tipos' | 'users';
-export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der';
+export type ConfigTab = 'rules' | 'pantaloneta' | 'players';
+export type SettingsTab = 'clientes' | 'tallas' | 'tallas_default' | 'moldes' | 'tipos' | 'users' | 'roles' | 'maquinas';
+export type PiezaKey = 'frente' | 'espalda' | 'manga_izq' | 'manga_der' | 'pant_izq' | 'pant_der';

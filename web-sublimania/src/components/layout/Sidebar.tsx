@@ -232,16 +232,18 @@ export function Sidebar({ onToast, isOpen, onClose, collapsed, onToggleCollapse,
 
 
 
-        <div className="sidebar-section">
-          <button
-            className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
-            onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
-            title="Ajustes"
-          >
-            <span className="sidebar-nav-item-icon">◈</span>
-            <span className="sidebar-nav-text">AJUSTES</span>
-          </button>
-        </div>
+        {canManageSettings && (
+          <div className="sidebar-section">
+            <button
+              className={`sidebar-nav-item ${screen === 'settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick(() => { saveActiveTeam(); setScreen('settings'); })}
+              title="Ajustes"
+            >
+              <span className="sidebar-nav-item-icon">◈</span>
+              <span className="sidebar-nav-text">AJUSTES</span>
+            </button>
+          </div>
+        )}
 
       </div>
 

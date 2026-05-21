@@ -27,6 +27,12 @@ export function parseExcelFile(file: File): Promise<Player[]> {
             Object.keys(row).forEach(k => {
               norm[k.trim().toUpperCase()] = String(row[k]);
             });
+            // Compatibilidad: columna TALLA (legacy) → TALLA_CAMI
+            if (!norm['TALLA_CAMI'] && norm['TALLA']) {
+              norm['TALLA_CAMI'] = norm['TALLA'];
+            }
+            // TALLA_PANT opcional — default vacío
+            if (!norm['TALLA_PANT']) norm['TALLA_PANT'] = '';
             return norm as unknown as Player;
           })
           .filter(p => p.NOMBRE && p.NOMBRE.trim() !== '');
@@ -36,8 +42,9 @@ export function parseExcelFile(file: File): Promise<Player[]> {
           return;
         }
 
-        // Validar columnas mínimas
-        const missing = PLAYER_KEYS.filter(k => !(k in players[0]));
+        // Validar columnas obligatorias (TALLA_PANT es opcional)
+        const required = PLAYER_KEYS.filter(k => k !== 'TALLA_PANT');
+        const missing = required.filter(k => !(k in players[0]));
         if (missing.length > 0) {
           reject(new Error('Faltan columnas requeridas: ' + missing.join(', ')));
           return;
@@ -58,7 +65,7 @@ export function extractTallas(players: Player[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   players.forEach(p => {
-    const t = String(p.TALLA ?? '').trim();
+    const t = String(p.TALLA_CAMI ?? '').trim();
     if (t && !seen.has(t)) { seen.add(t); result.push(t); }
   });
   return result;

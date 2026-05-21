@@ -7,14 +7,15 @@ export type UserRole = 'admin' | 'employee' | 'cliente';
 
 // ── Sesión activa ─────────────────────────────────────────────
 export interface AuthUser {
-  id:        string;
-  email:     string;
-  nombre:    string;
-  role:      UserRole;
-  orgId:     string;   // UUID de la organización (tenant)
-  orgName:   string;   // Nombre de la empresa
-  orgSlug:   string;   // Slug URL-friendly
-  createdAt: string;
+  id:          string;
+  email:       string;
+  nombre:      string;
+  role:        UserRole;
+  permissions: Permission[];
+  orgId:       string;   // UUID de la organización (tenant)
+  orgName:     string;   // Nombre de la empresa
+  orgSlug:     string;   // Slug URL-friendly
+  createdAt:   string;
 }
 
 export interface AuthSession {

@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function MoldesTab({ onToast }: Props) {
-  const { moldes, addMolde, renameMolde, removeMolde } = useMoldesStore();
+  const { moldes, addMolde, renameMolde, removeMolde, setTipo } = useMoldesStore();
   const { removeMoldeData } = useTallasStore();
 
   const [newNombre, setNewNombre] = useState('');
@@ -82,9 +82,18 @@ export function MoldesTab({ onToast }: Props) {
             ) : (
               <>
                 <span className="molde-nombre">{m.nombre}</span>
+                <select
+                  className="molde-tipo-select"
+                  value={m.tipo}
+                  onChange={e => setTipo(m.id, e.target.value as 'camiseta' | 'pantaloneta')}
+                >
+                  <option value="camiseta">CAMISETA</option>
+                  <option value="pantaloneta">PANTALONETA</option>
+                </select>
                 <div className="molde-actions">
                   <button
                     className="btn btn-ghost btn-sm"
+                    aria-label={`Renombrar ${m.nombre}`}
                     onClick={() => { setEditingId(m.id); setEditingNombre(m.nombre); }}
                   >
                     ✎ RENOMBRAR
@@ -92,7 +101,7 @@ export function MoldesTab({ onToast }: Props) {
                   {moldes.length > 1 && (
                     <ConfirmButton
                       className="btn btn-ghost btn-sm btn-danger"
-                      title="Eliminar molde y todas sus tallas"
+                      title={`Eliminar ${m.nombre} y todas sus tallas`}
                       onConfirm={() => handleRemove(m.id, m.nombre)}
                     />
                   )}

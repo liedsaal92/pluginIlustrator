@@ -2,12 +2,12 @@
 //  utils/authService.ts — Operaciones de autenticación (Supabase)
 // ============================================================
 import { supabase } from './supabase';
-import type { AuthSession, AuthUser, UserRole } from '../types/auth';
+import type { AuthSession, AuthUser, Permission, UserRole } from '../types/auth';
 
 // ── Helpers ───────────────────────────────────────────────────
 
 type OrgRow      = { name: string; slug: string };
-type UserRoleRow = { roles: { name: string } };
+type RolePermRow = { roles: { name: string; role_permissions: { permissions: { name: string } }[] } };
 
 async function buildSession(
   supabaseSession: { access_token: string; expires_at?: number },
@@ -16,24 +16,29 @@ async function buildSession(
 ): Promise<AuthSession> {
   const { data: userRow } = await supabase
     .from('users')
-    .select('nombre, org_id, created_at, organizations ( name, slug ), user_roles ( roles ( name ) )')
+    .select('nombre, org_id, created_at, organizations ( name, slug ), user_roles ( roles ( name, role_permissions ( permissions ( name ) ) ) )')
     .eq('id', userId)
     .single();
 
   if (!userRow) throw new Error('Perfil de usuario no encontrado');
 
-  const org  = (userRow.organizations as unknown as OrgRow | null);
-  const role = ((userRow.user_roles as unknown as UserRoleRow[]))?.[0]?.roles?.name as UserRole ?? 'employee';
+  const org       = (userRow.organizations as unknown as OrgRow | null);
+  const roleEntry = (userRow.user_roles as unknown as RolePermRow[])?.[0];
+  const role       = roleEntry?.roles?.name as UserRole ?? 'employee';
+  const permissions: Permission[] = (roleEntry?.roles?.role_permissions ?? [])
+    .map(rp => rp.permissions?.name as Permission)
+    .filter(Boolean);
 
   const user: AuthUser = {
-    id:        userId,
+    id:          userId,
     email,
-    nombre:    userRow.nombre,
+    nombre:      userRow.nombre,
     role,
-    orgId:     userRow.org_id,
-    orgName:   org?.name ?? '',
-    orgSlug:   org?.slug ?? '',
-    createdAt: userRow.created_at,
+    permissions,
+    orgId:       userRow.org_id,
+    orgName:     org?.name ?? '',
+    orgSlug:     org?.slug ?? '',
+    createdAt:   userRow.created_at,
   };
 
   return {
@@ -112,18 +117,25 @@ export const authService = {
 
     return (data ?? []).map(u => {
       const org  = (u.organizations as unknown as OrgRow | null);
-      const role = ((u.user_roles as unknown as UserRoleRow[]))?.[0]?.roles?.name as UserRole ?? 'employee';
+      const role = ((u.user_roles as unknown as RolePermRow[]))?.[0]?.roles?.name as UserRole ?? 'employee';
       return {
-        id:        u.id,
-        email:     u.email,
-        nombre:    u.nombre,
+        id:          u.id,
+        email:       u.email,
+        nombre:      u.nombre,
         role,
-        orgId:     u.org_id,
-        orgName:   org?.name ?? '',
-        orgSlug:   org?.slug ?? '',
-        createdAt: u.created_at,
+        permissions: [],
+        orgId:       u.org_id,
+        orgName:     org?.name ?? '',
+        orgSlug:     org?.slug ?? '',
+        createdAt:   u.created_at,
       };
     });
+  },
+
+  async refreshSession(): Promise<AuthSession> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No hay sesión activa');
+    return buildSession(session, session.user.id, session.user.email!);
   },
 
   async setUserRole(userId: string, role: UserRole): Promise<void> {

@@ -3,6 +3,7 @@
 // ============================================================
 import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { useTeamStore } from '../../store/useTeamStore';
+import { useTallasStore } from '../../store/useTallasStore';
 import { SCHEMA, ELEMENT_GROUPS, TALLAS_ESTANDAR, sortTallas, getGeneroTalla } from '../../utils/schema';
 import { ElementCard } from './ElementCard';
 import { PiezaTabs } from './PiezaTabs';
@@ -10,8 +11,11 @@ import { PiezaPreviewPanel } from './PiezaPreviewPanel';
 import { PiezaPreviewModal } from './PiezaPreviewModal';
 import type { PiezaKey, SchemaElement } from '../../types';
 
+const CAMISETA_PIEZAS: PiezaKey[] = ['frente', 'espalda', 'manga_izq', 'manga_der'];
+
 interface Props {
   onToast: (msg: string, type: 'ok' | 'error') => void;
+  piezas?: PiezaKey[];
 }
 
 // ── Talla sidebar buttons ─────────────────────────────────────
@@ -107,13 +111,21 @@ function ElementGroup({ groupKey, elements, rules, piezaColor, expanded, onToggl
 }
 
 // ── Main component ────────────────────────────────────────────
-export function RulesTab({ onToast }: Props) {
+export function RulesTab({ onToast, piezas: piezasProp }: Props) {
+  const activePiezas = piezasProp ?? CAMISETA_PIEZAS;
+  const isPantMode = activePiezas.some(p => p === 'pant_izq' || p === 'pant_der');
+
   const {
-    tallas, players, tallaRules,
-    activeTalla, activePieza,
-    setActiveTalla, setActivePieza,
+    tallas, players, tallaRules, globalConfig,
+    activeTalla, activeTallaPant, activePieza,
+    setActiveTalla, setActiveTallaPant, setActivePieza,
     setTallaRule, applyTallaToAll, copyTallaRules,
   } = useTeamStore();
+
+  const { getTallas } = useTallasStore();
+
+  const currentTalla = isPantMode ? activeTallaPant : activeTalla;
+  const setCurrentTalla = isPantMode ? setActiveTallaPant : setActiveTalla;
 
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -129,7 +141,19 @@ export function RulesTab({ onToast }: Props) {
   const [undoFlash, setUndoFlash] = useState(false);
   const undoFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const rules = activeTalla ? (tallaRules[activeTalla] ?? {}) : {};
+  const rules = currentTalla ? (tallaRules[currentTalla] ?? {}) : {};
+  const playerCount = (t: string) => isPantMode
+    ? players.filter(p => p.TALLA_PANT === t).length
+    : players.filter(p => p.TALLA_CAMI === t).length;
+
+  // Auto-switch to first valid pieza when entering a tab whose piezas don't include the current one
+  useEffect(() => {
+    if (!activePiezas.includes(activePieza)) {
+      setActivePieza(activePiezas[0]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePiezas.join(',')]);
+
   const schema = SCHEMA[activePieza];
 
   // Group elements by their group key, preserving order of first occurrence
@@ -198,28 +222,52 @@ export function RulesTab({ onToast }: Props) {
   }, [handleUndo]);
 
   // Clear undo stack when talla changes
-  useEffect(() => { setUndoStack([]); }, [activeTalla]);
+  useEffect(() => { setUndoStack([]); }, [currentTalla]);
 
   // Talla lists
-  const tallasExtras = tallas.filter(t => !TALLAS_ESTANDAR.includes(t));
-  const tallasConJugadores = [...tallas, ...tallasExtras.filter(t => !tallas.includes(t))];
-  const tallasSinJugadores = [...TALLAS_ESTANDAR, ...tallasExtras].filter(t => !tallasConJugadores.includes(t));
-  const todasLasTallas = [...tallasConJugadores, ...tallasSinJugadores];
+  let todasLasTallas: string[];
+  if (isPantMode) {
+    const pantTallas      = [...new Set(players.map(p => p.TALLA_PANT).filter(Boolean))];
+    const pantExtras      = pantTallas.filter(t => !TALLAS_ESTANDAR.includes(t));
+    const pantConJug      = pantTallas;
+    const pantSinJug      = [...TALLAS_ESTANDAR, ...pantExtras].filter(t => !pantConJug.includes(t));
+    todasLasTallas        = [...pantConJug, ...pantSinJug];
+  } else {
+    const tallasExtras = tallas.filter(t => !TALLAS_ESTANDAR.includes(t));
+    const tallasConJugadores = [...tallas, ...tallasExtras.filter(t => !tallas.includes(t))];
+    const tallasSinJugadores = [...TALLAS_ESTANDAR, ...tallasExtras].filter(t => !tallasConJugadores.includes(t));
+    todasLasTallas = [...tallasConJugadores, ...tallasSinJugadores];
+  }
 
   const hombres = todasLasTallas.filter(t => t.toUpperCase().endsWith('H'));
   const mujeres = todasLasTallas.filter(t => t.toUpperCase().endsWith('M'));
   const otros   = todasLasTallas.filter(t => !t.toUpperCase().endsWith('H') && !t.toUpperCase().endsWith('M'));
 
-  useEffect(() => { setCopyToSet(new Set()); }, [activeTalla]);
+  useEffect(() => { setCopyToSet(new Set()); }, [currentTalla]);
+
+  // Auto-populate PANT_ALTO/PANT_ANCHO desde molde cuando la talla no tiene dims configuradas
+  useEffect(() => {
+    if (!isPantMode || !currentTalla) return;
+    const clienteIdPant = globalConfig.clienteIdPant ?? '';
+    const moldeIdPant   = globalConfig.moldeIdPant   ?? '';
+    if (!clienteIdPant || !moldeIdPant) return;
+    const existingRules = tallaRules[currentTalla] ?? {};
+    if (existingRules.PANT_ALTO && existingRules.PANT_ALTO !== '') return;
+    const dims = getTallas(clienteIdPant, moldeIdPant)[currentTalla];
+    if (!dims) return;
+    if (dims.ALTO)  setTallaRule(currentTalla, 'PANT_ALTO',  dims.ALTO);
+    if (dims.ANCHO) setTallaRule(currentTalla, 'PANT_ANCHO', dims.ANCHO);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTalla, isPantMode]);
 
   // Auto-expand the talla group containing the active talla
   useEffect(() => {
-    if (!activeTalla) return;
-    const g = activeTalla.toUpperCase().endsWith('H') ? 'H' : activeTalla.toUpperCase().endsWith('M') ? 'M' : 'O';
+    if (!currentTalla) return;
+    const g = currentTalla.toUpperCase().endsWith('H') ? 'H' : currentTalla.toUpperCase().endsWith('M') ? 'M' : 'O';
     setTallaAccordion(prev => prev[g] ? prev : { ...prev, [g]: true });
-  }, [activeTalla]);
+  }, [currentTalla]);
 
-  const copyOptions = sortTallas(todasLasTallas.filter(t => t !== activeTalla));
+  const copyOptions = sortTallas(todasLasTallas.filter(t => t !== currentTalla));
   const copyH = copyOptions.filter(t => getGeneroTalla(t) === 'H');
   const copyM = copyOptions.filter(t => getGeneroTalla(t) === 'M');
   const copyO = copyOptions.filter(t => getGeneroTalla(t) === 'other');
@@ -238,14 +286,14 @@ export function RulesTab({ onToast }: Props) {
   }
 
   function handleCopy() {
-    if (!activeTalla || copyToSet.size === 0) return;
-    copyToSet.forEach(t => copyTallaRules(activeTalla, t));
-    onToast(`Reglas de ${activeTalla} copiadas a ${copyToSet.size} talla(s)`, 'ok');
+    if (!currentTalla || copyToSet.size === 0) return;
+    copyToSet.forEach(t => copyTallaRules(currentTalla, t));
+    onToast(`Reglas de ${currentTalla} copiadas a ${copyToSet.size} talla(s)`, 'ok');
     setCopyToSet(new Set());
   }
 
   return (
-    <div className={`rules-layout${showPreviewPanel && activeTalla ? ' with-preview' : ''}`}>
+    <div className={`rules-layout${showPreviewPanel && currentTalla ? ' with-preview' : ''}`}>
       {/* ── Sidebar tallas ── */}
       <div className="tallas-sidebar">
         <div className="sidebar-label">TALLAS</div>
@@ -262,7 +310,7 @@ export function RulesTab({ onToast }: Props) {
                   {hombres.length} · {tallaAccordion.H ? '▾' : '▸'}
                 </span>
               </button>
-              {tallaAccordion.H && hombres.map(t => <TallaBtn key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              {tallaAccordion.H && hombres.map(t => <TallaBtn key={t} t={t} genero="H" playerCount={playerCount(t)} active={currentTalla === t} onClick={setCurrentTalla} />)}
             </>
           )}
           {mujeres.length > 0 && (
@@ -276,7 +324,7 @@ export function RulesTab({ onToast }: Props) {
                   {mujeres.length} · {tallaAccordion.M ? '▾' : '▸'}
                 </span>
               </button>
-              {tallaAccordion.M && mujeres.map(t => <TallaBtn key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              {tallaAccordion.M && mujeres.map(t => <TallaBtn key={t} t={t} genero="M" playerCount={playerCount(t)} active={currentTalla === t} onClick={setCurrentTalla} />)}
             </>
           )}
           {otros.length > 0 && (
@@ -290,7 +338,7 @@ export function RulesTab({ onToast }: Props) {
                   {otros.length} · {tallaAccordion.O ? '▾' : '▸'}
                 </span>
               </button>
-              {tallaAccordion.O && otros.map(t => <TallaBtn key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} active={activeTalla === t} onClick={setActiveTalla} />)}
+              {tallaAccordion.O && otros.map(t => <TallaBtn key={t} t={t} genero="O" playerCount={playerCount(t)} active={currentTalla === t} onClick={setCurrentTalla} />)}
             </>
           )}
         </div>
@@ -306,13 +354,15 @@ export function RulesTab({ onToast }: Props) {
               ↩ DESHACER {undoStack.length > 0 ? `(${undoStack.length})` : ''}
             </button>
           </div>
-          <button
-            className="btn btn-ghost btn-sm btn-full"
-            title="Elimina overrides individuales de esta talla"
-            onClick={() => { if (activeTalla) { applyTallaToAll(activeTalla); onToast(`Reglas de ${activeTalla} aplicadas a todos`, 'ok'); } }}
-          >
-            ↺ RESET OVERRIDES
-          </button>
+          {!isPantMode && (
+            <button
+              className="btn btn-ghost btn-sm btn-full"
+              title="Elimina overrides individuales de esta talla"
+              onClick={() => { if (currentTalla) { applyTallaToAll(currentTalla); onToast(`Reglas de ${currentTalla} aplicadas a todos`, 'ok'); } }}
+            >
+              ↺ RESET OVERRIDES
+            </button>
+          )}
           <div className="copy-section">
             <div className="copy-label">
               Copiar a:
@@ -336,7 +386,7 @@ export function RulesTab({ onToast }: Props) {
                         <span>♂ HOMBRES</span>
                         <span>{copyH.filter(t => copyToSet.has(t)).length}/{copyH.length} {copyAccordion.H ? '▾' : '▸'}</span>
                       </button>
-                      {copyAccordion.H && copyH.map(t => <CopyItem key={t} t={t} genero="H" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      {copyAccordion.H && copyH.map(t => <CopyItem key={t} t={t} genero="H" playerCount={playerCount(t)} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyM.length > 0 && (
@@ -348,7 +398,7 @@ export function RulesTab({ onToast }: Props) {
                         <span>♀ MUJERES</span>
                         <span>{copyM.filter(t => copyToSet.has(t)).length}/{copyM.length} {copyAccordion.M ? '▾' : '▸'}</span>
                       </button>
-                      {copyAccordion.M && copyM.map(t => <CopyItem key={t} t={t} genero="M" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      {copyAccordion.M && copyM.map(t => <CopyItem key={t} t={t} genero="M" playerCount={playerCount(t)} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                   {copyO.length > 0 && (
@@ -360,7 +410,7 @@ export function RulesTab({ onToast }: Props) {
                         <span>OTROS</span>
                         <span>{copyO.filter(t => copyToSet.has(t)).length}/{copyO.length} {copyAccordion.O ? '▾' : '▸'}</span>
                       </button>
-                      {copyAccordion.O && copyO.map(t => <CopyItem key={t} t={t} genero="O" playerCount={players.filter(p => p.TALLA === t).length} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
+                      {copyAccordion.O && copyO.map(t => <CopyItem key={t} t={t} genero="O" playerCount={playerCount(t)} checked={copyToSet.has(t)} onToggle={toggleCopyTo} />)}
                     </div>
                   )}
                 </>
@@ -380,11 +430,11 @@ export function RulesTab({ onToast }: Props) {
       {/* ── Main rules area ── */}
       <div className="rules-main">
         <div className="rules-main-topbar">
-          <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} />
-          {activeTalla && (
+          <PiezaTabs active={activePieza} onChange={p => setActivePieza(p as PiezaKey)} piezas={activePiezas} />
+          {currentTalla && (
             <button
               className={`rules-preview-trigger${showPreviewPanel ? ' active' : ''}`}
-              title={`${showPreviewPanel ? 'Cerrar' : 'Abrir'} preview de ${SCHEMA[activePieza]?.label} — ${activeTalla}`}
+              title={`${showPreviewPanel ? 'Cerrar' : 'Abrir'} preview de ${SCHEMA[activePieza]?.label} — ${currentTalla}`}
               onClick={() => setShowPreviewPanel(v => !v)}
             >
               <svg viewBox="0 0 20 20" fill="none" width="16" height="16" aria-hidden="true">
@@ -398,7 +448,7 @@ export function RulesTab({ onToast }: Props) {
           )}
         </div>
 
-        {!activeTalla ? (
+        {!currentTalla ? (
           <div className="rules-empty-state">
             <span className="rules-empty-icon">←</span>
             <p>Seleccioná una talla para configurar sus reglas</p>
@@ -458,8 +508,8 @@ export function RulesTab({ onToast }: Props) {
                     piezaColor={schema?.color ?? '#999'}
                     expanded={q ? true : isGroupExpanded(groupKey)}
                     onToggle={() => toggleGroup(groupKey)}
-                    activeTalla={activeTalla}
-                    onChange={(key, val) => handleRuleChange(activeTalla, key, val)}
+                    activeTalla={currentTalla ?? ''}
+                    onChange={(key, val) => handleRuleChange(currentTalla ?? '', key, val)}
                   />
                 ));
               })()}
@@ -469,10 +519,10 @@ export function RulesTab({ onToast }: Props) {
       </div>
 
       {/* ── Preview panel (3rd column) ── */}
-      {showPreviewPanel && activeTalla && (
+      {showPreviewPanel && currentTalla && (
         <PiezaPreviewPanel
           pieza={activePieza}
-          talla={activeTalla}
+          talla={currentTalla}
           rules={rules}
           onClose={() => setShowPreviewPanel(false)}
           onExpand={() => setPreviewOpen(true)}
@@ -480,10 +530,10 @@ export function RulesTab({ onToast }: Props) {
       )}
 
       {/* ── Preview modal (fullscreen) ── */}
-      {previewOpen && activeTalla && (
+      {previewOpen && currentTalla && (
         <PiezaPreviewModal
           pieza={activePieza}
-          talla={activeTalla}
+          talla={currentTalla}
           rules={rules}
           onClose={() => setPreviewOpen(false)}
         />

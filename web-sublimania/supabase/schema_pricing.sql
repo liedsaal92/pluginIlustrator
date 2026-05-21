@@ -9,12 +9,20 @@
 -- ── pricing_config ────────────────────────────────────────────
 -- Una fila por org. PricingConfig completo como JSONB + refs UI.
 CREATE TABLE public.pricing_config (
-  org_id         UUID        PRIMARY KEY REFERENCES public.organizations(id) ON DELETE CASCADE,
-  config         JSONB       NOT NULL DEFAULT '{}',
-  ref_cliente_id TEXT,
-  ref_gender     TEXT,
-  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+  org_id              UUID        PRIMARY KEY REFERENCES public.organizations(id) ON DELETE CASCADE,
+  config              JSONB       NOT NULL DEFAULT '{}',
+  ref_cliente_id      TEXT,
+  ref_gender          TEXT,
+  ref_cliente_id_pant TEXT,
+  ref_gender_pant     TEXT,
+  ref_molde_id_pant   TEXT,
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migración para orgs existentes (ejecutar si la tabla ya existe):
+-- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_cliente_id_pant TEXT;
+-- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_gender_pant TEXT;
+-- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_molde_id_pant TEXT;
 
 ALTER TABLE public.pricing_config ENABLE ROW LEVEL SECURITY;
 

@@ -145,7 +145,7 @@ function getLineaClipBounds(item) {
     return null;
 }
 
-function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza) {
+function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza, usarBordeExterior) {
     if (!item) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_" + lado + " no encontrada — omitida");
@@ -271,7 +271,7 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
             if (!_estRef) {
                 _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
             }
-            var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds);
+            var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds, usarBordeExterior);
             var _estBot    = _estBounds[3];
             var _estLeft   = _estBounds[0];
             var _estRight  = _estBounds[2];
@@ -350,7 +350,7 @@ function procesarLineaManga(item, lado, targetAncho, targetAlto, ref, nombreJuga
 //   ES_RANGLAN=NO → posiciona desde el borde inferior del ESTATICO
 //                   (igual que ESCUDO en manga)
 // Centrado horizontalmente sobre el ESTATICO.
-function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan, grupoPieza, nombreJugador, nombrePieza) {
+function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan, grupoPieza, nombreJugador, nombrePieza, usarBordeExterior) {
     if (!item) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": LINEAS_ADIDAS (manga " + suf + ") no encontrada — omitida");
@@ -365,7 +365,7 @@ function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan,
         // ── Obtener bounds del ESTATICO ──────────────────────
         var _estRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
         if (!_estRef) _estRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-        var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds);
+        var _estBounds = getEstaticoRefBounds(_estRef, grupoPieza.geometricBounds, usarBordeExterior);
         var estTop    = _estBounds[1]; // borde superior (mayor Y en coordenadas AI)
         var estBottom = _estBounds[3]; // borde inferior (menor Y)
         var estLeft   = _estBounds[0];
@@ -436,7 +436,7 @@ function procesarLineasAdidas(item, suf, targetAncho, ref, marginInf, esRanglan,
 // REF=ALTO  → fija el alto al valor del CSV, ancho escala con la manga (comportamiento original)
 // REF=ANCHO → fija el ancho al valor del CSV, alto escala con la manga
 // REF=PROPORCIONAL → escala con la pieza (no se aplica resize adicional)
-function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza) {
+function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJugador, nombrePieza, factorPieza, grupoPieza, usarBordeExterior) {
     if (!grupoLinea) {
         Log.info(nombrePieza + " | " + nombreJugador +
                  ": MANGA_LINEA_INF no encontrada — omitida");
@@ -471,7 +471,7 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
             if (grupoPieza) {
                 var _infEstRef = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
                 if (!_infEstRef) _infEstRef = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-                var _infClipB  = getEstaticoRefBounds(_infEstRef, grupoPieza.geometricBounds);
+                var _infClipB  = getEstaticoRefBounds(_infEstRef, grupoPieza.geometricBounds, usarBordeExterior);
                 var _infBot    = _infClipB[3];
                 grupoLinea.translate(0, _infBot - boundsDespues[3]);
                 grupoLinea.left = _infClipB[0]; // snap horizontal al borde izq de ESTATICO
@@ -499,7 +499,7 @@ function procesarLineaMangaInf(grupoLinea, targetAncho, targetAlto, ref, nombreJ
             if (grupoPieza) {
                 var _infEstRefA = findGroupByNameRecursivo(grupoPieza, "ESTATICO");
                 if (!_infEstRefA) _infEstRefA = findItemByNameRecursivo(grupoPieza, "ESTATICO");
-                var _infClipBA  = getEstaticoRefBounds(_infEstRefA, grupoPieza.geometricBounds);
+                var _infClipBA  = getEstaticoRefBounds(_infEstRefA, grupoPieza.geometricBounds, usarBordeExterior);
                 grupoLinea.translate(0, _infClipBA[3] - _infBotA[3]);
                 grupoLinea.left = _infClipBA[0]; // snap horizontal al borde izq de ESTATICO
             } else {

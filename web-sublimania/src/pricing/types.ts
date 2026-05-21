@@ -4,6 +4,22 @@ export type ProductId = 'camiseta' | 'pantaloneta' | 'equipo' | 'por_cm';
 export type PrintProfileId = string;
 export type MeasurementSource = 'real' | 'estimated';
 
+export interface HeatPress {
+  id: string;
+  name: string;
+  widthCm: number;
+  heightCm: number;
+  cost: number;
+  lifeBajadas: number;
+  paperSheetsPerBajada: number;
+}
+
+export interface Plotter {
+  id: string;
+  name: string;
+  widthCm: number;
+}
+
 export interface PricingConfig {
   monthlyMeters: number;
   minMargin: number;
@@ -22,6 +38,11 @@ export interface PricingConfig {
   defaultFabricCamisetaId: string | null;
   defaultFabricPantalonetaId: string | null;
   orgNombre: string;
+  presses: HeatPress[];
+  selectedPressId: string | null;
+  plotters: Plotter[];
+  selectedPlotterId: string | null;
+  perBajadaSupplyIds: string[];
 }
 
 export interface FabricType {
@@ -105,6 +126,8 @@ export interface CostBreakdown {
   fabricCostPerUnit: number;
   tailoringCostPerUnit: number;
   polinesCostPerUnit: number;
+  pressBajadas: number;
+  pressCostPerUnit: number;
   unitCost: number;
   totalCost: number;
   savingsPerUnit: number;
@@ -131,6 +154,7 @@ export interface QuoteInput {
   savingsTransferRate: number;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
+  tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   serviceMode?: 'sublimation' | 'full_service' | 'paper';
   fabrics?: FabricType[];
   selectedFabricIdCamiseta?: string | null;

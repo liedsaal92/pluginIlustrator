@@ -19,7 +19,7 @@ export function Toast({ message, type, onDone }: ToastProps) {
   }, [onDone]);
 
   return (
-    <div className={`toast toast-${type} ${visible ? 'toast-show' : ''}`}>
+    <div role="status" aria-live="polite" className={`toast toast-${type} ${visible ? 'toast-show' : ''}`}>
       {message}
     </div>
   );

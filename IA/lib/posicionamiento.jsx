@@ -9,8 +9,12 @@
 // Prioridad: clip mask directo → clip mask en subgrupo → geometricBounds.
 // Necesario porque cuando el clip está en un subgrupo interno (estatico.clipped=false),
 // geometricBounds del ESTATICO incluye contenido que desborda la silueta visible.
-function getEstaticoRefBounds(estatico, fallback) {
+// usarBordeExterior=true: retorna geometricBounds sin buscar clips internos.
+// Usar para piezas donde el límite de corte es el grupo externo (PANT_IZQ/DER),
+// no el área de clip decorativa interna.
+function getEstaticoRefBounds(estatico, fallback, usarBordeExterior) {
     if (!estatico) return fallback;
+    if (usarBordeExterior) return estatico.geometricBounds;
     if (estatico.clipped) {
         try { return estatico.pageItems[0].geometricBounds; } catch(e) {}
     }

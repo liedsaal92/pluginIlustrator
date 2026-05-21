@@ -140,31 +140,61 @@ function verificarDuplicados(grupoPieza, nombrePieza) {
 function detectarTallaTemplate(jugadores, gruposDisponibles) {
     var tallaTemplate = null;
     var frenteGrupo   = gruposDisponibles.grupos["FRENTE"];
-    if (!frenteGrupo) return null;
 
-    var fcb    = buscarClipBounds(frenteGrupo);
-    var fAncho = fcb
-        ? ptToCm(Math.abs(fcb[3] - fcb[1]))
-        : ptToCm(Math.abs(frenteGrupo.width));
-    var fAlto  = fcb
-        ? ptToCm(Math.abs(fcb[0] - fcb[2]))
-        : ptToCm(Math.abs(frenteGrupo.height));
+    if (frenteGrupo) {
+        var fcb    = buscarClipBounds(frenteGrupo);
+        var fAncho = fcb
+            ? ptToCm(Math.abs(fcb[3] - fcb[1]))
+            : ptToCm(Math.abs(frenteGrupo.width));
+        var fAlto  = fcb
+            ? ptToCm(Math.abs(fcb[0] - fcb[2]))
+            : ptToCm(Math.abs(frenteGrupo.height));
 
-    var mejorDiff = 999;
-    for (var ti = 0; ti < jugadores.length; ti++) {
-        var tj   = jugadores[ti];
-        var ta   = parseFloat(tj.ANCHO);
-        var th   = parseFloat(tj.ALTO);
-        if (isNaN(ta) || isNaN(th)) continue;
-        var diff = Math.abs(ta - fAncho) + Math.abs(th - fAlto);
-        if (diff < mejorDiff) { mejorDiff = diff; tallaTemplate = tj; }
+        var mejorDiff = 999;
+        for (var ti = 0; ti < jugadores.length; ti++) {
+            var tj   = jugadores[ti];
+            var ta   = parseFloat(tj.ANCHO);
+            var th   = parseFloat(tj.ALTO);
+            if (isNaN(ta) || isNaN(th)) continue;
+            var diff = Math.abs(ta - fAncho) + Math.abs(th - fAlto);
+            if (diff < mejorDiff) { mejorDiff = diff; tallaTemplate = tj; }
+        }
+        if (tallaTemplate && mejorDiff < 2) {
+            Log.ok("Template detectado: talla " + tallaTemplate.TALLA_CAMI +
+                   " (" + fAncho.toFixed(1) + " x " + fAlto.toFixed(1) + " cm)");
+        } else {
+            tallaTemplate = null;
+            Log.info("No se pudo detectar talla del template desde FRENTE");
+        }
     }
-    if (tallaTemplate && mejorDiff < 2) {
-        Log.ok("Template detectado: talla " + tallaTemplate.TALLA +
-               " (" + fAncho.toFixed(1) + " x " + fAlto.toFixed(1) + " cm)");
-    } else {
-        tallaTemplate = null;
-        Log.info("No se pudo detectar talla del template desde FRENTE");
+
+    // Fallback: detectar desde PANT_IZQ o PANT_DER cuando no hay FRENTE
+    if (!tallaTemplate) {
+        var pantGrupo = gruposDisponibles.grupos["PANT_IZQ"] || gruposDisponibles.grupos["PANT_DER"];
+        if (pantGrupo) {
+            var _pantEst = findGroupByNameRecursivo(pantGrupo, "ESTATICO");
+            if (!_pantEst) _pantEst = findItemByNameRecursivo(pantGrupo, "ESTATICO");
+            var _pb = _pantEst ? _pantEst.geometricBounds : pantGrupo.geometricBounds;
+            var pAncho = ptToCm(Math.abs(_pb[2] - _pb[0]));
+            var pAlto  = ptToCm(Math.abs(_pb[1] - _pb[3]));
+            var mejorDiffP = 999;
+            for (var _tpi = 0; _tpi < jugadores.length; _tpi++) {
+                var _tp  = jugadores[_tpi];
+                var _tpa = parseFloat(_tp.PANT_ANCHO);
+                var _tph = parseFloat(_tp.PANT_ALTO);
+                if (isNaN(_tpa) || isNaN(_tph)) continue;
+                var _diffP = Math.abs(_tpa - pAncho) + Math.abs(_tph - pAlto);
+                if (_diffP < mejorDiffP) { mejorDiffP = _diffP; tallaTemplate = _tp; }
+            }
+            if (tallaTemplate && mejorDiffP < 2) {
+                Log.ok("Template detectado (PANT): talla " + tallaTemplate.TALLA_CAMI +
+                       " (" + pAncho.toFixed(1) + " x " + pAlto.toFixed(1) + " cm)");
+            } else {
+                tallaTemplate = null;
+                Log.info("No se pudo detectar talla del template desde PANT");
+            }
+        }
     }
+
     return tallaTemplate;
 }

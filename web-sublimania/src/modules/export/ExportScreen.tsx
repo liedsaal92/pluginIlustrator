@@ -10,8 +10,8 @@ import { useMoldesStore } from '../../store/useMoldesStore';
 import { buildCSV, downloadCSV } from '../../utils/csvExport';
 import { CSV_COLUMN_ORDER, TALLAS_ESTANDAR, buildEmptyRules } from '../../utils/schema';
 
-// Columnas visibles en el preview de tabla
-const PREVIEW_COLS = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA', 'ALTO', 'ANCHO', 'MANGA_ALTO', 'MANGA_ANCHO'];
+const PREVIEW_COLS_CAMI = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA_CAMI', 'ALTO', 'ANCHO', 'MANGA_ALTO', 'MANGA_ANCHO'];
+const PREVIEW_COLS_PANT = ['NOMBRE', 'NOMBRE_CAMISETA', 'NUMERO', 'TALLA_CAMI', 'TALLA_PANT', 'PANT_ALTO', 'PANT_ANCHO'];
 
 function parseCSVRow(line: string): string[] {
   const result: string[] = [];
@@ -86,33 +86,38 @@ export function ExportScreen({ onToast }: Props) {
 
   const tallasSeleccionadasArr = Array.from(seleccionadas);
 
-  const tallaDims = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
+  const isPantMolde = !!moldeId && (moldes.find(m => m.id === moldeId)?.tipo ?? 'camiseta') === 'pantaloneta';
+  const rawDims     = (clienteId && moldeId) ? getTallas(clienteId, moldeId) : {};
+  const tallaDims     = isPantMolde ? {} : rawDims;
+  const pantTallaDims = isPantMolde ? rawDims : {};
 
   const csv = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
-      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : undefined, tallaDims),
+      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : undefined, tallaDims, pantTallaDims),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
+    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), rawDims, isPantMolde]
   );
 
   const previewCSV = useMemo(
     () => buildCSV(players, tallaRules, overrides, globalConfig,
-      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : [], tallaDims),
+      tallasSeleccionadasArr.length > 0 ? tallasSeleccionadasArr : [], tallaDims, pantTallaDims),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), tallaDims]
+    [players, tallaRules, overrides, globalConfig, tallasSeleccionadasArr.join(','), rawDims, isPantMolde]
   );
 
-  const jugadoresFiltrados = players.filter(p => seleccionadas.has(p.TALLA ?? ''));
+  const jugadoresFiltrados = players.filter(p => seleccionadas.has(p.TALLA_CAMI ?? ''));
 
   // Historia de exportaciones
   const historialEntries = tallasConJugadores
-    .map(t => ({ talla: t, count: players.filter(p => p.TALLA === t).length, info: teamHistory[t] ?? null }))
+    .map(t => ({ talla: t, count: players.filter(p => p.TALLA_CAMI === t).length, info: teamHistory[t] ?? null }))
     .filter(e => e.count > 0);
   const lastExportTs = Object.values(teamHistory)
     .map(h => new Date(h.exportedAt).getTime())
     .sort((a, b) => b - a)[0] ?? null;
 
   // Parse preview CSV into table rows
+  const PREVIEW_COLS = isPantMolde ? PREVIEW_COLS_PANT : PREVIEW_COLS_CAMI;
+
   const { previewHeaders, previewColIndices, previewRows } = useMemo(() => {
     const lines = previewCSV.split('\r\n').filter(Boolean);
     if (lines.length < 1) return { previewHeaders: [], previewColIndices: [], previewRows: [] };
@@ -122,7 +127,7 @@ export function ExportScreen({ onToast }: Props) {
     const rows = lines.slice(1, 7).map(line => parseCSVRow(line));
     return { previewHeaders: headers, previewColIndices: indices, previewRows: rows };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewCSV]);
+  }, [previewCSV, isPantMolde]);
 
   function handleDownload() {
     if (!equipo) {
@@ -240,7 +245,7 @@ export function ExportScreen({ onToast }: Props) {
             <div className="talla-toggles-grid">
               {todasLasTallas.map(talla => {
                 const exportInfo = teamHistory[talla];
-                const count = players.filter(p => p.TALLA === talla).length;
+                const count = players.filter(p => p.TALLA_CAMI === talla).length;
                 const hasPlayers = count > 0;
                 const selected = seleccionadas.has(talla);
                 return (
@@ -332,7 +337,7 @@ export function ExportScreen({ onToast }: Props) {
             {seleccionadas.size > 0 && (
               <div className="talla-breakdown">
                 {tallasSeleccionadasArr.map(talla => {
-                  const jug = players.filter(p => p.TALLA === talla);
+                  const jug = players.filter(p => p.TALLA_CAMI === talla);
                   return (
                     <div key={talla} className="tdb-row">
                       <span className="tdb-talla">{talla}</span>

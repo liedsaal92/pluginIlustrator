@@ -5,11 +5,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { supabase } from '../../utils/supabase';
 import type { PortalInfo } from '../../types';
+import { TALLAS_DEFAULT } from '../../store/tallasConstants';
 
-const TALLAS = [
-  '24H','26H','28H','30H','32H','34H','35H','36H','38H','40H','42H','44H',
-  '24M','26M','28M','30M','32M','34M','35M','36M','38M','40M','42M','44M',
-];
+const TALLAS = Object.keys(TALLAS_DEFAULT);
 
 function useCountdown(expiresAt: string | null) {
   const [remaining, setRemaining] = useState<number | null>(null);

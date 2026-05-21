@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useClientesStore } from '../../store/useClientesStore';
 import { useTallasStore } from '../../store/useTallasStore';
-import { MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
+import { useMoldesStore } from '../../store/useMoldesStore';
 import { useTiposClienteStore } from '../../store/useTiposClienteStore';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 
@@ -17,16 +17,19 @@ const EMPTY = { nombre: '', casaCosturera: '' };
 export function ClientesTab({ onToast }: Props) {
   const { clientes, addCliente, updateCliente, removeCliente } = useClientesStore();
   const { initClienteFromDefault, removeCliente: removeTallasCliente } = useTallasStore();
+  const moldes = useMoldesStore(s => s.moldes);
   const { tipos, clienteTipos, assignTipo, unassignTipo } = useTiposClienteStore();
 
   const [form, setForm]         = useState({ ...EMPTY });
   const [editId, setEditId]     = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ ...EMPTY });
 
-  function handleAdd() {
+  async function handleAdd() {
     if (!form.nombre.trim()) return;
     const id = addCliente(form.nombre, form.casaCosturera);
-    initClienteFromDefault(id, MOLDE_DEFAULT_ID);
+    for (const molde of moldes) {
+      await initClienteFromDefault(id, molde.id);
+    }
     setForm({ ...EMPTY });
     onToast(`Cliente "${form.nombre.trim()}" creado con tallas por defecto`, 'ok');
   }
@@ -155,13 +158,14 @@ export function ClientesTab({ onToast }: Props) {
                       <button
                         className="btn-del-talla"
                         title="Editar"
+                        aria-label={`Editar ${c.nombre}`}
                         onClick={() => { setEditId(c.id); setEditForm({ nombre: c.nombre, casaCosturera: c.casaCosturera }); }}
                       >
                         ✎
                       </button>
                       <ConfirmButton
                         className="btn-del-talla btn-del-danger"
-                        title="Eliminar"
+                        title={`Eliminar ${c.nombre}`}
                         onConfirm={() => handleDelete(c.id, c.nombre)}
                       />
                     </td>
