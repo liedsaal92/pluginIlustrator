@@ -71,10 +71,13 @@ CREATE TABLE public.teams (
   nombre         TEXT        NOT NULL DEFAULT '',
   notas          TEXT        NOT NULL DEFAULT '',
   base_team_id   TEXT,                  -- referencia a equipo base (nullable)
+  cliente_id     TEXT,                  -- cliente al que pertenece el equipo (nullable)
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (id, org_id)
 );
+
+ALTER TABLE public.teams ADD COLUMN IF NOT EXISTS cliente_id TEXT;
 
 ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 

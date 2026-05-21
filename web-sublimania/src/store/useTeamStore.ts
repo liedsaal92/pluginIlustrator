@@ -12,6 +12,7 @@ interface TeamState {
   tallaRules: Record<string, Rules>;
   overrides: Overrides;
   globalConfig: GlobalConfig;
+  clienteId: string | null;
 
   // Navegación
   screen: Screen;
@@ -35,6 +36,7 @@ interface TeamState {
   copyTallaRulesToAll: (from: string) => void;
   importAllTallaRules: (rules: Record<string, Rules>) => void;
   setGlobalConfig: (key: string, value: string) => void;
+  setClienteId: (id: string | null) => void;
 
   // Acciones — navegación
   setScreen: (screen: Screen) => void;
@@ -60,6 +62,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
       tallaRules: {},
       overrides: {},
       globalConfig: getDefaultGlobal(),
+      clienteId: null,
       screen: 'upload',
       configTab: 'rules',
       activeTalla: null,
@@ -192,6 +195,8 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
         set({ globalConfig: { ...get().globalConfig, [key]: value } });
       },
 
+      setClienteId: (id) => set({ clienteId: id }),
+
       // ── Navegación ──────────────────────────────────────────
       setScreen: (screen) => set({ screen }),
       setConfigTab: (configTab) => set({ configTab }),
@@ -223,6 +228,7 @@ export const useTeamStore = create<TeamState>()((set, get) => ({
           tallaRules:     entry.tallaRules,
           overrides:      entry.overrides,
           globalConfig:   { ...getDefaultGlobal(), ...entry.globalConfig },
+          clienteId:      entry.clienteId ?? null,
           screen:         targetScreen,
           configTab:      'rules',
           activeTalla:    entry.tallas[0] ?? '24H',
@@ -244,6 +250,7 @@ export function buildTeamEntryFromWorkingStore(): Omit<TeamEntry, 'id' | 'create
     tallaRules:    s.tallaRules,
     overrides:     s.overrides,
     globalConfig:  s.globalConfig,
+    clienteId:     s.clienteId ?? null,
     exportHistory: {},
     portalStatus:  'none',
     createdBy:     null,
