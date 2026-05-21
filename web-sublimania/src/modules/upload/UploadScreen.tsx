@@ -75,6 +75,7 @@ export function UploadScreen({ onToast }: Props) {
           nombre: current?.nombre || globalConfig.EQUIPO || 'Sin nombre',
           players, tallas, tallaRules,
           overrides: {}, globalConfig,
+          clienteId:    current?.clienteId    ?? null,
           exportHistory: current?.exportHistory ?? {},
           portalStatus: current?.portalStatus ?? 'none',
           createdBy:    current?.createdBy    ?? null,
@@ -83,10 +84,12 @@ export function UploadScreen({ onToast }: Props) {
         });
       } else {
         // Equipo nuevo
+        const { clienteId } = useTeamStore.getState();
         createTeam({
           nombre: globalConfig.EQUIPO || 'Nuevo equipo',
           players, tallas, tallaRules,
           overrides: {}, globalConfig,
+          clienteId: clienteId ?? null,
           exportHistory: {},
           portalStatus: 'none', createdBy: null, portalToken: null, portalExpiry: null,
         });

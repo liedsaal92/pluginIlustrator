@@ -69,6 +69,7 @@ export interface TeamEntry {
   overrides: Overrides;
   globalConfig: GlobalConfig;
   exportHistory: Record<string, { exportedAt: string }>;
+  clienteId:    string | null;
   portalStatus: PortalStatus;
   createdBy:    string | null;
   portalToken:  string | null;

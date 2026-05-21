@@ -4,6 +4,7 @@
 import { useState, type CSSProperties } from 'react';
 import { useTeamsStore, saveActiveTeam } from '../../store/useTeamsStore';
 import { useTeamStore } from '../../store/useTeamStore';
+import { useClientesStore } from '../../store/useClientesStore';
 import { getDefaultGlobal, buildEmptyRules } from '../../utils/schema';
 import { ConfirmButton } from '../../components/ui/ConfirmButton';
 import { usePermission } from '../../hooks/usePermission';
@@ -51,31 +52,58 @@ function lastExportInfo(entry: TeamEntry): { relative: string; full: string; tal
 const EMPTY_ENTRY: TeamEntry = {
   id: '', nombre: '', createdAt: '', updatedAt: '',
   players: [], tallas: [], tallaRules: {}, overrides: {},
-  globalConfig: { EQUIPO: '', NOTAS: '', clienteIdPant: '', moldeIdPant: '' }, exportHistory: {},
+  globalConfig: { EQUIPO: '', NOTAS: '', clienteIdPant: '', moldeIdPant: '' },
+  clienteId: null,
+  exportHistory: {},
   portalStatus: 'none', createdBy: null, portalToken: null, portalExpiry: null,
 };
 
 export function TeamsScreen({ onToast }: Props) {
-  const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam } = useTeamsStore();
+  const { teams, activeTeamId, baseTeamId, switchTeam, deleteTeam, setBaseTeam, createTeam, saveTeam } = useTeamsStore();
   const { loadFromEntry } = useTeamStore();
+  const { clientes } = useClientesStore();
   const canManageSettings = usePermission('settings:manage');
-
-  // Paginación — active team shown as featured, paginate the rest
-  const PAGE_SIZE = 16;
-  const [page, setPage] = useState(1);
-  const otherTeams = teams.filter(t => t.id !== activeTeamId);
-  const totalPages = Math.ceil(otherTeams.length / PAGE_SIZE);
-  const pagedTeams = otherTeams.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // Estado del modal "nuevo equipo"
   const [showNewModal, setShowNewModal] = useState(false);
   const [newNombre, setNewNombre] = useState('');
   const [sourceTeamId, setSourceTeamId] = useState('');
+  const [newClienteId, setNewClienteId] = useState('');
+
+  // Búsqueda
+  const [teamSearch, setTeamSearch] = useState('');
+
+  // Grupos de clientes expandidos (por defecto todos)
+  const [collapsedClientes, setCollapsedClientes] = useState<Set<string>>(new Set());
 
   // Equipos que tienen al menos una talla con reglas configuradas
   const teamsWithRules = teams.filter(
     t => Object.keys(t.tallaRules).length > 0
   );
+
+  // Equipos distintos al activo, para la vista agrupada
+  const otherTeams = teams.filter(t => t.id !== activeTeamId);
+
+  const q = teamSearch.toLowerCase().trim();
+  const filteredTeams = q
+    ? otherTeams.filter(t => {
+        if (t.nombre.toLowerCase().includes(q)) return true;
+        if (t.clienteId) {
+          const clienteNombre = clientes.find(c => c.id === t.clienteId)?.nombre ?? '';
+          if (clienteNombre.toLowerCase().includes(q)) return true;
+        }
+        return false;
+      })
+    : otherTeams;
+
+  function toggleCliente(key: string) {
+    setCollapsedClientes(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   function handleOpen(entry: TeamEntry) {
     saveActiveTeam();
@@ -91,6 +119,7 @@ export function TeamsScreen({ onToast }: Props) {
 
   function openNewModal() {
     setNewNombre('');
+    setNewClienteId('');
     const validBase = teamsWithRules.find(t => t.id === baseTeamId);
     setSourceTeamId(validBase?.id ?? '');
     setShowNewModal(true);
@@ -106,12 +135,11 @@ export function TeamsScreen({ onToast }: Props) {
   function handleCreateWithExcel() {
     saveActiveTeam();
     const source = getSourceRules();
-    // Cargar entrada vacía y luego sobrescribir las reglas del equipo fuente
-    // para que UploadScreen las preserve al importar jugadores con tallas coincidentes
     loadFromEntry(EMPTY_ENTRY, 'upload');
     if (source) {
       useTeamStore.setState({ tallas: source.tallas, tallaRules: source.tallaRules });
     }
+    useTeamStore.getState().setClienteId(newClienteId || null);
     useTeamsStore.setState({ activeTeamId: null });
     setShowNewModal(false);
   }
@@ -127,16 +155,17 @@ export function TeamsScreen({ onToast }: Props) {
     const globalConfig = { ...getDefaultGlobal(), EQUIPO: nombre };
     const tallaRules = source ? source.tallaRules : {};
     const tallas = source ? source.tallas : [];
+    const clienteId = newClienteId || null;
     const portalDefaults = { portalStatus: 'none' as const, createdBy: null, portalToken: null, portalExpiry: null };
     const id = createTeam({
       nombre,
       players: [], tallas, tallaRules, overrides: {},
-      globalConfig, exportHistory: {}, ...portalDefaults,
+      globalConfig, clienteId, exportHistory: {}, ...portalDefaults,
     });
     useTeamStore.getState().loadFromEntry({
       id, nombre, createdAt: '', updatedAt: '',
       players: [], tallas, tallaRules, overrides: {},
-      globalConfig, exportHistory: {}, ...portalDefaults,
+      globalConfig, clienteId, exportHistory: {}, ...portalDefaults,
     }, 'configure');
     setShowNewModal(false);
     const suffix = source ? ` (reglas copiadas de "${teams.find(t => t.id === sourceTeamId)?.nombre}")` : '';
@@ -146,7 +175,7 @@ export function TeamsScreen({ onToast }: Props) {
   function handleDelete(id: string) {
     if (!confirm('¿Eliminar este equipo? Esta acción no se puede deshacer.')) return;
     const wasActive = id === activeTeamId;
-    deleteTeam(id); // primero: actualiza activeTeamId al siguiente equipo
+    deleteTeam(id);
     if (wasActive) {
       const { activeTeamId: nextId, teams: remaining } = useTeamsStore.getState();
       const nextTeam = nextId ? remaining.find(t => t.id === nextId) : null;
@@ -155,8 +184,141 @@ export function TeamsScreen({ onToast }: Props) {
     onToast('Equipo eliminado', 'ok');
   }
 
-  // Suprimir advertencia de buildEmptyRules no usado — lo usa UploadScreen
+  function handleAssignCliente(entry: TeamEntry, clienteId: string | null) {
+    const updated = { ...entry, clienteId };
+    // Update in master store optimistically + persist
+    saveTeam(entry.id, updated);
+    // If this is the active team, sync working store too
+    if (entry.id === activeTeamId) {
+      useTeamStore.getState().setClienteId(clienteId);
+    }
+  }
+
+  // Suppress unused warning
   void buildEmptyRules;
+
+  // ── Grouping logic ─────────────────────────────────────────────
+  // Groups: one per client that has teams, then "Sin cliente" at end
+  const clienteGroups = clientes
+    .map(c => ({ cliente: c, teams: filteredTeams.filter(t => t.clienteId === c.id) }))
+    .filter(g => g.teams.length > 0);
+  const sinClienteTeams = filteredTeams.filter(t => !t.clienteId);
+
+  // Inline client selector rendered inside each card
+  function ClienteSelect({ entry }: { entry: TeamEntry }) {
+    return (
+      <select
+        className="input-global"
+        style={{ fontSize: '0.72rem', padding: '0.2rem 0.4rem', height: 'auto', marginTop: '0.3rem' }}
+        value={entry.clienteId ?? ''}
+        onChange={e => handleAssignCliente(entry, e.target.value || null)}
+        onClick={e => e.stopPropagation()}
+        title="Cliente"
+      >
+        <option value="">— Sin cliente —</option>
+        {clientes.map(c => (
+          <option key={c.id} value={c.id}>{c.nombre}</option>
+        ))}
+      </select>
+    );
+  }
+
+  // Renders a single (non-featured) team card
+  function TeamCard({ entry, idx }: { entry: TeamEntry; idx: number }) {
+    const isEmpty = entry.players.length === 0;
+    const configured = getConfiguredCount(entry);
+    return (
+      <div
+        className={`team-card stagger-item ${isEmpty ? 'empty' : ''}`}
+        style={{ '--i': idx } as CSSProperties}
+      >
+        <div className="team-card-header">
+          <div className="team-card-name">{entry.nombre || 'Sin nombre'}</div>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            {isEmpty && <span className="team-empty-badge">VACÍO</span>}
+          </div>
+        </div>
+        {clientes.length > 0 && <ClienteSelect entry={entry} />}
+        <div className="team-card-meta" style={{ marginTop: '0.35rem' }}>
+          <span>{entry.players.length} jugadores</span>
+          {!isEmpty && <span>{entry.tallas.length} tallas: {entry.tallas.join(', ')}</span>}
+        </div>
+        {entry.tallas.length > 0 && (
+          <div className="team-card-progress">
+            <div className="team-card-progress-bar" style={{ width: `${Math.round((configured / entry.tallas.length) * 100)}%` }} />
+            <span className="team-card-progress-label">{configured}/{entry.tallas.length} tallas configuradas</span>
+          </div>
+        )}
+        {!isEmpty && (() => {
+          const exp = lastExportInfo(entry);
+          return <div className="team-card-export">{exp ? `✓ ${exp.relative} · ${exp.tallas}` : 'Sin exportaciones'}</div>;
+        })()}
+        <div className="team-card-dates">
+          <span>Creado: {formatDate(entry.createdAt)}</span>
+          <span>Modificado: {formatDate(entry.updatedAt)}</span>
+        </div>
+        <div className="team-card-btns">
+          {isEmpty ? (
+            <>
+              <button className="btn btn-primary btn-sm" onClick={() => handleLoadPlayers(entry)}>
+                📂 CARGAR JUGADORES
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleOpen(entry)}>
+                ▶ ABRIR
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn btn-primary btn-sm" onClick={() => handleOpen(entry)}>
+                ▶ ABRIR
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(entry)}>
+                🔄 RE-CARGAR
+              </button>
+            </>
+          )}
+          <button
+            className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === entry.id ? 'is-base' : ''}`}
+            title={baseTeamId === entry.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
+            onClick={() => setBaseTeam(entry.id)}
+          >
+            {baseTeamId === entry.id ? '★' : '☆'}
+          </button>
+          {canManageSettings && (
+            <ConfirmButton
+              className="btn btn-ghost btn-sm btn-danger"
+              title="Eliminar equipo"
+              onConfirm={() => handleDelete(entry.id)}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Renders a collapsible client group
+  function ClienteGroup({ label, groupKey, groupTeams }: { label: string; groupKey: string; groupTeams: TeamEntry[] }) {
+    const collapsed = !q && collapsedClientes.has(groupKey);
+    return (
+      <div className="teams-cliente-group">
+        <div
+          className={`teams-cliente-group-header ${collapsed ? '' : 'expanded'}`}
+          onClick={() => toggleCliente(groupKey)}
+        >
+          <span className="teams-cliente-group-label">{label}</span>
+          <span className="teams-cliente-group-badge">{groupTeams.length} equipo{groupTeams.length !== 1 ? 's' : ''}</span>
+          <span className="teams-cliente-group-chevron">{collapsed ? '▶' : '▼'}</span>
+        </div>
+        {!collapsed && (
+          <div className="teams-grid teams-cliente-group-body">
+            {groupTeams.map((entry, idx) => (
+              <TeamCard key={entry.id} entry={entry} idx={idx} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="screen teams-screen">
@@ -184,6 +346,20 @@ export function TeamsScreen({ onToast }: Props) {
               <div className="team-card-featured-info">
                 <div className="team-card-featured-label">▶ EQUIPO ACTIVO</div>
                 <div className="team-card-featured-name">{featured.nombre || 'Sin nombre'}</div>
+                {clientes.length > 0 && (
+                  <select
+                    className="input-global"
+                    style={{ fontSize: '0.72rem', padding: '0.2rem 0.4rem', height: 'auto', marginBottom: '0.4rem', maxWidth: '220px' }}
+                    value={featured.clienteId ?? ''}
+                    onChange={e => handleAssignCliente(featured, e.target.value || null)}
+                    title="Cliente"
+                  >
+                    <option value="">— Sin cliente —</option>
+                    {clientes.map(c => (
+                      <option key={c.id} value={c.id}>{c.nombre}</option>
+                    ))}
+                  </select>
+                )}
                 <div className="team-card-featured-meta">
                   <span><strong>{featured.players.length}</strong> jugadores · <strong>{featured.tallas.length}</strong> tallas{featured.tallas.length > 0 ? `: ${featured.tallas.join(', ')}` : ''}</span>
                   {!isEmpty && (() => {
@@ -242,94 +418,43 @@ export function TeamsScreen({ onToast }: Props) {
           );
         })()}
 
-        {/* ── Rest of teams ──────────────────────────────────── */}
-        {pagedTeams.length > 0 && (
-        <div className="teams-grid">
-          {pagedTeams.map((entry, idx) => {
-            const isEmpty = entry.players.length === 0;
-            const configured = getConfiguredCount(entry);
-            return (
-              <div
-                key={entry.id}
-                className={`team-card stagger-item ${isEmpty ? 'empty' : ''}`}
-                style={{ '--i': idx } as CSSProperties}
-              >
-                <div className="team-card-header">
-                  <div className="team-card-name">{entry.nombre || 'Sin nombre'}</div>
-                  <div style={{ display: 'flex', gap: '0.3rem' }}>
-                    {isEmpty && <span className="team-empty-badge">VACÍO</span>}
-                  </div>
-                </div>
-                <div className="team-card-meta">
-                  <span>{entry.players.length} jugadores</span>
-                  {!isEmpty && <span>{entry.tallas.length} tallas: {entry.tallas.join(', ')}</span>}
-                </div>
-                {entry.tallas.length > 0 && (
-                  <div className="team-card-progress">
-                    <div className="team-card-progress-bar" style={{ width: `${Math.round((configured / entry.tallas.length) * 100)}%` }} />
-                    <span className="team-card-progress-label">{configured}/{entry.tallas.length} tallas configuradas</span>
-                  </div>
-                )}
-                {!isEmpty && (() => {
-                  const exp = lastExportInfo(entry);
-                  return <div className="team-card-export">{exp ? `✓ ${exp.relative} · ${exp.tallas}` : 'Sin exportaciones'}</div>;
-                })()}
-                <div className="team-card-dates">
-                  <span>Creado: {formatDate(entry.createdAt)}</span>
-                  <span>Modificado: {formatDate(entry.updatedAt)}</span>
-                </div>
-                <div className="team-card-btns">
-                  {isEmpty ? (
-                    <>
-                      <button className="btn btn-primary btn-sm" onClick={() => handleLoadPlayers(entry)}>
-                        📂 CARGAR JUGADORES
-                      </button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => handleOpen(entry)}>
-                        ▶ ABRIR
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="btn btn-primary btn-sm" onClick={() => handleOpen(entry)}>
-                        ▶ ABRIR
-                      </button>
-                      <button className="btn btn-ghost btn-sm" onClick={() => handleLoadPlayers(entry)}>
-                        🔄 RE-CARGAR
-                      </button>
-                    </>
-                  )}
-                  <button
-                    className={`btn btn-ghost btn-sm btn-base-team ${baseTeamId === entry.id ? 'is-base' : ''}`}
-                    title={baseTeamId === entry.id ? 'Quitar como equipo base' : 'Marcar como equipo base'}
-                    onClick={() => setBaseTeam(entry.id)}
-                  >
-                    {baseTeamId === entry.id ? '★' : '☆'}
-                  </button>
-                  {canManageSettings && (
-                    <ConfirmButton
-                      className="btn btn-ghost btn-sm btn-danger"
-                      title="Eliminar equipo"
-                      onConfirm={() => handleDelete(entry.id)}
-                    />
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        )}
-        {totalPages > 1 && (
-          <div className="teams-pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-              <button
-                key={n}
-                className={`pagination-btn ${page === n ? 'active' : ''}`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ))}
+        {/* ── Grouped by cliente ────────────────────────────── */}
+        {otherTeams.length > 0 && (
+          <div className="rules-search-bar" style={{ margin: '0.75rem 0' }}>
+            <input
+              className="rules-search-input"
+              type="search"
+              placeholder="Buscar por cliente o equipo…"
+              value={teamSearch}
+              onChange={e => setTeamSearch(e.target.value)}
+            />
+            {teamSearch && (
+              <button className="rules-search-clear" onClick={() => setTeamSearch('')}>×</button>
+            )}
           </div>
+        )}
+        {otherTeams.length > 0 && (
+          q && filteredTeams.length === 0 ? (
+            <div className="rules-search-empty">Sin resultados para "{teamSearch}"</div>
+          ) : (
+          <div className="teams-cliente-groups">
+            {clienteGroups.map(g => (
+              <ClienteGroup
+                key={g.cliente.id}
+                groupKey={g.cliente.id}
+                label={g.cliente.nombre}
+                groupTeams={g.teams}
+              />
+            ))}
+            {sinClienteTeams.length > 0 && (
+              <ClienteGroup
+                groupKey="__sin_cliente__"
+                label="SIN CLIENTE"
+                groupTeams={sinClienteTeams}
+              />
+            )}
+          </div>
+          )
         )}
         </>
       )}
@@ -342,6 +467,23 @@ export function TeamsScreen({ onToast }: Props) {
         <div className="modal-overlay" onClick={() => setShowNewModal(false)}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-title">NUEVO EQUIPO</div>
+
+            {clientes.length > 0 && (
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div className="modal-option-title" style={{ marginBottom: '0.4rem' }}>CLIENTE</div>
+                <select
+                  className="input-global"
+                  style={{ width: '100%' }}
+                  value={newClienteId}
+                  onChange={e => setNewClienteId(e.target.value)}
+                >
+                  <option value="">— Sin cliente —</option>
+                  {clientes.map(c => (
+                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="modal-option" onClick={handleCreateWithExcel}>
               <div className="modal-option-icon">📊</div>

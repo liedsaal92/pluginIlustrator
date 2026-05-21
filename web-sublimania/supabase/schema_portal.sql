@@ -33,13 +33,17 @@ CREATE TABLE IF NOT EXISTS portal_links (
 ALTER TABLE portal_links ENABLE ROW LEVEL SECURITY;
 
 -- Miembros de la org pueden gestionar sus links
-CREATE POLICY "org_portal_manage" ON portal_links
-  USING  (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "org_portal_manage" ON portal_links
+    USING  (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Anon puede leer por token (el token ES la autenticación pública)
-CREATE POLICY "public_read_token" ON portal_links
-  FOR SELECT TO anon USING (true);
+DO $$ BEGIN
+  CREATE POLICY "public_read_token" ON portal_links
+    FOR SELECT TO anon USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── 5. RLS updates para costurera en teams ───────────────────
 -- Costurera solo ve teams que ella creó

@@ -4,11 +4,13 @@
 --
 --  Requiere que schema.sql (auth/orgs) ya esté ejecutado.
 --  Toda tabla tiene org_id para aislamiento multi-tenant + RLS.
+--  Seguro para re-ejecutar: usa CREATE TABLE IF NOT EXISTS y
+--  políticas idempotentes (DO $$ EXCEPTION WHEN duplicate_object).
 -- ============================================================
 
 -- ── pricing_config ────────────────────────────────────────────
 -- Una fila por org. PricingConfig completo como JSONB + refs UI.
-CREATE TABLE public.pricing_config (
+CREATE TABLE IF NOT EXISTS public.pricing_config (
   org_id              UUID        PRIMARY KEY REFERENCES public.organizations(id) ON DELETE CASCADE,
   config              JSONB       NOT NULL DEFAULT '{}',
   ref_cliente_id      TEXT,
@@ -19,22 +21,26 @@ CREATE TABLE public.pricing_config (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Migración para orgs existentes (ejecutar si la tabla ya existe):
--- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_cliente_id_pant TEXT;
--- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_gender_pant TEXT;
--- ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_molde_id_pant TEXT;
+-- Migración para orgs existentes (agrega columnas si faltan):
+ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_cliente_id      TEXT;
+ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_gender           TEXT;
+ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_cliente_id_pant TEXT;
+ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_gender_pant      TEXT;
+ALTER TABLE public.pricing_config ADD COLUMN IF NOT EXISTS ref_molde_id_pant    TEXT;
 
 ALTER TABLE public.pricing_config ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_config: org isolation"
-  ON public.pricing_config FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_config: org isolation"
+    ON public.pricing_config FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_base_prices ───────────────────────────────────────
 -- Precios base por modo de servicio × segmento × género × talla.
 -- service_mode: 'parcial' (sublimación) | 'completo' (servicio completo)
-CREATE TABLE public.pricing_base_prices (
+CREATE TABLE IF NOT EXISTS public.pricing_base_prices (
   org_id       UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   service_mode TEXT    NOT NULL,
   segment      TEXT    NOT NULL,
@@ -48,15 +54,18 @@ CREATE TABLE public.pricing_base_prices (
 
 ALTER TABLE public.pricing_base_prices ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_base_prices: org isolation"
-  ON public.pricing_base_prices FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_base_prices: org isolation"
+    ON public.pricing_base_prices FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_base_prices (org_id, service_mode);
+CREATE INDEX IF NOT EXISTS idx_pricing_base_prices_org_mode
+  ON public.pricing_base_prices (org_id, service_mode);
 
 -- ── pricing_supplies ──────────────────────────────────────────
-CREATE TABLE public.pricing_supplies (
+CREATE TABLE IF NOT EXISTS public.pricing_supplies (
   id               TEXT    NOT NULL,
   org_id           UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name             TEXT    NOT NULL DEFAULT '',
@@ -70,13 +79,15 @@ CREATE TABLE public.pricing_supplies (
 
 ALTER TABLE public.pricing_supplies ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_supplies: org isolation"
-  ON public.pricing_supplies FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_supplies: org isolation"
+    ON public.pricing_supplies FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_machines ──────────────────────────────────────────
-CREATE TABLE public.pricing_machines (
+CREATE TABLE IF NOT EXISTS public.pricing_machines (
   id          TEXT    NOT NULL,
   org_id      UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name        TEXT    NOT NULL DEFAULT '',
@@ -88,13 +99,15 @@ CREATE TABLE public.pricing_machines (
 
 ALTER TABLE public.pricing_machines ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_machines: org isolation"
-  ON public.pricing_machines FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_machines: org isolation"
+    ON public.pricing_machines FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_operations ────────────────────────────────────────
-CREATE TABLE public.pricing_operations (
+CREATE TABLE IF NOT EXISTS public.pricing_operations (
   id           TEXT    NOT NULL,
   org_id       UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name         TEXT    NOT NULL DEFAULT '',
@@ -105,13 +118,15 @@ CREATE TABLE public.pricing_operations (
 
 ALTER TABLE public.pricing_operations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_operations: org isolation"
-  ON public.pricing_operations FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_operations: org isolation"
+    ON public.pricing_operations FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_fabrics ───────────────────────────────────────────
-CREATE TABLE public.pricing_fabrics (
+CREATE TABLE IF NOT EXISTS public.pricing_fabrics (
   id            TEXT    NOT NULL,
   org_id        UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name          TEXT    NOT NULL DEFAULT '',
@@ -124,15 +139,17 @@ CREATE TABLE public.pricing_fabrics (
 
 ALTER TABLE public.pricing_fabrics ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_fabrics: org isolation"
-  ON public.pricing_fabrics FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_fabrics: org isolation"
+    ON public.pricing_fabrics FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_volume_tiers ──────────────────────────────────────
 -- Record<ProductId, VolumeTier[]> aplanado con product_id.
 -- tier_from/tier_to en lugar de from/to (from es reservado en SQL).
-CREATE TABLE public.pricing_volume_tiers (
+CREATE TABLE IF NOT EXISTS public.pricing_volume_tiers (
   id         TEXT    NOT NULL,
   org_id     UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   product_id TEXT    NOT NULL,
@@ -145,16 +162,19 @@ CREATE TABLE public.pricing_volume_tiers (
 
 ALTER TABLE public.pricing_volume_tiers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_volume_tiers: org isolation"
-  ON public.pricing_volume_tiers FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_volume_tiers: org isolation"
+    ON public.pricing_volume_tiers FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_volume_tiers (org_id, product_id);
+CREATE INDEX IF NOT EXISTS idx_pricing_volume_tiers_org_product
+  ON public.pricing_volume_tiers (org_id, product_id);
 
 -- ── pricing_competitors ───────────────────────────────────────
 -- prices es JSONB: Partial<Record<MarketProductId, number>>
-CREATE TABLE public.pricing_competitors (
+CREATE TABLE IF NOT EXISTS public.pricing_competitors (
   id         TEXT    NOT NULL,
   org_id     UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name       TEXT    NOT NULL DEFAULT '',
@@ -165,13 +185,15 @@ CREATE TABLE public.pricing_competitors (
 
 ALTER TABLE public.pricing_competitors ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_competitors: org isolation"
-  ON public.pricing_competitors FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_competitors: org isolation"
+    ON public.pricing_competitors FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_print_profiles ────────────────────────────────────
-CREATE TABLE public.pricing_print_profiles (
+CREATE TABLE IF NOT EXISTS public.pricing_print_profiles (
   id         TEXT    NOT NULL,
   org_id     UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   name       TEXT    NOT NULL DEFAULT '',
@@ -183,15 +205,17 @@ CREATE TABLE public.pricing_print_profiles (
 
 ALTER TABLE public.pricing_print_profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_print_profiles: org isolation"
-  ON public.pricing_print_profiles FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_print_profiles: org isolation"
+    ON public.pricing_print_profiles FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_cm_price_tiers ────────────────────────────────────
 -- Unifica cm_price_tiers (embroidery) + paper_price_tiers (paper).
 -- tier_type: 'embroidery' | 'paper'
-CREATE TABLE public.pricing_cm_price_tiers (
+CREATE TABLE IF NOT EXISTS public.pricing_cm_price_tiers (
   id         TEXT    NOT NULL,
   org_id     UUID    NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   tier_type  TEXT    NOT NULL,
@@ -203,17 +227,20 @@ CREATE TABLE public.pricing_cm_price_tiers (
 
 ALTER TABLE public.pricing_cm_price_tiers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_cm_price_tiers: org isolation"
-  ON public.pricing_cm_price_tiers FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_cm_price_tiers: org isolation"
+    ON public.pricing_cm_price_tiers FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_cm_price_tiers (org_id, tier_type);
+CREATE INDEX IF NOT EXISTS idx_pricing_cm_price_tiers_org_type
+  ON public.pricing_cm_price_tiers (org_id, tier_type);
 
 -- ── pricing_quote_history ─────────────────────────────────────
 -- Historial de quotes rápidas. Sin límite (antes cap 80 en localStorage).
 -- data JSONB = QuoteHistoryEntry completo.
-CREATE TABLE public.pricing_quote_history (
+CREATE TABLE IF NOT EXISTS public.pricing_quote_history (
   id         TEXT        NOT NULL,
   org_id     UUID        NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -223,17 +250,20 @@ CREATE TABLE public.pricing_quote_history (
 
 ALTER TABLE public.pricing_quote_history ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_quote_history: org isolation"
-  ON public.pricing_quote_history FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_quote_history: org isolation"
+    ON public.pricing_quote_history FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_quote_history (org_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pricing_quote_history_org_date
+  ON public.pricing_quote_history (org_id, created_at DESC);
 
 -- ── pricing_cotizaciones ──────────────────────────────────────
 -- Cotizaciones guardadas. Sin límite (antes cap 50 en localStorage).
 -- Cols queryables para búsquedas + data JSONB completo.
-CREATE TABLE public.pricing_cotizaciones (
+CREATE TABLE IF NOT EXISTS public.pricing_cotizaciones (
   id             TEXT        NOT NULL,
   org_id         UUID        NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -250,16 +280,19 @@ CREATE TABLE public.pricing_cotizaciones (
 
 ALTER TABLE public.pricing_cotizaciones ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_cotizaciones: org isolation"
-  ON public.pricing_cotizaciones FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_cotizaciones: org isolation"
+    ON public.pricing_cotizaciones FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_cotizaciones (org_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pricing_cotizaciones_org_date
+  ON public.pricing_cotizaciones (org_id, created_at DESC);
 
 -- ── pricing_tabla_exports ─────────────────────────────────────
 -- Tablas de precios exportadas. Sin límite (antes cap 50 en localStorage).
-CREATE TABLE public.pricing_tabla_exports (
+CREATE TABLE IF NOT EXISTS public.pricing_tabla_exports (
   id             TEXT        NOT NULL,
   org_id         UUID        NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -274,16 +307,19 @@ CREATE TABLE public.pricing_tabla_exports (
 
 ALTER TABLE public.pricing_tabla_exports ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_tabla_exports: org isolation"
-  ON public.pricing_tabla_exports FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_tabla_exports: org isolation"
+    ON public.pricing_tabla_exports FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE INDEX ON public.pricing_tabla_exports (org_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pricing_tabla_exports_org_date
+  ON public.pricing_tabla_exports (org_id, created_at DESC);
 
 -- ── pricing_tipos_cliente ─────────────────────────────────────
 -- Tipos de cliente por org (antes subliflow_tipos_cliente).
-CREATE TABLE public.pricing_tipos_cliente (
+CREATE TABLE IF NOT EXISTS public.pricing_tipos_cliente (
   id         TEXT NOT NULL,
   org_id     UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   nombre     TEXT NOT NULL,
@@ -294,14 +330,16 @@ CREATE TABLE public.pricing_tipos_cliente (
 
 ALTER TABLE public.pricing_tipos_cliente ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_tipos_cliente: org isolation"
-  ON public.pricing_tipos_cliente FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_tipos_cliente: org isolation"
+    ON public.pricing_tipos_cliente FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- ── pricing_cliente_tipos ─────────────────────────────────────
 -- Asignaciones cliente → tipo (antes subliflow_cliente_tipos).
-CREATE TABLE public.pricing_cliente_tipos (
+CREATE TABLE IF NOT EXISTS public.pricing_cliente_tipos (
   cliente_id TEXT NOT NULL,
   org_id     UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
   tipo_id    TEXT NOT NULL,
@@ -310,7 +348,9 @@ CREATE TABLE public.pricing_cliente_tipos (
 
 ALTER TABLE public.pricing_cliente_tipos ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "pricing_cliente_tipos: org isolation"
-  ON public.pricing_cliente_tipos FOR ALL
-  USING (org_id = my_org_id())
-  WITH CHECK (org_id = my_org_id());
+DO $$ BEGIN
+  CREATE POLICY "pricing_cliente_tipos: org isolation"
+    ON public.pricing_cliente_tipos FOR ALL
+    USING (org_id = my_org_id())
+    WITH CHECK (org_id = my_org_id());
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
