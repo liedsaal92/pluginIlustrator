@@ -125,7 +125,13 @@ function getMetersForProduct(
 
   const dimsShirtMeters = tallaDims ? calcShirtMetersFromDims(tallaDims, plotterWidthCm) : 0;
   const dimsValid = tallaDims && dimsShirtMeters > 0;
-  const shirtMeters = dimsValid ? dimsShirtMeters : getSizeMeasurement(size).shirtMeters;
+  const sm = getSizeMeasurement(size);
+  const fallbackMeters = calcShirtMetersFromDims(
+    { ALTO: String(sm.torsoHeightCm), ANCHO: String(sm.torsoWidthCm),
+      MANGA_ANCHO: String(sm.sleeveWidthCm), MANGA_ALTO: String(sm.sleeveHeightCm) },
+    plotterWidthCm,
+  );
+  const shirtMeters = dimsValid ? dimsShirtMeters : fallbackMeters;
   if (tallaDims && !dimsValid) notes.push('Dims configuradas incompletas — usando tabla por defecto.');
   const source = dimsValid ? 'real' as const : 'estimated' as const;
 

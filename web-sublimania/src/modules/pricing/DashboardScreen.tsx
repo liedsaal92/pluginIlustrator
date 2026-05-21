@@ -11,6 +11,7 @@ import { calculateQuote } from '../../pricing/engines/pricingEngine';
 import { compareProfiles } from '../../pricing/engines/simulator';
 import { usePricingStore } from '../../store/usePricingStore';
 import { useTallasStore } from '../../store/useTallasStore';
+import { useTeamStore } from '../../store/useTeamStore';
 import { useMoldesStore, MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import { sizeMeasurements } from '../../pricing/data/sizeMeasurements';
 import type {
@@ -163,6 +164,8 @@ interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
 export function DashboardScreen({ onToast: _onToast }: Props) {
   const { config, printProfiles, fabrics, supplies, machines, operations, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
+  const setScreen = useTeamStore(s => s.setScreen);
+  const activePlotter = (config.plotters ?? []).find(p => p.id === config.selectedPlotterId);
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
 
   const [controls, setControls] = useState<DashboardControls>({
@@ -272,6 +275,19 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
           </div>
         </div>
       </div>
+
+      {/* ADVERTENCIA: sin plotter configurado */}
+      {!activePlotter && (
+        <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 6, padding: '10px 16px', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.85rem' }}>
+          <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+          <span style={{ flex: 1 }}>
+            <strong>Sin plotter configurado.</strong> Los metros de tela se calculan con ancho de referencia ({config.rollWidthCm} cm). Configura un plotter para resultados exactos.
+          </span>
+          <button className="btn btn-sm btn-warning" onClick={() => setScreen('pricing_costos')}>
+            Ir a Costos → Máquinas
+          </button>
+        </div>
+      )}
 
       {/* CONTROLES */}
       <section className="pricing-panel db-controls-panel">
