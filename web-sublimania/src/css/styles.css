@@ -6514,7 +6514,10 @@ textarea:focus-visible,
 [data-theme="dark"] .db-margin-warn { color: var(--yellow); }
 
 .db-alert-icon { color: var(--orange); font-size: 0.9rem; cursor: default; }
-.db-suggested  { color: var(--purple); font-weight: 700; font-variant-numeric: tabular-nums; }
+.db-suggested  { font-weight: 700; font-variant-numeric: tabular-nums; }
+.db-suggested--neutral { color: var(--purple); }
+.db-suggested--up      { color: var(--red,   #ef4444); }
+.db-suggested--down    { color: var(--green, #22c55e); }
 .db-suggested-btn {
   background: none; border: 1px solid transparent; padding: 0.15rem 0.4rem;
   color: var(--purple); font-weight: 700; font-variant-numeric: tabular-nums;
@@ -6523,6 +6526,12 @@ textarea:focus-visible,
   transition: border-color 0.15s, background 0.15s;
 }
 .db-suggested-btn:hover { border-color: var(--purple); background: rgba(168,85,247,0.1); }
+.db-suggested-btn--neutral { color: var(--purple); }
+.db-suggested-btn--neutral:hover { border-color: var(--purple); background: rgba(168,85,247,0.1); }
+.db-suggested-btn--up   { color: var(--red,   #ef4444); }
+.db-suggested-btn--up:hover   { border-color: var(--red,   #ef4444); background: rgba(239,68,68,0.1); }
+.db-suggested-btn--down { color: var(--green, #22c55e); }
+.db-suggested-btn--down:hover { border-color: var(--green, #22c55e); background: rgba(34,197,94,0.1); }
 .db-popup-overlay {
   position: fixed; inset: 0; z-index: 9000;
   background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;

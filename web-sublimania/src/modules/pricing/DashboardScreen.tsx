@@ -37,6 +37,7 @@ interface DashboardRow {
   label: string;
   quote: QuoteResult;
   suggestedBase: number | null;
+  suggestedDirection: 'up' | 'down' | null;
 }
 
 // ── constantes ───────────────────────────────────────────────
@@ -110,18 +111,34 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
 
         // Precio base sugerido — inversa de la fórmula del engine:
         // finalUnitPrice = basePrice*(1-vd) - transferredSavings
-        // → basePrice = (minPrice + transferredSavings) / (1 - vd)
+        // → basePrice = (targetFinalPrice + transferredSavings) / (1 - vd)
+        // minPrice = unitCost / (1 - minMargin) → precio final que da exactamente el margen deseado
         let suggestedBase: number | null = null;
-        if (quote.finalUnitPrice < quote.minPrice) {
-          const divisor = 1 - quote.volumeDiscount;
-          if (divisor > 0) {
+        let suggestedDirection: 'up' | 'down' | null = null;
+        const divisor = 1 - quote.volumeDiscount;
+        if (divisor > 0) {
+          if (quote.finalUnitPrice < quote.minPrice) {
+            // Precio por debajo del piso → subir
             suggestedBase = Math.ceil(
+              ((quote.minPrice + quote.transferredSavings) / divisor) * 100
+            ) / 100;
+            suggestedDirection = 'up';
+          } else if (quote.margin > config.minMargin) {
+            // Margen superior al deseado → puede bajar precio y seguir en el margen objetivo
+            const candidate = Math.floor(
+              ((quote.minPrice + quote.transferredSavings) / divisor) * 100
+            ) / 100;
+            suggestedBase = candidate;
+            if (candidate < quote.basePrice) suggestedDirection = 'down';
+          } else {
+            // Precio ok — siempre mostrar botón neutro con precio objetivo
+            suggestedBase = Math.round(
               ((quote.minPrice + quote.transferredSavings) / divisor) * 100
             ) / 100;
           }
         }
 
-        rows.push({ size, label: `${size}${controls.gender}`, quote, suggestedBase });
+        rows.push({ size, label: `${size}${controls.gender}`, quote, suggestedBase, suggestedDirection });
       } catch {
         // talla no configurada para este segmento/género — omitir
       }
@@ -420,13 +437,20 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                       <span className="db-alert-icon" title={row.quote.alerts.join(' · ')}>⚠</span>
                     )}
                   </td>
-                  <td data-label="Sug." className={row.suggestedBase !== null ? 'db-suggested' : ''}>
+                  <td data-label="Sug." className={`db-suggested db-suggested--${row.suggestedDirection ?? 'neutral'}`}>
                     {row.suggestedBase !== null
-                      ? <button className="db-suggested-btn" onClick={() => {
-                          setEditingBase({ size: row.size, value: row.suggestedBase! });
-                          setEditValue(String(row.suggestedBase!));
-                        }}>
-                          {money(row.suggestedBase)}
+                      ? <button
+                          className={`db-suggested-btn db-suggested-btn--${row.suggestedDirection ?? 'neutral'}`}
+                          title={row.suggestedDirection === 'up'
+                            ? 'Precio por debajo del piso — subir para alcanzar margen mínimo'
+                            : row.suggestedDirection === 'down'
+                              ? 'Margen superior al deseado — puedes bajar precio y mantener el margen objetivo'
+                              : 'Precio en margen objetivo — click para ajustar manualmente'}
+                          onClick={() => {
+                            setEditingBase({ size: row.size, value: row.suggestedBase! });
+                            setEditValue(String(row.suggestedBase!));
+                          }}>
+                          {row.suggestedDirection === 'up' ? '↑ ' : row.suggestedDirection === 'down' ? '↓ ' : ''}{money(row.suggestedBase)}
                         </button>
                       : '—'
                     }
