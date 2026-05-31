@@ -59,32 +59,32 @@ const operations: OperationCost[] = [
 
 describe('calcShirtMetersFromDims', () => {
 
-  it('camiseta normal — ancho*2 cabe en plotter → torsoM=alto/100', () => {
-    // talla 28H: ANCHO=39, ALTO=55 → 2*39=78 ≤ 130 → torsoM=0.55
-    // MANGA_ANCHO=35 → 2*35=70 ≤ 130 → sleeveM=0.19
+  it('camiseta normal — elige orientación óptima (rotada menor)', () => {
+    // ANCHO=39, ALTO=55: normal→0.55, rotado(55×2=110≤130)→0.39 → torsoM=0.39
+    // MANGA: normal→0.19, rotado(19×2=38≤130)→0.35 → sleeveM=0.19 → total=0.58
     const m = calcShirtMetersFromDims(
       { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '35', MANGA_ALTO: '19' },
       PLOTTER_130,
     );
-    expect(m).toBeCloseTo(0.74, 5);
+    expect(m).toBeCloseTo(0.58, 5);
   });
 
-  it('torso ancho — ancho*2 NO cabe → torsoM=alto*2/100', () => {
-    // ANCHO=70 → 2*70=140 > 130 → torsoM=90*2/100=1.8
+  it('torso ancho — ambas orientaciones no caben×2, elige menor', () => {
+    // ANCHO=70 ALTO=90: normal(70×2=140>130)→1.80, rotado(90×2=180>130)→1.40 → min=1.40
     const m = calcShirtMetersFromDims(
       { ALTO: '90', ANCHO: '70', MANGA_ANCHO: '0', MANGA_ALTO: '0' },
       PLOTTER_130,
     );
-    expect(m).toBeCloseTo(1.8, 5);
+    expect(m).toBeCloseTo(1.4, 5);
   });
 
-  it('pantaloneta — MANGA vacío → sleeveM=0, total=torsoM', () => {
-    // ANCHO=39, ALTO=55 → torsoM=0.55; MANGA vacío → sleeveM=0
+  it('pantaloneta — MANGA vacío → sleeveM=0, torso usa orientación óptima', () => {
+    // ANCHO=39, ALTO=55: rotado→0.39 menor → torsoM=0.39; MANGA vacío → 0.39
     const m = calcShirtMetersFromDims(
       { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '', MANGA_ALTO: '' },
       PLOTTER_130,
     );
-    expect(m).toBeCloseTo(0.55, 5);
+    expect(m).toBeCloseTo(0.39, 5);
   });
 
   it('manga que no cabe → sleeveM=mangaAlto*2/100', () => {
@@ -154,17 +154,19 @@ describe('calculateCost — camiseta', () => {
     config: minConfig,
   };
 
-  it('sin tallaDims → usa sizeMeasurements → metersUnit=0.74', () => {
+  it('sin tallaDims → usa sizeMeasurements con rotación óptima', () => {
+    // size 28: torso 55×39 → rotado(55×2=110≤130)→0.39 < normal→0.55; sleeve 35×19 → normal→0.19 < rotado→0.35
+    // total = 0.39 + 0.19 = 0.58
     const result = calculateCost(baseInput);
-    expect(result.metersUnit).toBeCloseTo(0.74, 2);
+    expect(result.metersUnit).toBeCloseTo(0.58, 2);
   });
 
-  it('con tallaDims → usa dims reales', () => {
+  it('con tallaDims → usa dims reales con rotación óptima', () => {
     const result = calculateCost({
       ...baseInput,
       tallaDims: { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '35', MANGA_ALTO: '19' },
     });
-    expect(result.metersUnit).toBeCloseTo(0.74, 2);
+    expect(result.metersUnit).toBeCloseTo(0.58, 2);
     expect(result.measurementSource).toBe('real');
   });
 
@@ -200,20 +202,20 @@ describe('calculateCost — pantaloneta', () => {
   };
 
   it('sin tallaDims → estimada por ratio, source=estimated, nota en notes', () => {
+    // shirtMeters(28) con rotación = 0.58; ratio = 16000/20000 = 0.8 → 0.58 * 0.8 = 0.464
     const result = calculateCost(baseInput);
-    // ratio = 16000/20000 = 0.8 → pMeters = sizeMeasurements(28).shirtMeters * 0.8 = 0.74 * 0.8 = 0.592
-    expect(result.metersUnit).toBeCloseTo(0.592, 2);
+    expect(result.metersUnit).toBeCloseTo(0.464, 2);
     expect(result.measurementSource).toBe('estimated');
     expect(result.notes.length).toBeGreaterThan(0);
   });
 
   it('con tallaDims → usa dims directamente, NO aplica ratio', () => {
-    // Si aplica ratio: 0.55 * 0.8 = 0.44. Si usa dims: 0.55. Debe ser 0.55.
+    // ALTO=55 ANCHO=39 sin mangas: rotado(55×2=110≤130)→0.39 < normal→0.55 → 0.39
     const result = calculateCost({
       ...baseInput,
       tallaDims: { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '', MANGA_ALTO: '' },
     });
-    expect(result.metersUnit).toBeCloseTo(0.55, 2);
+    expect(result.metersUnit).toBeCloseTo(0.39, 2);
     expect(result.measurementSource).toBe('real');
     expect(result.notes).toHaveLength(0);
   });
@@ -260,8 +262,8 @@ describe('calculateCost — equipo', () => {
       tallaDims: { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '35', MANGA_ALTO: '19' },
     });
     expect(result.measurementSource).toBe('estimated');
-    // camisetaMeters ≈ 0.74, pantalonetaMeters = 0.74 * 0.8 = 0.592
-    expect(result.metersUnit).toBeCloseTo(0.74 + 0.592, 1);
+    // camisetaMeters=0.58 (rotación), pantalonetaMeters=0.58*0.8=0.464
+    expect(result.metersUnit).toBeCloseTo(0.58 + 0.464, 1);
   });
 
   it('con tallaDims + tallaDimsPant → pant usa dims reales, source=real', () => {
@@ -270,8 +272,8 @@ describe('calculateCost — equipo', () => {
       tallaDims:     { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '35', MANGA_ALTO: '19' },
       tallaDimsPant: { ALTO: '55', ANCHO: '39', MANGA_ANCHO: '', MANGA_ALTO: '' },
     });
-    // camisetaMeters ≈ 0.74, pantalonetaMeters = 0.55 (dims reales, no ratio 0.592)
-    expect(result.metersUnit).toBeCloseTo(0.74 + 0.55, 2);
+    // camisetaMeters=0.58, pantalonetaMeters=0.39 (ambos rotados)
+    expect(result.metersUnit).toBeCloseTo(0.58 + 0.39, 2);
     expect(result.measurementSource).toBe('real');
     expect(result.notes).toHaveLength(0);
   });

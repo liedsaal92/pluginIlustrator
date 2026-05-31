@@ -43,8 +43,13 @@ export function calcShirtMetersFromDims(
   const alto       = parseFloat(dims.ALTO)        || 0;
   const mangaAncho = parseFloat(dims.MANGA_ANCHO) || 0;
   const mangaAlto  = parseFloat(dims.MANGA_ALTO)  || 0;
-  const torsoM  = (ancho * 2 <= plotterWidthCm ? alto      : alto * 2)      / 100;
-  const sleeveM = (mangaAncho * 2 <= plotterWidthCm ? mangaAlto : mangaAlto * 2) / 100;
+  // Probar orientación normal y rotada 90° — usar la que requiere menos metros
+  const torsoNormal   = (ancho * 2      <= plotterWidthCm ? alto      : alto  * 2) / 100;
+  const torsoRotated  = (alto  * 2      <= plotterWidthCm ? ancho     : ancho * 2) / 100;
+  const torsoM        = Math.min(torsoNormal, torsoRotated);
+  const sleeveNormal  = (mangaAncho * 2 <= plotterWidthCm ? mangaAlto : mangaAlto * 2) / 100;
+  const sleeveRotated = (mangaAlto  * 2 <= plotterWidthCm ? mangaAncho : mangaAncho * 2) / 100;
+  const sleeveM       = Math.min(sleeveNormal, sleeveRotated);
   return torsoM + sleeveM;
 }
 
