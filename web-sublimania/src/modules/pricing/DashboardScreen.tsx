@@ -112,7 +112,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
         // Precio base sugerido — inversa de la fórmula del engine:
         // finalUnitPrice = basePrice*(1-vd) - transferredSavings
         // → basePrice = (targetFinalPrice + transferredSavings) / (1 - vd)
-        // minPrice = unitCost / (1 - minMargin) → precio final que da exactamente el margen deseado
+        // minPrice = unitCost * (1 + minMarkup) → precio final que da exactamente el markup deseado
         let suggestedBase: number | null = null;
         let suggestedDirection: 'up' | 'down' | null = null;
         const divisor = 1 - quote.volumeDiscount;
@@ -164,14 +164,14 @@ function computeKPIs(rows: DashboardRow[], minMargin: number) {
   return { avgMargin, totalRetained, belowFloor, best, worst, minMargin };
 }
 
-// ── color de margen ──────────────────────────────────────────
+// ── color de markup ──────────────────────────────────────────
 function marginCls(margin: number, minMargin: number) {
-  if (margin >= 0.45) return 'db-margin-good';
+  if (margin >= minMargin * 1.15) return 'db-margin-good';
   if (margin >= minMargin) return 'db-margin-warn';
   return 'db-margin-bad';
 }
 function marginHex(margin: number, minMargin: number) {
-  if (margin >= 0.45) return 'var(--green)';
+  if (margin >= minMargin * 1.15) return 'var(--green)';
   if (margin >= minMargin) return '#ca8a04';
   return 'var(--red)';
 }
@@ -372,7 +372,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       {kpis && (
         <div className="db-kpi-row">
           <div className="pricing-kpi">
-            <span>MARGEN PROMEDIO</span>
+            <span>MARKUP PROMEDIO</span>
             <strong className={kpis.avgMargin >= 0.45 ? 'db-kpi-good' : kpis.avgMargin >= kpis.minMargin ? 'db-kpi-warn' : 'db-kpi-bad'}>
               {pct(kpis.avgMargin)}
             </strong>
@@ -388,7 +388,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
             </strong>
           </div>
           <div className="pricing-kpi">
-            <span>MEJOR MARGEN · PEOR MARGEN</span>
+            <span>MEJOR MARKUP · PEOR MARKUP</span>
             <strong>
               <span className="db-kpi-good">{kpis.best.label} {pct(kpis.best.quote.margin)}</span>
               {'  '}
@@ -410,7 +410,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                 <th>COSTO REAL</th>
                 <th className="db-sortable" onClick={() => toggleSort('finalUnitPrice')}>PRECIO FINAL{sortIcon('finalUnitPrice')}</th>
                 <th className="db-sortable" onClick={() => toggleSort('unitProfit')}>GANANCIA{sortIcon('unitProfit')}</th>
-                <th className="db-sortable" onClick={() => toggleSort('margin')}>MARGEN %{sortIcon('margin')}</th>
+                <th className="db-sortable" onClick={() => toggleSort('margin')}>MARKUP %{sortIcon('margin')}</th>
                 <th className="db-sortable" onClick={() => toggleSort('retainedSavings')}>AHORRO RETENIDO{sortIcon('retainedSavings')}</th>
                 <th>⚠</th>
                 <th>PRECIO BASE SUGERIDO</th>
@@ -442,10 +442,10 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                       ? <button
                           className={`db-suggested-btn db-suggested-btn--${row.suggestedDirection ?? 'neutral'}`}
                           title={row.suggestedDirection === 'up'
-                            ? 'Precio por debajo del piso — subir para alcanzar margen mínimo'
+                            ? 'Precio por debajo del piso — subir para alcanzar markup mínimo'
                             : row.suggestedDirection === 'down'
-                              ? 'Margen superior al deseado — puedes bajar precio y mantener el margen objetivo'
-                              : 'Precio en margen objetivo — click para ajustar manualmente'}
+                              ? 'Markup superior al deseado — puedes bajar precio y mantener el markup objetivo'
+                              : 'Precio en markup objetivo — click para ajustar manualmente'}
                           onClick={() => {
                             setEditingBase({ size: row.size, value: row.suggestedBase! });
                             setEditValue(String(row.suggestedBase!));
@@ -471,7 +471,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       <div className="db-charts-grid">
 
         <section className="pricing-panel db-chart-panel">
-          <div className="pricing-panel-title">MARGEN % POR TALLA</div>
+          <div className="pricing-panel-title">MARKUP % POR TALLA</div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={chartMarginData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
               <XAxis dataKey="talla" tick={{ fontSize: 11 }} />
@@ -530,7 +530,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                   <th>PERFIL</th>
                   <th>COSTO REAL</th>
                   <th>PRECIO FINAL</th>
-                  <th>MARGEN %</th>
+                  <th>MARKUP %</th>
                   <th>AHORRO RETENIDO</th>
                   <th>AHORRO TRASLADADO</th>
                 </tr>
