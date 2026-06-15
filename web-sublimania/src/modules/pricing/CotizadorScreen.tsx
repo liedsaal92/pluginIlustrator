@@ -146,7 +146,7 @@ export function CotizadorScreen({ onToast }: Props) {
         };
         try { const r = calculateQuote(input); tp += r.totalPrice; tpr += r.totalProfit; } catch { /**/ }
       }
-      return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / tp : 0 };
+      return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / (tp - tpr) : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
@@ -276,7 +276,7 @@ export function CotizadorScreen({ onToast }: Props) {
               onClick={() => setProfileId(item.profileId)}>
               <span>{printProfiles.find(p => p.id === item.profileId)?.name ?? item.profileId}</span>
               <strong>{fmt(item.totalPrice)}</strong>
-              <small>Ganancia {fmt(item.totalProfit)} / Margen {pct.format(item.margin)}</small>
+              <small>Ganancia {fmt(item.totalProfit)} / Markup {pct.format(item.margin)}</small>
             </button>
           ))}
         </div>
@@ -473,7 +473,7 @@ export function CotizadorScreen({ onToast }: Props) {
               <div className="pricing-hero-min">
                 <div className="pricing-hero-min-label">SUGERIDO</div>
                 <div className="pricing-hero-min-value">{fmt(totalRecommended)}</div>
-                <div className="pricing-hero-min-sub">para mantener margen</div>
+                <div className="pricing-hero-min-sub">para mantener markup</div>
               </div>
             )}
           </div>
@@ -570,7 +570,7 @@ export function CotizadorScreen({ onToast }: Props) {
                         ) : '—'}
                       </td>
                       <td data-label="Subtotal">{q ? fmt(q.totalPrice) : 'ERR'}</td>
-                      <td data-label="Mrg">{q ? pct.format(q.margin) : '—'}</td>
+                      <td data-label="Mkp">{q ? pct.format(q.margin) : '—'}</td>
                       {Object.keys(mktAvg).length > 0 && (
                         <td data-label="Mrk" className={mrkDelta !== null ? (mrkDelta > 0.05 ? 'mkt-diff-above' : mrkDelta < -0.05 ? 'mkt-diff-below' : '') : ''}>
                           {mrkDelta !== null ? `${mrkDelta >= 0 ? '+' : ''}${Math.round(mrkDelta * 100)}%` : '—'}
@@ -609,7 +609,7 @@ export function CotizadorScreen({ onToast }: Props) {
                 <span className="pbs-value">{fmt(totalPrice)}</span>
               </div>
               <div className="pbs-row">
-                <span className="pbs-label">MARGEN</span>
+                <span className="pbs-label">MARKUP</span>
                 <span className="pbs-value">{pct.format(overallMargin)}</span>
               </div>
             </div>

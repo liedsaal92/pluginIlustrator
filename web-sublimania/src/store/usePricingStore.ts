@@ -326,7 +326,7 @@ export const usePricingStore = create<PricingState>()((set, get) => ({
     }
 
     // Transformar filas DB → tipos del store
-    const config = migrateConfig({ ...defaultPricingConfig, ...configRes.data.config });
+    const config = migrateConfig({ ...defaultPricingConfig, ...configRes.data.config, minProfitRatio: 0 });
     const refClienteId     = configRes.data.ref_cliente_id      ?? null;
     const refGender        = (configRes.data.ref_gender as Gender | null) ?? null;
     const refClienteIdPant = configRes.data.ref_cliente_id_pant ?? null;
