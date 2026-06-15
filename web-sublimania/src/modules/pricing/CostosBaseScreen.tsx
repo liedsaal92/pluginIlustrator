@@ -87,8 +87,8 @@ export function CostosBaseScreen({ onToast }: Props) {
 
   const cpmOperations = useMemo(() => {
     const monthly = operations.reduce((s, o) => s + o.monthlyCost, 0);
-    return monthly / (config.monthlyMeters > 0 ? config.monthlyMeters : 1);
-  }, [operations, config.monthlyMeters]);
+    return monthly / ((config.monthlyUnits ?? 0) > 0 ? config.monthlyUnits : 1);
+  }, [operations, config.monthlyUnits]);
 
   const cpmNormal = useMemo(() => {
     try { return getCostPerMeter('normal', config, supplies, machines, operations, printProfiles); } catch { return 0; }
@@ -331,7 +331,7 @@ export function CostosBaseScreen({ onToast }: Props) {
       <section className="pricing-panel pricing-costs-panel" style={{ marginTop: '1.25rem' }}>
         <div className="pricing-panel-title">OPERACIONES MENSUALES</div>
         <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
-          Costos fijos mensuales distribuidos entre los metros producidos.
+          Costos fijos mensuales distribuidos entre las prendas producidas.
         </div>
         <div className="pricing-price-table-wrap">
           <table className="pricing-costs-table">
@@ -339,7 +339,7 @@ export function CostosBaseScreen({ onToast }: Props) {
               <tr>
                 <th>NOMBRE</th>
                 <th>COSTO/MES ($)</th>
-                <th>COSTO/METRO *</th>
+                <th>COSTO/PRENDA *</th>
                 <th></th>
               </tr>
             </thead>
@@ -359,7 +359,7 @@ export function CostosBaseScreen({ onToast }: Props) {
                       onChange={e => updateOperation(o.id, { monthlyCost: toNum(e.target.value) })} />
                   </td>
                   <td className="pricing-costs-derived">
-                    {config.monthlyMeters > 0 ? fmt4(o.monthlyCost / config.monthlyMeters) : '—'}
+                    {(config.monthlyUnits ?? 0) > 0 ? fmt4(o.monthlyCost / config.monthlyUnits) : '—'}
                   </td>
                   <td>
                     <button className="pricing-order-remove" onClick={() => removeOperation(o.id)}>✕</button>
@@ -373,9 +373,9 @@ export function CostosBaseScreen({ onToast }: Props) {
           * Con
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
             <input className="pricing-price-input" style={{ width: '90px', display: 'inline-block' }}
-              type="number" min="1" step="100" value={config.monthlyMeters}
-              onChange={e => updateConfig('monthlyMeters', toNum(e.target.value))} />
-            metros/mes
+              type="number" min="1" step="10" value={config.monthlyUnits ?? ''}
+              onChange={e => updateConfig('monthlyUnits', toNum(e.target.value))} />
+            prendas/mes
           </label>
         </div>
         <button className="pricing-order-add" onClick={addOperation}>+ AGREGAR COSTO</button>

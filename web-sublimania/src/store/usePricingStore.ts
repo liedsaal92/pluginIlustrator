@@ -50,6 +50,7 @@ function migrateConfig(raw: PricingConfig): PricingConfig {
     out.savingsTransferRateVip = legacy;
   }
   if (!('minMarginVip' in raw)) out.minMarginVip = out.minMargin;
+  if (!('monthlyUnits' in raw) || !out.monthlyUnits) out.monthlyUnits = Math.round(out.monthlyMeters / 0.8);
   return out;
 }
 
