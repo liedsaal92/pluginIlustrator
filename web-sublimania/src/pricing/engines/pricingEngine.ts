@@ -79,8 +79,11 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   const discountedBasePrice = roundMoney(basePrice * (1 - volumeDiscount));
   const volumeDiscountAmount = roundMoney((basePrice - discountedBasePrice) * quantity);
 
+  const activeMinMarkup = normalizedInput.customerSegment === 'vip'
+    ? (normalizedInput.config.minMarginVip ?? normalizedInput.config.minMargin)
+    : normalizedInput.config.minMargin;
   const minProfit = cost.unitCost * normalizedInput.config.minProfitRatio;
-  const minPriceByMargin = cost.unitCost * (1 + normalizedInput.config.minMargin);
+  const minPriceByMargin = cost.unitCost * (1 + activeMinMarkup);
   const minPriceByProfit = cost.unitCost + minProfit;
   const minPrice = Math.max(minPriceByMargin, minPriceByProfit);
 
@@ -109,7 +112,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
 
   const alerts: string[] = [];
   if (finalUnitPrice < minPrice) alerts.push('Precio por debajo del mínimo financiero.');
-  if (margin < normalizedInput.config.minMargin) alerts.push('Markup menor al mínimo configurado.');
+  if (margin < activeMinMarkup) alerts.push('Markup menor al mínimo configurado.');
   if (unitProfit < minProfit) alerts.push('Ganancia por prenda menor a la relación 1:1 configurada.');
   if (cost.measurementSource === 'estimated') alerts.push('Cotización usa medidas estimadas.');
   if (!normalizedInput.tallaDims && normalizedInput.productId !== 'por_cm') {

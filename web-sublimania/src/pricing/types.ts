@@ -23,6 +23,7 @@ export interface Plotter {
 export interface PricingConfig {
   monthlyMeters: number;
   minMargin: number;
+  minMarginVip: number;
   minProfitRatio: number;
   wasteRate: number;
   rollWidthCm: number;

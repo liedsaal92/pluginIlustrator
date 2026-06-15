@@ -49,6 +49,7 @@ function migrateConfig(raw: PricingConfig): PricingConfig {
     out.savingsTransferRateNormal = legacy;
     out.savingsTransferRateVip = legacy;
   }
+  if (!('minMarginVip' in raw)) out.minMarginVip = out.minMargin;
   return out;
 }
 
