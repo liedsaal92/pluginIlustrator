@@ -7,7 +7,10 @@ export function validateQuoteInput(input: QuoteInput): string[] {
     errors.push('Ingresa los centimetros a sublimar.');
   }
   if (input.config.minMargin <= 0 || input.config.minMargin >= 0.95) {
-    errors.push('El margen minimo debe estar entre 1% y 95%.');
+    errors.push('El markup mínimo Normal debe estar entre 1% y 95%.');
+  }
+  if (input.config.minMarginVip != null && (input.config.minMarginVip <= 0 || input.config.minMarginVip >= 0.95)) {
+    errors.push('El markup mínimo VIP debe estar entre 1% y 95%.');
   }
   return errors;
 }

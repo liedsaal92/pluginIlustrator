@@ -3,6 +3,7 @@ import type { PricingConfig } from '../types';
 export const defaultPricingConfig: PricingConfig = {
   monthlyMeters: 600,
   minMargin: 0.45,
+  minMarginVip: 0.35,
   minProfitRatio: 0,
   wasteRate: 0,
   rollWidthCm: 130,

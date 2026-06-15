@@ -123,7 +123,7 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
               ((quote.minPrice + quote.transferredSavings) / divisor) * 100
             ) / 100;
             suggestedDirection = 'up';
-          } else if (quote.margin > config.minMargin) {
+          } else if (quote.margin > (controls.segment === 'vip' ? (config.minMarginVip ?? config.minMargin) : config.minMargin)) {
             // Margen superior al deseado → puede bajar precio y seguir en el margen objetivo
             const candidate = Math.floor(
               ((quote.minPrice + quote.transferredSavings) / divisor) * 100
@@ -203,7 +203,8 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
   const [editValue, setEditValue]     = useState('');
 
   const rows = useDashboardData(controls);
-  const kpis = useMemo(() => computeKPIs(rows, config.minMargin), [rows, config.minMargin]);
+  const activeMinMarkup = controls.segment === 'vip' ? (config.minMarginVip ?? config.minMargin) : config.minMargin;
+  const kpis = useMemo(() => computeKPIs(rows, activeMinMarkup), [rows, activeMinMarkup]);
 
   // ordenamiento
   const sortedRows = useMemo(() => {
@@ -236,7 +237,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
   const chartMarginData = sortedRows.map(r => ({
     talla:  r.label,
     margen: parseFloat((r.quote.margin * 100).toFixed(1)),
-    color:  marginHex(r.quote.margin, config.minMargin),
+    color:  marginHex(r.quote.margin, activeMinMarkup),
   }));
   const chartSavingsData = sortedRows.map(r => ({
     talla:     r.label,
@@ -249,6 +250,53 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
     precio:   parseFloat(r.quote.finalUnitPrice.toFixed(2)),
     minPrecio: parseFloat(r.quote.minPrice.toFixed(2)),
   }));
+
+  // filas para DESGLOSE — siempre ambos géneros, ordenadas por talla
+  const rowsH = useDashboardData({ ...controls, gender: 'H' });
+  const rowsF = useDashboardData({ ...controls, gender: 'M' });
+  const desgloseRows = useMemo(() => ({
+    h: [...rowsH].sort((a, b) => a.size - b.size),
+    f: [...rowsF].sort((a, b) => a.size - b.size),
+  }), [rowsH, rowsF]);
+
+  // tabla cruzada: precio sugerido por talla × perfil
+  const allProfilesSuggestedPrices = useMemo<{ size: number; label: string; byProfile: Record<string, number> }[]>(() => {
+    const state = usePricingStore.getState();
+    const savingsTransferRate = controls.segment === 'vip'
+      ? (state.config.savingsTransferRateVip ?? 0)
+      : (state.config.savingsTransferRateNormal ?? 0);
+    return rows.map(row => {
+      const byProfile: Record<string, number> = {};
+      for (const profile of enabledProfiles) {
+        try {
+          const input: QuoteInput = {
+            customerSegment:  controls.segment,
+            gender:           controls.gender,
+            productId:        controls.productId,
+            size:             row.size,
+            quantity:         controls.quantity,
+            profileId:        profile.id,
+            profiles:         state.printProfiles,
+            basePrices:       state.basePrices,
+            basePricesCompleto: state.basePricesCompleto,
+            supplies:         state.supplies,
+            machines:         state.machines,
+            operations:       state.operations,
+            volumeTiers:      (state.volumeTiersByProduct[controls.productId] ?? []),
+            savingsTransferRate,
+            config:           state.config,
+            serviceMode:      controls.serviceMode,
+            fabrics:          state.fabrics,
+            tallaDims:        row.quote.input.tallaDims,
+            tallaDimsPant:    row.quote.input.tallaDimsPant,
+          };
+          const q = calculateQuote(input);
+          byProfile[profile.id] = q.recommendedUnitPrice;
+        } catch { /* talla no configurada */ }
+      }
+      return { size: row.size, label: row.label, byProfile };
+    });
+  }, [rows, enabledProfiles, controls]);
 
   // comparación de perfiles para la talla seleccionada
   const profileComparison = useMemo<QuoteResult[]>(() => {
@@ -373,7 +421,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
         <div className="db-kpi-row">
           <div className="pricing-kpi">
             <span>MARKUP PROMEDIO</span>
-            <strong className={kpis.avgMargin >= 0.45 ? 'db-kpi-good' : kpis.avgMargin >= kpis.minMargin ? 'db-kpi-warn' : 'db-kpi-bad'}>
+            <strong className={kpis.avgMargin >= kpis.minMargin * 1.15 ? 'db-kpi-good' : kpis.avgMargin >= kpis.minMargin ? 'db-kpi-warn' : 'db-kpi-bad'}>
               {pct(kpis.avgMargin)}
             </strong>
           </div>
@@ -428,7 +476,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                   <td data-label="Costo">{money(row.quote.cost.unitCost)}</td>
                   <td data-label="Final">{money(row.quote.finalUnitPrice)}</td>
                   <td data-label="Ganancia">{money(row.quote.unitProfit)}</td>
-                  <td data-label="Margen" className={marginCls(row.quote.margin, config.minMargin)}>
+                  <td data-label="Margen" className={marginCls(row.quote.margin, activeMinMarkup)}>
                     {pct(row.quote.margin)}
                   </td>
                   <td data-label="Ahorro">{money(row.quote.retainedSavings)}</td>
@@ -544,7 +592,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                       <td><strong>{prof?.name ?? q.input.profileId}</strong></td>
                       <td>{money(q.cost.unitCost)}</td>
                       <td>{money(q.finalUnitPrice)}</td>
-                      <td className={marginCls(q.margin, config.minMargin)}>{pct(q.margin)}</td>
+                      <td className={marginCls(q.margin, activeMinMarkup)}>{pct(q.margin)}</td>
                       <td>{money(q.retainedSavings)}</td>
                       <td>{money(q.transferredSavings)}</td>
                     </tr>
@@ -557,17 +605,18 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       )}
 
       {/* DESGLOSE DE COSTOS POR TALLA */}
-      {sortedRows.length > 0 && (() => {
+      {(desgloseRows.h.length > 0 || desgloseRows.f.length > 0) && (() => {
         const activeProfile = printProfiles.find(p => p.id === controls.profileId);
         const inkFactor = activeProfile?.inkFactor ?? 1;
         const monthlyMeters = config.monthlyMeters > 0 ? config.monthlyMeters : 1;
         const totalMonthlyCost = operations.reduce((s, o) => s + o.monthlyCost, 0);
         const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId);
-        const showPress = activePress != null && sortedRows.some(r => r.quote.cost.pressBajadas > 0);
+        const allDesgloseRows = [...desgloseRows.h, ...desgloseRows.f];
+        const showPress = activePress != null && allDesgloseRows.some(r => r.quote.cost.pressBajadas > 0);
         const perBajadaIds = activePress ? (config.perBajadaSupplyIds ?? []) : [];
-        const showFabric    = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.fabricCostPerUnit > 0);
-        const showTailoring = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.tailoringCostPerUnit > 0);
-        const showPolines   = controls.serviceMode === 'full_service' && sortedRows.some(r => r.quote.cost.polinesCostPerUnit > 0);
+        const showFabric    = controls.serviceMode === 'full_service' && allDesgloseRows.some(r => r.quote.cost.fabricCostPerUnit > 0);
+        const showTailoring = controls.serviceMode === 'full_service' && allDesgloseRows.some(r => r.quote.cost.tailoringCostPerUnit > 0);
+        const showPolines   = controls.serviceMode === 'full_service' && allDesgloseRows.some(r => r.quote.cost.polinesCostPerUnit > 0);
 
         const perMeterSupplies = supplies.filter(s => s.quantity > 0 && !perBajadaIds.includes(s.id));
         const perBajadaSupplies = supplies.filter(s => s.quantity > 0 && perBajadaIds.includes(s.id));
@@ -617,46 +666,50 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRows.map(row => {
-                    const m = row.quote.cost.metersUnit;
-                    const opsCost = (totalMonthlyCost / monthlyMeters) * m;
-                    const bajadas = row.quote.cost.pressBajadas;
-                    const dep = activePress && activePress.lifeBajadas > 0
-                      ? (activePress.cost / activePress.lifeBajadas) * bajadas : 0;
-                    return (
-                      <tr key={row.size} className={selectedSize === row.size ? 'db-row-selected' : ''}>
-                        <td><strong>{row.label}</strong></td>
-                        <td>{m.toFixed(3)} m</td>
-                        {/* Per-metro supplies */}
-                        {perMeterSupplies.map(s => {
-                          const cpm = s.totalCost / s.quantity;
-                          return <td key={s.id}>{money(cpm * (s.applyInkFactor ? inkFactor : 1) * m)}</td>;
-                        })}
-                        {/* Machines */}
-                        {activeMachines.map(mach => (
-                          <td key={mach.id}>{money((mach.cost / mach.lifeMeters) * m)}</td>
-                        ))}
-                        {/* Ops + Subtotal (= printCostPerUnit) */}
-                        <td>{money(opsCost)}</td>
-                        <td style={{ fontWeight: 700 }}>{money(row.quote.cost.printCostPerUnit)}</td>
-                        {/* Per-bajada supplies */}
-                        {showPress && perBajadaSupplies.map(s => {
-                          const cpm = s.totalCost / s.quantity;
-                          const val = bajadas > 0
-                            ? cpm * (activePress!.paperSheetsPerBajada ?? 2) * bajadas : 0;
-                          return <td key={s.id}>{val > 0 ? money(val) : '—'}</td>;
-                        })}
-                        {/* Bajadas count + depreciación */}
-                        {showPress && <td>{bajadas > 0 ? `${bajadas} baj.` : '—'}</td>}
-                        {showPress && <td>{dep > 0 ? money(dep) : '—'}</td>}
-                        {showPress && <td style={{ fontWeight: 700 }}>{row.quote.cost.pressCostPerUnit > 0 ? money(row.quote.cost.pressCostPerUnit) : '—'}</td>}
-                        {showFabric    && <td>{money(row.quote.cost.fabricCostPerUnit)}</td>}
-                        {showTailoring && <td>{money(row.quote.cost.tailoringCostPerUnit)}</td>}
-                        {showPolines   && <td>{money(row.quote.cost.polinesCostPerUnit)}</td>}
-                        <td style={{ fontWeight: 800 }}>{money(row.quote.cost.unitCost)}</td>
-                      </tr>
-                    );
-                  })}
+                  {([
+                    { rows: desgloseRows.h, gender: 'H', color: '#0891b2', label: 'HOMBRES (H)' },
+                    { rows: desgloseRows.f, gender: 'M', color: '#db2777', label: 'MUJERES (M)' },
+                  ] as const).map(({ rows: gRows, color, label }) => [
+                    <tr key={label}>
+                      <td colSpan={100} style={{ background: color, color: '#fff', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.1em', padding: '4px 10px', opacity: 0.9 }}>
+                        {label}
+                      </td>
+                    </tr>,
+                    ...gRows.map(row => {
+                      const m = row.quote.cost.metersUnit;
+                      const opsCost = (totalMonthlyCost / monthlyMeters) * m;
+                      const bajadas = row.quote.cost.pressBajadas;
+                      const dep = activePress && activePress.lifeBajadas > 0
+                        ? (activePress.cost / activePress.lifeBajadas) * bajadas : 0;
+                      return (
+                        <tr key={row.label} className={selectedSize === row.size ? 'db-row-selected' : ''}>
+                          <td><strong style={{ color }}>{row.label}</strong></td>
+                          <td>{m.toFixed(3)} m</td>
+                          {perMeterSupplies.map(s => {
+                            const cpm = s.totalCost / s.quantity;
+                            return <td key={s.id}>{money(cpm * (s.applyInkFactor ? inkFactor : 1) * m)}</td>;
+                          })}
+                          {activeMachines.map(mach => (
+                            <td key={mach.id}>{money((mach.cost / mach.lifeMeters) * m)}</td>
+                          ))}
+                          <td>{money(opsCost)}</td>
+                          <td style={{ fontWeight: 700 }}>{money(row.quote.cost.printCostPerUnit)}</td>
+                          {showPress && perBajadaSupplies.map(s => {
+                            const cpm = s.totalCost / s.quantity;
+                            const val = bajadas > 0 ? cpm * (activePress!.paperSheetsPerBajada ?? 2) * bajadas : 0;
+                            return <td key={s.id}>{val > 0 ? money(val) : '—'}</td>;
+                          })}
+                          {showPress && <td>{bajadas > 0 ? `${bajadas} baj.` : '—'}</td>}
+                          {showPress && <td>{dep > 0 ? money(dep) : '—'}</td>}
+                          {showPress && <td style={{ fontWeight: 700 }}>{row.quote.cost.pressCostPerUnit > 0 ? money(row.quote.cost.pressCostPerUnit) : '—'}</td>}
+                          {showFabric    && <td>{money(row.quote.cost.fabricCostPerUnit)}</td>}
+                          {showTailoring && <td>{money(row.quote.cost.tailoringCostPerUnit)}</td>}
+                          {showPolines   && <td>{money(row.quote.cost.polinesCostPerUnit)}</td>}
+                          <td style={{ fontWeight: 800 }}>{money(row.quote.cost.unitCost)}</td>
+                        </tr>
+                      );
+                    }),
+                  ])}
                 </tbody>
                 <tfoot>
                   {supplies.some(s => s.applyInkFactor && s.quantity > 0) && (
@@ -679,6 +732,38 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
           </section>
         );
       })()}
+
+      {/* PRECIOS SUGERIDOS POR PERFIL */}
+      {allProfilesSuggestedPrices.length > 0 && enabledProfiles.length > 1 && (
+        <section className="pricing-panel db-comparison-panel" style={{ marginTop: '1.5rem' }}>
+          <div className="pricing-panel-title">PRECIOS SUGERIDOS POR PERFIL</div>
+          <div className="pricing-table-sub" style={{ marginBottom: '0.75rem' }}>
+            Precio base mínimo para alcanzar el markup objetivo según cada perfil de impresión
+          </div>
+          <div className="pricing-price-table-wrap">
+            <table className="pricing-price-table" style={{ fontSize: '0.78rem' }}>
+              <thead>
+                <tr>
+                  <th>TALLA</th>
+                  {enabledProfiles.map(p => <th key={p.id}>{p.name}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {allProfilesSuggestedPrices.map(row => (
+                  <tr key={row.size}>
+                    <td><strong>{row.label}</strong></td>
+                    {enabledProfiles.map(p => (
+                      <td key={p.id}>
+                        {row.byProfile[p.id] != null ? money(row.byProfile[p.id]) : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {editingBase && (
         <BasePricePopup
