@@ -180,7 +180,7 @@ function marginHex(margin: number, minMargin: number) {
 interface Props { onToast: (msg: string, type: 'ok' | 'error') => void; }
 
 export function DashboardScreen({ onToast: _onToast }: Props) {
-  const { config, printProfiles, fabrics, supplies, machines, operations, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
+  const { config, printProfiles, fabrics, supplies, machines, updateBasePrice, updateBasePriceCompleto } = usePricingStore();
   const setScreen = useTeamStore(s => s.setScreen);
   const activePlotter = (config.plotters ?? []).find(p => p.id === config.selectedPlotterId);
   const enabledProfiles = useMemo(() => printProfiles.filter(p => p.enabled), [printProfiles]);
@@ -608,8 +608,6 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
       {(desgloseRows.h.length > 0 || desgloseRows.f.length > 0) && (() => {
         const activeProfile = printProfiles.find(p => p.id === controls.profileId);
         const inkFactor = activeProfile?.inkFactor ?? 1;
-        const monthlyMeters = config.monthlyMeters > 0 ? config.monthlyMeters : 1;
-        const totalMonthlyCost = operations.reduce((s, o) => s + o.monthlyCost, 0);
         const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId);
         const allDesgloseRows = [...desgloseRows.h, ...desgloseRows.f];
         const showPress = activePress != null && allDesgloseRows.some(r => r.quote.cost.pressBajadas > 0);
@@ -677,7 +675,7 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
                     </tr>,
                     ...gRows.map(row => {
                       const m = row.quote.cost.metersUnit;
-                      const opsCost = (totalMonthlyCost / monthlyMeters) * m;
+                      const opsCost = row.quote.cost.opsCostPerUnit;
                       const bajadas = row.quote.cost.pressBajadas;
                       const dep = activePress && activePress.lifeBajadas > 0
                         ? (activePress.cost / activePress.lifeBajadas) * bajadas : 0;

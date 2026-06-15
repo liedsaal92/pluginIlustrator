@@ -55,10 +55,10 @@ export function calcShirtMetersFromDims(
 
 function computeCostWithInkFactor(
   inkFactor: number,
-  config: PricingConfig,
+  _config: PricingConfig,
   supplies: Supply[],
   machines: MachineCost[],
-  operations: OperationCost[],
+  _operations: OperationCost[],
   excludeSupplyIds?: string[],
 ): number {
   const suppliesCost = supplies.reduce((sum, s) => {
@@ -73,10 +73,7 @@ function computeCostWithInkFactor(
     return sum + m.cost / m.lifeMeters;
   }, 0);
 
-  const monthlyMeters = config.monthlyMeters > 0 ? config.monthlyMeters : 1;
-  const operationCost = operations.reduce((sum, o) => sum + o.monthlyCost, 0) / monthlyMeters;
-
-  return suppliesCost + machineCost + operationCost;
+  return suppliesCost + machineCost;
 }
 
 export function getCostPerMeter(
@@ -286,7 +283,9 @@ export function calculateCost(input: {
     pressCostPerUnit = roundMoney(pressDepreciation + paperCost);
   }
 
-  const unitCost = roundMoney(printCostPerUnit + pressCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit);
+  const monthlyUnits = (input.config.monthlyUnits ?? 0) > 0 ? input.config.monthlyUnits : 1;
+  const opsCostPerUnit = roundMoney(input.operations.reduce((s, o) => s + o.monthlyCost, 0) / monthlyUnits);
+  const unitCost = roundMoney(printCostPerUnit + pressCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit + opsCostPerUnit);
 
   return {
     profileId: input.profileId,
@@ -299,6 +298,7 @@ export function calculateCost(input: {
     polinesCostPerUnit,
     pressBajadas,
     pressCostPerUnit,
+    opsCostPerUnit,
     unitCost,
     totalCost: roundMoney(unitCost * input.quantity),
     savingsPerUnit: Math.max(0, roundMoney(normalPrintCostPerUnit - printCostPerUnit)),

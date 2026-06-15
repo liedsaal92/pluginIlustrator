@@ -22,6 +22,7 @@ export interface Plotter {
 
 export interface PricingConfig {
   monthlyMeters: number;
+  monthlyUnits: number;
   minMargin: number;
   minMarginVip: number;
   minProfitRatio: number;
@@ -129,6 +130,7 @@ export interface CostBreakdown {
   polinesCostPerUnit: number;
   pressBajadas: number;
   pressCostPerUnit: number;
+  opsCostPerUnit: number;
   unitCost: number;
   totalCost: number;
   savingsPerUnit: number;

@@ -8,6 +8,7 @@ const PLOTTER_130 = 130;
 
 const minConfig: PricingConfig = {
   monthlyMeters: 100,
+  monthlyUnits: 100,
   minMargin: 0,
   minMarginVip: 0,
   minProfitRatio: 0,
