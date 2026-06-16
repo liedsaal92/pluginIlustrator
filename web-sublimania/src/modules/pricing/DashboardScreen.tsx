@@ -436,6 +436,10 @@ export function DashboardScreen({ onToast: _onToast }: Props) {
             </strong>
           </div>
           <div className="pricing-kpi">
+            <span>MARKUP MÍNIMO ({controls.segment === 'vip' ? 'VIP' : 'NORMAL'})</span>
+            <strong style={{ color: 'var(--pricing-muted, #888)' }}>{pct(activeMinMarkup)}</strong>
+          </div>
+          <div className="pricing-kpi">
             <span>MEJOR MARKUP · PEOR MARKUP</span>
             <strong>
               <span className="db-kpi-good">{kpis.best.label} {pct(kpis.best.quote.margin)}</span>
