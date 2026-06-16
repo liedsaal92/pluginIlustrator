@@ -116,25 +116,18 @@ function useDashboardData(controls: DashboardControls): DashboardRow[] {
         let suggestedBase: number | null = null;
         let suggestedDirection: 'up' | 'down' | null = null;
         const divisor = 1 - quote.volumeDiscount;
+        const roundUpHalf = (v: number) => Math.ceil(v * 20) / 20;
         if (divisor > 0) {
+          const rawBase = (quote.minPrice + quote.transferredSavings) / divisor;
+          const rounded = roundUpHalf(rawBase);
           if (quote.finalUnitPrice < quote.minPrice) {
-            // Precio por debajo del piso → subir
-            suggestedBase = Math.ceil(
-              ((quote.minPrice + quote.transferredSavings) / divisor) * 100
-            ) / 100;
+            suggestedBase = rounded;
             suggestedDirection = 'up';
           } else if (quote.margin > (controls.segment === 'vip' ? (config.minMarginVip ?? config.minMargin) : config.minMargin)) {
-            // Margen superior al deseado → puede bajar precio y seguir en el margen objetivo
-            const candidate = Math.floor(
-              ((quote.minPrice + quote.transferredSavings) / divisor) * 100
-            ) / 100;
-            suggestedBase = candidate;
-            if (candidate < quote.basePrice) suggestedDirection = 'down';
+            suggestedBase = rounded;
+            if (rounded < quote.basePrice) suggestedDirection = 'down';
           } else {
-            // Precio ok — siempre mostrar botón neutro con precio objetivo
-            suggestedBase = Math.round(
-              ((quote.minPrice + quote.transferredSavings) / divisor) * 100
-            ) / 100;
+            suggestedBase = rounded;
           }
         }
 
