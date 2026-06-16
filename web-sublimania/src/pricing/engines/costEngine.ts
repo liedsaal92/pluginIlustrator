@@ -96,19 +96,11 @@ export function getSizeMeasurement(size: number) {
   return measurement;
 }
 
-function getBasePriceRow(basePrices: BasePrice[], segment: CustomerSegment, gender: Gender, size: number) {
-  const price = basePrices.find(item =>
-    item.segment === segment && item.gender === gender && item.size === size
-  ) ?? basePrices.find(item => item.segment === segment && item.size === size);
-  if (!price) throw new Error(`Precio base no configurado: ${segment} ${gender} ${size}`);
-  return price;
-}
-
 function getMetersForProduct(
   productId: ProductId,
-  basePrices: BasePrice[],
-  segment: CustomerSegment,
-  gender: Gender,
+  _basePrices: BasePrice[],
+  _segment: CustomerSegment,
+  _gender: Gender,
   size: number,
   plotterWidthCm: number,
   linearCm?: number,
@@ -141,8 +133,8 @@ function getMetersForProduct(
     return { meters: shirtMeters, camisetaMeters: shirtMeters, pantalonetaMeters: 0, source, notes };
   }
 
-  const prices = getBasePriceRow(basePrices, segment, gender, size);
-  const ratio = prices.camiseta > 0 ? prices.pantaloneta / prices.camiseta : 1;
+  // ratio físico de metros pantaloneta vs camiseta — independiente de precios de venta
+  const ratio = 0.65;
 
   if (productId === 'pantaloneta') {
     if (tallaDims) {
@@ -284,7 +276,8 @@ export function calculateCost(input: {
   }
 
   const monthlyUnits = (input.config.monthlyUnits ?? 0) > 0 ? input.config.monthlyUnits : 1;
-  const opsCostPerUnit = roundMoney(input.operations.reduce((s, o) => s + o.monthlyCost, 0) / monthlyUnits);
+  const opsBase = roundMoney(input.operations.reduce((s, o) => s + o.monthlyCost, 0) / monthlyUnits);
+  const opsCostPerUnit = input.productId === 'equipo' ? roundMoney(opsBase * 2) : opsBase;
   const unitCost = roundMoney(printCostPerUnit + pressCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit + opsCostPerUnit);
 
   return {
