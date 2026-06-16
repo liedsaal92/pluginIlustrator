@@ -96,10 +96,8 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     ? roundUpTo(rawTablePrice, normalizedInput.config.roundingIncrement)
     : roundMoney(rawTablePrice);
 
-  // Piso financiero — solo informativo, no sobreescribe la tabla
-  const recommendedUnitPrice = normalizedInput.config.roundingEnabled
-    ? roundUpTo(minPrice, normalizedInput.config.roundingIncrement)
-    : roundMoney(minPrice);
+  // Piso financiero — siempre redondeado al $0.05 superior más cercano
+  const recommendedUnitPrice = roundUpTo(minPrice, 0.05);
 
   const finalUnitPrice = normalizedInput.manualPrice && normalizedInput.manualPrice > 0
     ? normalizedInput.manualPrice
