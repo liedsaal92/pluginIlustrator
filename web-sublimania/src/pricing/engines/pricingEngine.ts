@@ -99,9 +99,8 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     ? roundUpTo(rawTablePrice, normalizedInput.config.roundingIncrement)
     : roundMoney(rawTablePrice);
 
-  // Piso financiero — $0.01 para por_cm (precios pequeños), $0.05 para prendas
-  const roundingStep = normalizedInput.productId === 'por_cm' ? 0.01 : 0.05;
-  const recommendedUnitPrice = roundUpTo(minPrice, roundingStep);
+  // Piso financiero — siempre redondeado al $0.05 superior más cercano
+  const recommendedUnitPrice = roundUpTo(minPrice, 0.05);
 
   const finalUnitPrice = normalizedInput.manualPrice && normalizedInput.manualPrice > 0
     ? normalizedInput.manualPrice
