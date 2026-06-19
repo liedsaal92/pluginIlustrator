@@ -506,7 +506,7 @@ export function CotizadorScreen({ onToast }: Props) {
               </div>
               <div className="pricing-hero-label">TOTAL PEDIDO — {totalUnits} prenda{totalUnits !== 1 ? 's' : ''}</div>
             </div>
-            {belowMin && (() => {
+            {totalRecommended > 0 && (() => {
               const firstQ = lineQuotes.find(q => q !== null);
               const engineMarkup = firstQ ? firstQ.activeMinMarkup : displayMinMarkup;
               return (
