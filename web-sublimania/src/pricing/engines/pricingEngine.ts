@@ -62,6 +62,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     operations: normalizedInput.operations,
     linearCm: normalizedInput.linearCm,
     widthCm: normalizedInput.widthCm,
+    physicalSizeId: normalizedInput.physicalSizeId,
     config: normalizedInput.config,
     tallaDims: normalizedInput.tallaDims,
     tallaDimsPant: normalizedInput.tallaDimsPant,
@@ -79,9 +80,11 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   const discountedBasePrice = roundMoney(basePrice * (1 - volumeDiscount));
   const volumeDiscountAmount = roundMoney((basePrice - discountedBasePrice) * quantity);
 
-  const activeMinMarkup = normalizedInput.customerSegment === 'vip'
-    ? (normalizedInput.config.minMarginVip ?? normalizedInput.config.minMargin)
-    : normalizedInput.config.minMargin;
+  const activeMinMarkup = normalizedInput.productId === 'por_cm'
+    ? (normalizedInput.config.minMarginCm || normalizedInput.config.minMargin)
+    : normalizedInput.customerSegment === 'vip'
+      ? (normalizedInput.config.minMarginVip || normalizedInput.config.minMargin)
+      : normalizedInput.config.minMargin;
   const minProfit = cost.unitCost * normalizedInput.config.minProfitRatio;
   const minPriceByMargin = cost.unitCost * (1 + activeMinMarkup);
   const minPriceByProfit = cost.unitCost + minProfit;
@@ -96,8 +99,9 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
     ? roundUpTo(rawTablePrice, normalizedInput.config.roundingIncrement)
     : roundMoney(rawTablePrice);
 
-  // Piso financiero — siempre redondeado al $0.05 superior más cercano
-  const recommendedUnitPrice = roundUpTo(minPrice, 0.05);
+  // Piso financiero — $0.01 para por_cm (precios pequeños), $0.05 para prendas
+  const roundingStep = normalizedInput.productId === 'por_cm' ? 0.01 : 0.05;
+  const recommendedUnitPrice = roundUpTo(minPrice, roundingStep);
 
   const finalUnitPrice = normalizedInput.manualPrice && normalizedInput.manualPrice > 0
     ? normalizedInput.manualPrice
@@ -124,6 +128,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   return {
     input: normalizedInput,
     cost,
+    activeMinMarkup,
     basePrice,
     volumeDiscount,
     volumeDiscountAmount,
