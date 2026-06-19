@@ -102,7 +102,7 @@ export function CotizadorScreen({ onToast }: Props) {
       try { return calculateQuote(input); } catch { return null; }
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
+    [orderLines, customerSegment, profileId, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente, physicalSizeId]
   );
 
   const totalPrice   = lineQuotes.reduce((s, q) => s + (q?.totalPrice ?? 0), 0);
@@ -159,7 +159,7 @@ export function CotizadorScreen({ onToast }: Props) {
       return { profileId: profile.id, totalPrice: tp, totalProfit: tpr, margin: tp > 0 ? tpr / (tp - tpr) : 0 };
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
+    [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente, physicalSizeId]
   );
 
   const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId) ?? null;
