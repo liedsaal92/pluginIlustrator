@@ -510,12 +510,9 @@ export function CotizadorScreen({ onToast }: Props) {
               const firstQ = lineQuotes.find(q => q !== null);
               const engineMarkup = firstQ ? firstQ.activeMinMarkup : displayMinMarkup;
               return (
-                <div className="pricing-hero-min" style={{
-                  borderColor: belowMin ? 'var(--red, #f44336)' : 'var(--green, #4caf50)',
-                  color:       belowMin ? 'var(--red, #f44336)' : 'var(--green, #4caf50)',
-                }}>
-                  <div className="pricing-hero-min-label" style={{ color: 'inherit' }}>SUGERIDO</div>
-                  <div className="pricing-hero-min-value" style={{ color: 'inherit' }}>{fmt(totalRecommended)}</div>
+                <div className="pricing-hero-min" style={{ borderColor: 'var(--green, #4caf50)', color: 'var(--green, #4caf50)' }}>
+                  <div className="pricing-hero-min-label" style={{ color: 'var(--green, #4caf50)' }}>SUGERIDO</div>
+                  <div className="pricing-hero-min-value" style={{ color: 'var(--green, #4caf50)' }}>{fmt(totalRecommended)}</div>
                   <div className="pricing-hero-min-sub">para mantener markup {Math.round(engineMarkup * 100)}%</div>
                 </div>
               );
