@@ -25,6 +25,7 @@ export interface PricingConfig {
   monthlyUnits: number;
   minMargin: number;
   minMarginVip: number;
+  minMarginCm: number;
   minProfitRatio: number;
   wasteRate: number;
   rollWidthCm: number;
@@ -153,6 +154,7 @@ export interface QuoteInput {
   volumeTiers: VolumeTier[];
   linearCm?: number;
   widthCm?: number;
+  physicalSizeId?: string;
   manualPrice?: number;
   savingsTransferRate: number;
   config: PricingConfig;
@@ -170,6 +172,7 @@ export interface QuoteInput {
 export interface QuoteResult {
   input: QuoteInput;
   cost: CostBreakdown;
+  activeMinMarkup: number;
   basePrice: number;
   volumeDiscount: number;
   volumeDiscountAmount: number;
@@ -205,6 +208,23 @@ export interface QuoteHistoryEntry extends QuoteResult {
   id: string;
   createdAt: string;
 }
+
+export interface PhysicalSize {
+  id: string;
+  label: string;
+  widthCm: number;
+  heightCm: number;
+}
+
+export const PHYSICAL_SIZES: PhysicalSize[] = [
+  { id: 'A6',     label: 'A6',     widthCm: 10.5,  heightCm: 14.8  },
+  { id: 'A5',     label: 'A5',     widthCm: 14.8,  heightCm: 21.0  },
+  { id: 'A4',     label: 'A4',     widthCm: 21.0,  heightCm: 29.7  },
+  { id: 'A3',     label: 'A3',     widthCm: 29.7,  heightCm: 42.0  },
+  { id: 'A2',     label: 'A2',     widthCm: 42.0,  heightCm: 59.4  },
+  { id: 'A1',     label: 'A1',     widthCm: 59.4,  heightCm: 84.1  },
+  { id: 'A0',     label: 'A0',     widthCm: 84.1,  heightCm: 118.9 },
+];
 
 export interface OrderLine {
   id: string;

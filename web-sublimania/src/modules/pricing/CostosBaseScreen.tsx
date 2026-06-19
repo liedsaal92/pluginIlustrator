@@ -478,6 +478,12 @@ export function CostosBaseScreen({ onToast }: Props) {
               value={Math.round((config.minMarginVip ?? config.minMargin) * 100)}
               onChange={e => updateConfig('minMarginVip', Number(e.target.value) / 100)} />
           </label>
+          <label className="pricing-field">
+            <span>MARKUP MÍNIMO % — POR CM</span>
+            <input className="field-input" type="number" min="1" max="95"
+              value={Math.round((config.minMarginCm ?? config.minMargin) * 100)}
+              onChange={e => updateConfig('minMarginCm', Number(e.target.value) / 100)} />
+          </label>
 
           <label className="pricing-field">
             <span>PRECIO / CM</span>

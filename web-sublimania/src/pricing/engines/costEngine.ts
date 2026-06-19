@@ -3,9 +3,19 @@ import type {
   BasePrice, CostBreakdown, FabricType, Gender, HeatPress, MachineCost, OperationCost,
   PricingConfig, PrintProfile, PrintProfileId, ProductId, CustomerSegment, Supply,
 } from '../types';
+import { PHYSICAL_SIZES } from '../types';
 
 function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function calcPiecesPerBajada(pieceW: number, pieceH: number, press: HeatPress): number {
+  if (pieceW <= 0 || pieceH <= 0) return 1;
+  const pw = press.widthCm;
+  const ph = press.heightCm;
+  const normal  = Math.floor(pw / pieceW) * Math.floor(ph / pieceH);
+  const rotated = Math.floor(pw / pieceH) * Math.floor(ph / pieceW);
+  return Math.max(1, normal, rotated);
 }
 
 function fitsTwoPieces(w: number, h: number, press: HeatPress): boolean {
@@ -176,6 +186,7 @@ export function calculateCost(input: {
   operations: OperationCost[];
   linearCm?: number;
   widthCm?: number;
+  physicalSizeId?: string;
   config: PricingConfig;
   tallaDims?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
   tallaDimsPant?: { ALTO: string; ANCHO: string; MANGA_ANCHO: string; MANGA_ALTO: string };
@@ -240,7 +251,13 @@ export function calculateCost(input: {
 
   // ── Planchado ──────────────────────────────────────────────────
   let pressBajadas = 0;
-  if (activePress && input.productId !== 'por_cm') {
+  if (activePress && input.productId === 'por_cm') {
+    const physSize = PHYSICAL_SIZES.find(s => s.id === input.physicalSizeId);
+    const pw = physSize ? physSize.widthCm  : (input.widthCm  ?? 0);
+    const ph = physSize ? physSize.heightCm : (input.linearCm ?? 0);
+    const piecesPerBajada = pw > 0 && ph > 0 ? calcPiecesPerBajada(pw, ph, activePress) : 1;
+    pressBajadas = 1 / piecesPerBajada;
+  } else if (activePress && input.productId !== 'por_cm') {
     if (input.tallaDims) {
       pressBajadas = calcBajadasDePlancha(input.tallaDims, activePress);
     } else {
@@ -277,7 +294,26 @@ export function calculateCost(input: {
 
   const monthlyUnits = (input.config.monthlyUnits ?? 0) > 0 ? input.config.monthlyUnits : 1;
   const opsBase = roundMoney(input.operations.reduce((s, o) => s + o.monthlyCost, 0) / monthlyUnits);
-  const opsCostPerUnit = input.productId === 'equipo' ? roundMoney(opsBase * 2) : opsBase;
+  let opsCostPerUnit: number;
+  if (input.productId === 'por_cm') {
+    if (activePress) {
+      const physSize = PHYSICAL_SIZES.find(s => s.id === input.physicalSizeId);
+      const pw = physSize ? physSize.widthCm  : (input.widthCm  ?? 0);
+      const ph = physSize ? physSize.heightCm : (input.linearCm ?? 0);
+      if (pw > 0 && ph > 0) {
+        const piecesPerBajada = calcPiecesPerBajada(pw, ph, activePress);
+        opsCostPerUnit = roundMoney(opsBase / piecesPerBajada);
+      } else {
+        opsCostPerUnit = 0;
+      }
+    } else {
+      opsCostPerUnit = 0;
+    }
+  } else if (input.productId === 'equipo') {
+    opsCostPerUnit = roundMoney(opsBase * 2);
+  } else {
+    opsCostPerUnit = opsBase;
+  }
   const unitCost = roundMoney(printCostPerUnit + pressCostPerUnit + fabricCostPerUnit + tailoringCostPerUnit + polinesCostPerUnit + opsCostPerUnit);
 
   return {

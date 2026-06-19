@@ -8,6 +8,7 @@ import { useTiposClienteStore } from '../../store/useTiposClienteStore';
 import { useTallasStore } from '../../store/useTallasStore';
 import { useMoldesStore, MOLDE_DEFAULT_ID } from '../../store/useMoldesStore';
 import type { CotizacionHistoryEntry, CustomerSegment, Gender, MarketProductId, OrderLine, PrintProfileId, ProductId, QuoteInput, QuoteResult } from '../../pricing/types';
+import { PHYSICAL_SIZES } from '../../pricing/types';
 import { openCotizacionPrintWindow } from '../../pricing/cotizacionPrint';
 
 function parseTalla(t: string): { size: number; gender: Gender } {
@@ -38,6 +39,7 @@ export function CotizadorScreen({ onToast }: Props) {
   const [serviceMode, setServiceMode]             = useState<'sublimation' | 'full_service' | 'paper'>('sublimation');
   const [fabricCamisetaId, setFabricCamisetaId]   = useState<string | null>(null);
   const [fabricPantalonetaId, setFabricPantalonetaId] = useState<string | null>(null);
+  const [physicalSizeId, setPhysicalSizeId]       = useState<string>('A4');
   const [saving, setSaving]     = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -89,6 +91,7 @@ export function CotizadorScreen({ onToast }: Props) {
         volumeTiers: volumeTiersByProduct[line.productId] ?? [],
         linearCm: line.linearCm,
         widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
+        physicalSizeId: line.productId === 'por_cm' ? physicalSizeId : undefined,
         manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
         savingsTransferRate, config, tallaDims, tallaDimsPant,
         serviceMode, fabrics,
@@ -109,11 +112,17 @@ export function CotizadorScreen({ onToast }: Props) {
   const totalTransferredSavings = lineQuotes.reduce((s, q) => s + (q ? q.transferredSavings * q.input.quantity : 0), 0);
   const totalRetainedSavings    = lineQuotes.reduce((s, q) => s + (q ? q.retainedSavings * q.input.quantity : 0), 0);
   const totalEcoSavings  = totalTransferredSavings + totalRetainedSavings;
-  const overallMargin    = totalPrice > 0 ? totalProfit / totalPrice : 0;
+  const overallMargin    = totalCost > 0 ? totalProfit / totalCost : 0;
   const totalUnits       = orderLines.reduce((s, l) => s + l.quantity, 0);
   const allAlerts        = lineQuotes.flatMap((q, i) => (q?.alerts ?? []).map(a => `L${i + 1}: ${a}`));
   const totalRecommended = lineQuotes.reduce((s, q) => s + (q ? q.recommendedUnitPrice * q.input.quantity : 0), 0);
   const belowMin         = totalPrice > 0 && totalPrice < totalRecommended;
+  const displayMinMarkup = (() => {
+    const allCm = orderLines.every(l => l.productId === 'por_cm');
+    if (allCm) return config.minMarginCm ?? config.minMargin;
+    if (customerSegment === 'vip') return config.minMarginVip ?? config.minMargin;
+    return config.minMargin;
+  })();
 
   const profileTotals = useMemo(() =>
     enabledProfiles.map(profile => {
@@ -137,6 +146,7 @@ export function CotizadorScreen({ onToast }: Props) {
           volumeTiers: volumeTiersByProduct[line.productId] ?? [],
           linearCm: line.linearCm,
           widthCm: line.productId === 'por_cm' && serviceMode === 'sublimation' ? line.widthCm : undefined,
+          physicalSizeId: line.productId === 'por_cm' ? physicalSizeId : undefined,
           manualPrice: line.manualPrice.trim() ? Number(line.manualPrice) : undefined,
           savingsTransferRate, config, tallaDims, tallaDimsPant,
           serviceMode, fabrics,
@@ -151,6 +161,14 @@ export function CotizadorScreen({ onToast }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orderLines, customerSegment, enabledProfiles, printProfiles, basePrices, basePricesCompleto, cmPriceTiers, paperPriceTiers, supplies, machines, operations, volumeTiersByProduct, config, savingsTransferRate, serviceMode, fabrics, fabricCamisetaId, fabricPantalonetaId, refClienteId, refGender, refClienteIdPant, refGenderPant, activeMoldeIdPant, tallasPorCliente]
   );
+
+  const activePress = (config.presses ?? []).find(p => p.id === config.selectedPressId) ?? null;
+  function calcPiecesPerBajadaUI(pw: number, ph: number, press: typeof activePress) {
+    if (!press || pw <= 0 || ph <= 0) return 0;
+    const normal  = Math.floor(press.widthCm / pw) * Math.floor(press.heightCm / ph);
+    const rotated = Math.floor(press.widthCm / ph) * Math.floor(press.heightCm / pw);
+    return Math.max(1, normal, rotated);
+  }
 
   function addLine()    { setOrderLines(prev => [...prev, newLine(config.rollWidthCm)]); }
   function removeLine(id: string) {
@@ -372,6 +390,25 @@ export function CotizadorScreen({ onToast }: Props) {
           </div>
 
           <div className="pricing-panel-title pricing-panel-title-spaced">LÍNEAS DEL PEDIDO</div>
+          {orderLines.some(l => l.productId === 'por_cm') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.72rem', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tamaño físico tela</span>
+              <select className="field-input field-select" style={{ width: 'auto', minWidth: '11rem' }}
+                value={physicalSizeId} onChange={e => setPhysicalSizeId(e.target.value)}>
+                {PHYSICAL_SIZES.filter(s => {
+                  if (!activePress) return true;
+                  return calcPiecesPerBajadaUI(s.widthCm, s.heightCm, activePress) >= 1;
+                }).map(s => {
+                  const count = activePress ? calcPiecesPerBajadaUI(s.widthCm, s.heightCm, activePress) : null;
+                  return (
+                    <option key={s.id} value={s.id}>
+                      {s.label} ({s.widthCm}×{s.heightCm}cm{count !== null ? ` — ${count}/plancha` : ''})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
           <div className="pricing-order-wrap">
             <table className="pricing-order-table">
               <thead>
@@ -469,13 +506,17 @@ export function CotizadorScreen({ onToast }: Props) {
               </div>
               <div className="pricing-hero-label">TOTAL PEDIDO — {totalUnits} prenda{totalUnits !== 1 ? 's' : ''}</div>
             </div>
-            {belowMin && (
-              <div className="pricing-hero-min">
-                <div className="pricing-hero-min-label">SUGERIDO</div>
-                <div className="pricing-hero-min-value">{fmt(totalRecommended)}</div>
-                <div className="pricing-hero-min-sub">para mantener markup</div>
-              </div>
-            )}
+            {belowMin && (() => {
+              const firstQ = lineQuotes.find(q => q !== null);
+              const engineMarkup = firstQ ? firstQ.activeMinMarkup : displayMinMarkup;
+              return (
+                <div className="pricing-hero-min" style={{ borderColor: 'var(--green, #4caf50)', color: 'var(--green, #4caf50)' }}>
+                  <div className="pricing-hero-min-label" style={{ color: 'var(--green, #4caf50)' }}>SUGERIDO</div>
+                  <div className="pricing-hero-min-value" style={{ color: 'var(--green, #4caf50)' }}>{fmt(totalRecommended)}</div>
+                  <div className="pricing-hero-min-sub">para mantener markup {Math.round(engineMarkup * 100)}%</div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* ── COSTOS ───────────────────────────── */}
@@ -484,19 +525,19 @@ export function CotizadorScreen({ onToast }: Props) {
             <div className="pricing-kpis">
               {(() => {
                 const totalPrint     = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit     * q.input.quantity : 0), 0);
+                const totalPress     = lineQuotes.reduce((s, q) => s + (q ? q.cost.pressCostPerUnit     * q.input.quantity : 0), 0);
+
                 const totalFabric    = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit    * q.input.quantity : 0), 0);
                 const totalTailoring = lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit * q.input.quantity : 0), 0);
                 const totalPolines   = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit   * q.input.quantity : 0), 0);
-                const showBreakdown  = serviceMode === 'full_service';
-                return showBreakdown ? (<>
+                return (<>
                   <div className="pricing-kpi"><span>Sublimado</span><strong>{fmt(totalPrint)}</strong></div>
+                  <div className="pricing-kpi"><span>Plancha</span><strong>{fmt(totalPress)}</strong></div>
                   {totalFabric    > 0 && <div className="pricing-kpi"><span>Tela</span><strong>{fmt(totalFabric)}</strong></div>}
                   {totalTailoring > 0 && <div className="pricing-kpi"><span>Costura</span><strong>{fmt(totalTailoring)}</strong></div>}
                   {totalPolines   > 0 && <div className="pricing-kpi"><span>Polines/medias</span><strong>{fmt(totalPolines)}</strong></div>}
                   <div className="pricing-kpi pricing-kpi-total"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
-                </>) : (
-                  <div className="pricing-kpi"><span>Total costo</span><strong>{fmt(totalCost)}</strong></div>
-                );
+                </>);
               })()}
             </div>
           </div>
@@ -506,7 +547,7 @@ export function CotizadorScreen({ onToast }: Props) {
             <div className="pricing-kpi-section-label">RESULTADO</div>
             <div className="pricing-kpis">
               <div className="pricing-kpi"><span>Ganancia</span><strong>{fmt(totalProfit)}</strong></div>
-              <div className="pricing-kpi"><span>Margen</span><strong>{pct.format(overallMargin)}</strong></div>
+              <div className="pricing-kpi"><span>Markup</span><strong>{pct.format(overallMargin)}</strong></div>
               {totalVolumeDiscount > 0 && (
                 <div className="pricing-kpi pricing-kpi-discount">
                   <span>Desc. volumen</span><strong>−{fmt(totalVolumeDiscount)}</strong>
@@ -535,7 +576,7 @@ export function CotizadorScreen({ onToast }: Props) {
           <div className="pricing-breakdown-wrap">
             <table className="pricing-breakdown-table">
               <thead>
-                <tr><th>#</th><th>PROD.</th><th>T.</th><th>CANT.</th><th>COSTO/U</th><th>DESC.</th><th>P/U</th><th>SUBTOTAL</th><th>MRG</th>{Object.keys(mktAvg).length > 0 && <th>MRK</th>}</tr>
+                <tr><th>#</th><th>PROD.</th><th>T.</th><th>CANT.</th><th>COSTO/U</th><th>DESC.</th><th>P/U</th><th>SUBTOTAL</th><th>MKP</th>{Object.keys(mktAvg).length > 0 && <th>MRK</th>}</tr>
               </thead>
               <tbody>
                 {lineQuotes.map((q, i) => {
@@ -614,6 +655,85 @@ export function CotizadorScreen({ onToast }: Props) {
               </div>
             </div>
           </div>
+
+          {/* ── DESGLOSE DE COSTOS ───────────────── */}
+          {lineQuotes.some(q => q !== null) && (() => {
+            const hasPress    = lineQuotes.some(q => q && q.cost.pressCostPerUnit > 0);
+            const hasFabric   = lineQuotes.some(q => q && q.cost.fabricCostPerUnit > 0);
+            const hasTailoring= lineQuotes.some(q => q && q.cost.tailoringCostPerUnit > 0);
+            const hasPolines  = lineQuotes.some(q => q && q.cost.polinesCostPerUnit > 0);
+            const colSpan     = orderLines.length;
+            return (
+              <div style={{ marginTop: '1rem' }}>
+                <div className="pricing-panel-title" style={{ fontSize: '0.72rem', marginBottom: '0.4rem' }}>DESGLOSE DE COSTOS</div>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="pricing-breakdown-table" style={{ fontSize: '0.75rem' }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left' }}>CONCEPTO</th>
+                        {orderLines.map((l, i) => (
+                          <th key={l.id} style={{ textAlign: 'right' }}>
+                            L{i + 1}<br />
+                            <span style={{ fontWeight: 400, opacity: 0.55, fontSize: '0.65rem' }}>
+                              {l.productId === 'por_cm' ? `${l.linearCm}×${l.widthCm}cm` : l.talla} ×{l.quantity}
+                            </span>
+                          </th>
+                        ))}
+                        {colSpan > 1 && <th style={{ textAlign: 'right' }}>TOTAL</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {([
+                        { label: 'Sublimado',    key: 'printCostPerUnit'      },
+                        ...(hasPress     ? [{ label: 'Plancha',      key: 'pressCostPerUnit'     }] : []),
+                        { label: 'Operaciones',  key: 'opsCostPerUnit'        },
+                        ...(hasFabric    ? [{ label: 'Tela',         key: 'fabricCostPerUnit'    }] : []),
+                        ...(hasTailoring ? [{ label: 'Costura',      key: 'tailoringCostPerUnit' }] : []),
+                        ...(hasPolines   ? [{ label: 'Polines',      key: 'polinesCostPerUnit'   }] : []),
+                      ] as { label: string; key: keyof import('../../pricing/types').CostBreakdown }[]).map(({ label, key }) => {
+                        const rowTotal = lineQuotes.reduce((s, q) => s + (q ? (q.cost[key] as number) * q.input.quantity : 0), 0);
+                        return (
+                          <tr key={String(key)}>
+                            <td style={{ textAlign: 'left', opacity: 0.75 }}>{label}</td>
+                            {lineQuotes.map((q, i) => (
+                              <td key={orderLines[i].id} style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                                {q ? (
+                                  <>
+                                    {fmt(q.cost[key] as number)}
+                                    <span style={{ opacity: 0.4, fontSize: '0.65rem' }}> /u</span>
+                                  </>
+                                ) : '—'}
+                              </td>
+                            ))}
+                            {colSpan > 1 && (
+                              <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                                {fmt(rowTotal)}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ fontWeight: 700 }}>
+                        <td style={{ textAlign: 'left' }}>TOTAL COSTO</td>
+                        {lineQuotes.map((q, i) => (
+                          <td key={orderLines[i].id} style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                            {q ? fmt(q.cost.unitCost) : '—'}
+                          </td>
+                        ))}
+                        {colSpan > 1 && (
+                          <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                            {fmt(lineQuotes.reduce((s, q) => s + (q?.cost.totalCost ?? 0), 0))}
+                          </td>
+                        )}
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="pricing-alerts" aria-live="polite">
             {allAlerts.length === 0 ? (

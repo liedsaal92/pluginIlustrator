@@ -49,7 +49,8 @@ function migrateConfig(raw: PricingConfig): PricingConfig {
     out.savingsTransferRateNormal = legacy;
     out.savingsTransferRateVip = legacy;
   }
-  if (!('minMarginVip' in raw)) out.minMarginVip = out.minMargin;
+  if (!('minMarginVip' in raw) || !raw.minMarginVip) out.minMarginVip = out.minMargin;
+  if (!('minMarginCm'  in raw) || !raw.minMarginCm)  out.minMarginCm  = 0.50;
   if (!('monthlyUnits' in raw) || !out.monthlyUnits) out.monthlyUnits = Math.round(out.monthlyMeters / 0.8);
   return out;
 }

@@ -12,5 +12,8 @@ export function validateQuoteInput(input: QuoteInput): string[] {
   if (input.config.minMarginVip != null && (input.config.minMarginVip <= 0 || input.config.minMarginVip >= 0.95)) {
     errors.push('El markup mínimo VIP debe estar entre 1% y 95%.');
   }
+  if (input.config.minMarginCm != null && (input.config.minMarginCm <= 0 || input.config.minMarginCm >= 0.95)) {
+    errors.push('El markup mínimo POR CM debe estar entre 1% y 95%.');
+  }
   return errors;
 }

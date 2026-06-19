@@ -5,6 +5,7 @@ export const defaultPricingConfig: PricingConfig = {
   monthlyUnits: 500,
   minMargin: 0.45,
   minMarginVip: 0.35,
+  minMarginCm: 0.50,
   minProfitRatio: 0,
   wasteRate: 0,
   rollWidthCm: 130,
