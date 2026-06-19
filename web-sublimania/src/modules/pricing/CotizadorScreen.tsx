@@ -526,7 +526,7 @@ export function CotizadorScreen({ onToast }: Props) {
               {(() => {
                 const totalPrint     = lineQuotes.reduce((s, q) => s + (q ? q.cost.printCostPerUnit     * q.input.quantity : 0), 0);
                 const totalPress     = lineQuotes.reduce((s, q) => s + (q ? q.cost.pressCostPerUnit     * q.input.quantity : 0), 0);
-                const totalOps       = lineQuotes.reduce((s, q) => s + (q ? q.cost.opsCostPerUnit       * q.input.quantity : 0), 0);
+
                 const totalFabric    = lineQuotes.reduce((s, q) => s + (q ? q.cost.fabricCostPerUnit    * q.input.quantity : 0), 0);
                 const totalTailoring = lineQuotes.reduce((s, q) => s + (q ? q.cost.tailoringCostPerUnit * q.input.quantity : 0), 0);
                 const totalPolines   = lineQuotes.reduce((s, q) => s + (q ? q.cost.polinesCostPerUnit   * q.input.quantity : 0), 0);
@@ -684,16 +684,16 @@ export function CotizadorScreen({ onToast }: Props) {
                     </thead>
                     <tbody>
                       {([
-                        { label: 'Sublimado',    key: 'printCostPerUnit'     as const },
-                        ...(hasPress     ? [{ label: 'Plancha',      key: 'pressCostPerUnit'    as const }] : []),
-                        { label: 'Operaciones',  key: 'opsCostPerUnit'       as const },
-                        ...(hasFabric    ? [{ label: 'Tela',         key: 'fabricCostPerUnit'   as const }] : []),
-                        ...(hasTailoring ? [{ label: 'Costura',      key: 'tailoringCostPerUnit'as const }] : []),
-                        ...(hasPolines   ? [{ label: 'Polines',      key: 'polinesCostPerUnit'  as const }] : []),
-                      ] as { label: string; key: keyof typeof lineQuotes[0]['cost'] }[]).map(({ label, key }) => {
+                        { label: 'Sublimado',    key: 'printCostPerUnit'      },
+                        ...(hasPress     ? [{ label: 'Plancha',      key: 'pressCostPerUnit'     }] : []),
+                        { label: 'Operaciones',  key: 'opsCostPerUnit'        },
+                        ...(hasFabric    ? [{ label: 'Tela',         key: 'fabricCostPerUnit'    }] : []),
+                        ...(hasTailoring ? [{ label: 'Costura',      key: 'tailoringCostPerUnit' }] : []),
+                        ...(hasPolines   ? [{ label: 'Polines',      key: 'polinesCostPerUnit'   }] : []),
+                      ] as { label: string; key: keyof import('../../pricing/types').CostBreakdown }[]).map(({ label, key }) => {
                         const rowTotal = lineQuotes.reduce((s, q) => s + (q ? (q.cost[key] as number) * q.input.quantity : 0), 0);
                         return (
-                          <tr key={key}>
+                          <tr key={String(key)}>
                             <td style={{ textAlign: 'left', opacity: 0.75 }}>{label}</td>
                             {lineQuotes.map((q, i) => (
                               <td key={orderLines[i].id} style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>

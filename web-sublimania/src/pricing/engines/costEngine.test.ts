@@ -11,6 +11,7 @@ const minConfig: PricingConfig = {
   monthlyUnits: 100,
   minMargin: 0,
   minMarginVip: 0,
+  minMarginCm: 0,
   minProfitRatio: 0,
   wasteRate: 0,
   rollWidthCm: PLOTTER_130,
